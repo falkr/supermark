@@ -201,15 +201,17 @@ class Chunk:
 
 class YAMLChunk(Chunk):
 
-    def __init__(self, raw_chunk, dictionary, page_variables, required=[], optional=[]):
-        super().__init__(raw_chunk, page_variables)
-        self.dictionary = dictionary
-        for key in required:
-            if key not in self.dictionary:
-                tell("YAML section misses required parameter '{}'.".format(key), level='error', chunk=raw_chunk)
-        for key in self.dictionary.keys():
-            if (key not in required) and (key not in optional) and (key != 'type'):
-                tell("YAML section has unknown parameter '{}'.".format(key), level='warn', chunk=raw_chunk)
+     def __init__(self, raw_chunk, dictionary, page_variables, required=None, optional=None):
+          super().__init__(raw_chunk, page_variables)
+          self.dictionary = dictionary
+          required = required or []
+          optional = optional or []
+          for key in required:
+               if key not in self.dictionary:
+                    tell("YAML section misses required parameter '{}'.".format(key), level='error', chunk=raw_chunk)
+          for key in self.dictionary.keys():
+               if (key not in required) and (key not in optional) and (key != 'type'):
+                    tell("YAML section has unknown parameter '{}'.".format(key), level='warn', chunk=raw_chunk)
 
 
 class YAMLVideoChunk(YAMLChunk):
@@ -279,13 +281,8 @@ class MarkdownChunk(Chunk):
 
     def __init__(self, raw_chunk, page_variables):
         super().__init__(raw_chunk, page_variables)
-        self.is_aside = super().get_first_line().strip().startswith('Aside:')
+        self.aside = super().get_first_line().strip().startswith('Aside:')
         self.is_section = super().get_first_line().startswith('# ')
-        if self.is_aside:
-            print('found aside')
-        else:
-            print('      not aside: ')
-            print(super().get_first_line())
     
     def to_html(self):
         if self.is_aside:
@@ -293,7 +290,6 @@ class MarkdownChunk(Chunk):
             #aside_id = random_id()
             shake.update(content.encode('utf-8'))
             aside_id = shake.hexdigest(3)
-            print(aside_id)
             output = []
             output.append('<span name="{}"></span><aside name="{}">'.format(aside_id, aside_id))
             output.append(pypandoc.convert_text(content, 'html', format='md'))
@@ -466,7 +462,6 @@ def split(base_path, rebuild_all_pages = True, abort_draft = True):
             target_file_path = os.path.join(base_path, target_file_name)
             if _create_target(source_file_path, target_file_path, rebuild_all_pages):
                 process_file(source_file_path, target_file_path, template, abort_draft)
-            
 
 if __name__ == "__main__":
     base_path = '/Users/kraemer/Dropbox/Teaching/TTM4115/website/'
