@@ -44,9 +44,9 @@ def is_empty(s_line):
 
 class RawChunk:
 
-    def __init__(self, lines, type, start_line_number, path):
+    def __init__(self, lines, chunk_type, start_line_number, path):
         self.lines = lines
-        self.type = type
+        self.type = chunk_type
         self.start_line_number = start_line_number
         self.path = path
         # check if we only got empty lines
@@ -68,7 +68,7 @@ class RawChunk:
         return self.type
 
     def get_first_line(self):
-        if len(self.lines) == 0: 
+        if len(self.lines) == 0:
             return 'empty'
         return self.lines[0]
 
@@ -177,11 +177,11 @@ class Chunk:
     def __init__(self, raw_chunk, page_variables):
         self.raw_chunk = raw_chunk
         self.page_variables = page_variables
-        self.is_aside = False
+        self.aside = False
         self.asides = []
 
     def is_aside(self):
-        return self.is_aside
+        return self.aside
 
     def get_asides(self):
         return self.asides
@@ -333,8 +333,8 @@ def cast(rawchunks):
         if chunk_type==ParserState.MARKDOWN:
             chunks.append(MarkdownChunk(raw, page_variables))
         elif chunk_type==ParserState.YAML:
-            dictionary = yaml.load(''.join(raw.lines))
-            if type(dictionary) == dict:
+            dictionary = yaml.safe_load(''.join(raw.lines))
+            if isinstance(dictionary, dict):
                 if 'type' in dictionary:
                     yaml_type = dictionary['type']
                     if yaml_type == 'youtube':
@@ -351,7 +351,7 @@ def cast(rawchunks):
                         print(e)
                     chunks.append(data_chunk)
             else:
-                tell('Something is wrong with the YAML section.', level='error', chunk=raw) 
+                tell('Something is wrong with the YAML section.', level='error', chunk=raw)
         elif chunk_type==ParserState.HTML:
             chunks.append(HTMLChunk(raw, page_variables))
         elif chunk_type==ParserState.CODE:
@@ -362,7 +362,7 @@ def arrange_assides(chunks):
     main_chunks = []
     current_main_chunk = None
     for chunk in chunks:
-        if chunk.is_aside:
+        if chunk.is_aside():
             if current_main_chunk is not None:
                 current_main_chunk.asides.append(chunk)
             else:
@@ -400,7 +400,6 @@ def transform_page_to_html(lines, template, filepath, abort_draft):
                 content.append('    <section class="content">')
             for aside in chunk.asides:
                 content.append(aside.to_html())
-                #content.append(chunk.to_html())
             content.append(chunk.to_html())
         else:
             for aside in chunk.asides:
@@ -472,4 +471,3 @@ def split(base_path, rebuild_all_pages = True, abort_draft = True):
 if __name__ == "__main__":
     base_path = '/Users/kraemer/Dropbox/Teaching/TTM4115/website/'
     split(base_path)
-    
