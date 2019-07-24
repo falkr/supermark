@@ -285,7 +285,7 @@ class MarkdownChunk(Chunk):
         self.is_section = super().get_first_line().startswith('# ')
     
     def to_html(self):
-        if self.is_aside:
+        if self.aside:
             content = self.get_content()[6:].strip() # remove 'aside: '
             #aside_id = random_id()
             shake.update(content.encode('utf-8'))
@@ -409,12 +409,15 @@ def transform_page_to_html(lines, template, filepath, abort_draft):
     html = template.format(**parameters)
     return html
 
-def _create_target(source_file_path, target_file_path, overwrite):
+def _create_target(source_file_path, target_file_path, template_file_path, overwrite):
     if not os.path.isfile(target_file_path):
         return True
     if overwrite:
         return True
-    return os.path.getmtime(target_file_path) < os.path.getmtime(source_file_path)
+    if not os.path.isfile(template_file_path):
+        return os.path.getmtime(target_file_path) < os.path.getmtime(source_file_path)
+    else:
+        return os.path.getmtime(target_file_path) < os.path.getmtime(source_file_path) and os.path.getmtime(target_file_path) < os.path.getmtime(template_file_path)
 
 def write_file(html, target_file_path):
     try:# latin-1
@@ -442,8 +445,7 @@ def default_html_template():
     html.append('</html>')
     return '\n'.join(html)
 
-def load_html_template(base_path):
-    template_path = os.path.join(base_path, 'templates/page.html')
+def load_html_template(template_path):
     try:
         with open(template_path, 'r', encoding='utf-8', errors="surrogateescape") as templatefile:
             template = templatefile.read()
@@ -452,17 +454,12 @@ def load_html_template(base_path):
         tell('Template file missing. Expected at {}. Using default template.'.format(template_path))
         return default_html_template()
 
-def split(base_path, rebuild_all_pages = True, abort_draft = True):
-    template = load_html_template(base_path)
-    path = os.path.join(base_path, 'pages')
-    for filename in os.listdir(path):
-        source_file_path = os.path.join(path, filename)
+def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True):
+    template = load_html_template(template_file)
+    for filename in os.listdir(input_path):
+        source_file_path = os.path.join(input_path, filename)
         if os.path.isfile(source_file_path) and filename.endswith('.md'):
             target_file_name = os.path.splitext(os.path.basename(filename))[0] + '.html'
-            target_file_path = os.path.join(base_path, target_file_name)
-            if _create_target(source_file_path, target_file_path, rebuild_all_pages):
+            target_file_path = os.path.join(output_path, target_file_name)
+            if _create_target(source_file_path, target_file_path, template_file, rebuild_all_pages):
                 process_file(source_file_path, target_file_path, template, abort_draft)
-
-if __name__ == "__main__":
-    base_path = '/Users/kraemer/Dropbox/Teaching/TTM4115/website/'
-    split(base_path)

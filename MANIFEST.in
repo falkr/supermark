@@ -1,0 +1,3 @@
+include latex_preamble.tex
+include teampy/latex_preamble.tex
+include teampy/scratch.pdf
