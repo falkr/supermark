@@ -13,6 +13,8 @@ shake = hashlib.shake_128()
 
 ENV_PATTERN = re.compile('[a-zA-Z]*:')
 
+LOG_VERBOSE = False
+
 def random_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
 
@@ -26,7 +28,8 @@ def tell(message, level='info', chunk=None):
     if chunk is not None:
         message = '{} line {}: {}'.format(chunk.path, chunk.start_line_number, message)
     if level == 'info':
-        print(Fore.GREEN + Style.BRIGHT +  ' - ' + Style.RESET_ALL + message)
+        if LOG_VERBOSE:
+            print(Fore.GREEN + Style.BRIGHT +  ' - ' + Style.RESET_ALL + message)
     elif level == 'warn':
         print(Fore.YELLOW + Style.BRIGHT +  ' - ' + Style.RESET_ALL + message)
     else:
@@ -292,10 +295,13 @@ class MarkdownChunk(Chunk):
             aside_id = shake.hexdigest(3)
             output = []
             output.append('<span name="{}"></span><aside name="{}">'.format(aside_id, aside_id))
-            output.append(pypandoc.convert_text(content, 'html', format='md'))
+            extra_args = ['--ascii', '--highlight-style', 'pygments']
+            extra_args = ['--highlight-style', 'pygments']
+            output.append(pypandoc.convert_text(content, 'html', format='md', extra_args=extra_args))
             output.append('</aside>')
             return ''.join(output)
         else:
+            extra_args = ['--ascii', '--highlight-style', 'pygments']
             extra_args = ['--highlight-style', 'pygments']
             output = pypandoc.convert_text(self.get_content(), 'html', format='md', extra_args=extra_args)
             return output
@@ -339,6 +345,7 @@ def cast(rawchunks):
                         chunks.append(YAMLFigureChunk(raw, dictionary, page_variables))
                     elif yaml_type == 'button':
                         chunks.append(YAMLButtonChunk(raw, dictionary, page_variables))
+                    # TODO warn if unknown type
                 else:
                     data_chunk = YAMLDataChunk(raw, dictionary, page_variables)
                     try:
@@ -382,7 +389,7 @@ def transform_page_to_html(lines, template, filepath, abort_draft):
         first_chunk = chunks[0]
         if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
             content.append('    <section class="content">')
-    
+
     for chunk in chunks:
         if 'status' in chunk.page_variables and abort_draft and chunk.page_variables['status'] == 'draft':
             content.append('<mark>This site is under construction.</mark>')
@@ -417,24 +424,27 @@ def _create_target(source_file_path, target_file_path, template_file_path, overw
     if not os.path.isfile(template_file_path):
         return os.path.getmtime(target_file_path) < os.path.getmtime(source_file_path)
     else:
-        return os.path.getmtime(target_file_path) < os.path.getmtime(source_file_path) and os.path.getmtime(target_file_path) < os.path.getmtime(template_file_path)
+        return os.path.getmtime(target_file_path) < os.path.getmtime(source_file_path) or os.path.getmtime(target_file_path) < os.path.getmtime(template_file_path)
 
 def write_file(html, target_file_path):
-    try:# latin-1
-        with open(target_file_path, "w", encoding='latin-1') as html_file:
+    encoding = 'utf-8'
+    try:
+        with open(target_file_path, "w", encoding=encoding) as html_file:
             html_file.write(html)
-            print('latin-1: {}'.format(target_file_path))
     except UnicodeEncodeError as error:
-        print(error)
-    with open(target_file_path, "w", encoding='utf-8') as html_file:
-        html_file.write(html)
+        tell('Encoding error when writing file {}.'.format(target_file_path))
+        character = error.object[error.start:error.end]
+        line = html.count("\n",0,error.start)+1
+        tell('Character {} in line {} cannot be saved with encoding {}.'.format(character, line, encoding))
+        with open(target_file_path, "w", encoding=encoding, errors='ignore') as html_file:
+            html_file.write(html)
 
 def process_file(source_file_path, target_file_path, template, abort_draft):
-        #print(source_file_path)
-        with open(source_file_path, 'r', encoding='latin-1') as file:
-            lines = file.readlines()
-            html = transform_page_to_html(lines, template, source_file_path, abort_draft)
-            write_file(html, target_file_path)
+     with open(source_file_path, 'r', encoding='utf-8') as file:
+          lines = file.readlines()
+          tell('{}'.format(source_file_path), 'info')
+          html = transform_page_to_html(lines, template, source_file_path, abort_draft)
+          write_file(html, target_file_path)
 
 def default_html_template():
     html = []
@@ -449,12 +459,15 @@ def load_html_template(template_path):
     try:
         with open(template_path, 'r', encoding='utf-8', errors="surrogateescape") as templatefile:
             template = templatefile.read()
+            tell('Loading template {}.'.format(template_path), 'info')
             return template
-    except FileNotFoundError as error:
-        tell('Template file missing. Expected at {}. Using default template.'.format(template_path))
+    except FileNotFoundError:
+        tell('Template file missing. Expected at {}. Using default template.'.format(template_path), 'warn')
         return default_html_template()
 
-def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True):
+def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True, verbose=False):
+    global LOG_VERBOSE
+    LOG_VERBOSE = verbose
     template = load_html_template(template_file)
     for filename in os.listdir(input_path):
         source_file_path = os.path.join(input_path, filename)

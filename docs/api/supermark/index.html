@@ -1598,6 +1598,7 @@ table {
                         <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YAMLFigureChunk</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">page_variables</span><span class="p">))</span>
                     <span class="k">elif</span> <span class="n">yaml_type</span> <span class="o">==</span> <span class="s1">&#39;button&#39;</span><span class="p">:</span>
                         <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YAMLButtonChunk</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">page_variables</span><span class="p">))</span>
+                    <span class="c1"># TODO warn if unknown type</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">data_chunk</span> <span class="o">=</span> <span class="n">YAMLDataChunk</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">page_variables</span><span class="p">)</span>
                     <span class="k">try</span><span class="p">:</span>
@@ -1839,6 +1840,7 @@ table {
                         <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YAMLFigureChunk</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">page_variables</span><span class="p">))</span>
                     <span class="k">elif</span> <span class="n">yaml_type</span> <span class="o">==</span> <span class="s1">&#39;button&#39;</span><span class="p">:</span>
                         <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YAMLButtonChunk</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">page_variables</span><span class="p">))</span>
+                    <span class="c1"># TODO warn if unknown type</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">data_chunk</span> <span class="o">=</span> <span class="n">YAMLDataChunk</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">page_variables</span><span class="p">)</span>
                     <span class="k">try</span><span class="p">:</span>

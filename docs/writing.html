@@ -61,15 +61,58 @@
 
     </section>
     <section class="content">
-<h1 id="markdown">Markdown</h1>
+<h1 id="chunks">Chunks</h1>
+
+    </section>
+    <section class="content">
+<h1 id="markdown-chunks">Markdown Chunks</h1>
+<p>The Markdown chunks of the document should follow <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc’s Markdown syntax</a>.</p>
 
     </section>
     <section class="content">
 <h1 id="yaml-elements">YAML Elements</h1>
+<p>YAML elements start and stop with a delimiter <code>---</code>.</p>
+<h2 id="videos">Videos</h2>
+
+<div class="figure">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/wupToqz1e2g?start=80" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<span name="wupToqz1e2g">&nbsp;</span>
+<aside name="wupToqz1e2g"><p><p>The Pale Blue Dot.</p>
+</p></aside>
+</div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="fu">type:</span><span class="at"> youtube</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="fu">video:</span><span class="at"> wupToqz1e2g</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="fu">caption:</span><span class="at"> </span><span class="st">&quot;The Pale Blue Dot.&quot;</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="fu">start:</span><span class="at"> 80</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="ot">---</span></a></code></pre></div>
+
+<h2 id="figures">Figures</h2>
+<h2 id="buttons">Buttons</h2>
 
     </section>
     <section class="content">
 <h1 id="html-blocks">HTML Blocks</h1>
+
+    </section>
+    <section class="content">
+<h1 id="code-blocks">Code Blocks</h1>
+<p>Supermark uses Pandoc’s functions to highlight code. Place the code between the following delimiters:</p>
+
+<div>
+<pre>
+```bash
+pandoc --list-highlight-languages
+```
+</pre>
+</div>
+
+
+
+<p><code>abc</code>, <code>asn1</code>, <code>asp</code>, <code>ats</code>, <code>awk</code>, <code>actionscript</code>, <code>ada</code>, <code>agda</code>, <code>alertindent</code>, <code>apache</code>, <code>bash</code>, <code>bibtex</code>, <code>boo</code>, <code>c</code>, <code>cs</code>, <code>cpp</code>, <code>cmake</code>, <code>css</code>, <code>changelog</code>, <code>clojure</code>, <code>coffee</code>, <code>coldfusion</code>, <code>commonlisp</code>, <code>curry</code>, <code>d</code>, <code>dtd</code>, <code>diff</code>, <code>djangotemplate</code>, <code>dockerfile</code>, <code>doxygen</code>, <code>doxygenlua</code>, <code>eiffel</code>, <code>elixir</code>, <code>email</code>, <code>erlang</code>, <code>fsharp</code>, <code>fortran</code>, <code>gcc</code>, <code>glsl</code>, <code>gnuassembler</code>, <code>m4</code>, <code>go</code>, <code>html</code>, <code>hamlet</code>, <code>haskell</code>, <code>haxe</code>, <code>ini</code>, <code>isocpp</code>, <code>idris</code>, <code>fasm</code>, <code>nasm</code>, <code>json</code>, <code>jsp</code>, <code>java</code>, <code>javascript</code>, <code>javadoc</code>, <code>julia</code>, <code>kotlin</code>, <code>llvm</code>, <code>latex</code>, <code>lex</code>, <code>lilypond</code>, <code>literatecurry</code>, <code>literatehaskell</code>, <code>lua</code>, <code>mips</code>, <code>makefile</code>, <code>markdown</code>, <code>mathematica</code>, <code>matlab</code>, <code>maxima</code>, <code>mediawiki</code>, <code>metafont</code>, <code>modelines</code>, <code>modula2</code>, <code>modula3</code>, <code>monobasic</code>, <code>ocaml</code>, <code>objectivec</code>, <code>objectivecpp</code>, <code>octave</code>, <code>opencl</code>, <code>php</code>, <code>povray</code>, <code>pascal</code>, <code>perl</code>, <code>pike</code>, <code>postscript</code>, <code>powershell</code>, <code>prolog</code>, <code>pure</code>, <code>purebasic</code>, <code>python</code>, <code>r</code>, <code>relaxng</code>, <code>relaxngcompact</code>, <code>roff</code>, <code>ruby</code>, <code>rhtml</code>, <code>rust</code>, <code>sgml</code>, <code>sql</code>, <code>sqlmysql</code>, <code>sqlpostgresql</code>, <code>scala</code>, <code>scheme</code>, <code>tcl</code>, <code>tcsh</code>, <code>texinfo</code>, <code>mandoc</code>, <code>vhdl</code>, <code>verilog</code>, <code>xml</code>, <code>xul</code>, <code>yaml</code>, <code>yacc</code>, <code>zsh</code>, <code>dot</code>, <code>noweb</code>, <code>rest</code>, <code>sci</code>, <code>sed</code>, <code>xorg</code>, <code>xslt</code>,</p>
+<p>For an updated list, type:</p>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ex">pandoc</span> --list-highlight-languages</a></code></pre></div>
 
     </section>
 </div>
