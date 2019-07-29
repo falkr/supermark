@@ -81,8 +81,11 @@ def yaml_start(s_line):
 def yaml_stop(s_line):
     return s_line == '---'
 
+def has_class_tag(s_line):
+    return s_line.startswith(':') and ENV_PATTERN.match(s_line)
+
 def markdown_start(s_line, empty_lines):
-    return s_line.startswith('# ') or empty_lines >= 2 or s_line.startswith('Aside:')
+    return has_class_tag(s_line) or s_line.startswith('# ') or empty_lines >= 2 or s_line.startswith('Aside:')
 
 def html_start(s_line, empty_lines):
     return s_line.startswith('<') and empty_lines >= 2
@@ -175,6 +178,33 @@ def _parse(lines, path):
     chunks = [item for item in chunks if not item.is_empty()]
     return chunks
 
+class Pattern:
+     def __init__(self):
+        pass
+
+class MarkdownPattern(Pattern):
+    
+    def match(self, line):
+        return False
+
+    def get_css(self):
+        return None
+
+    def to_html(self, chunk):
+        extra_args = ['--ascii', '--highlight-style', 'pygments']
+        extra_args = ['--highlight-style', 'pygments']
+        output = pypandoc.convert_text(chunk.get_content(), 'html', format='md', extra_args=extra_args)
+        return output
+
+class MarkdownLearningGoalsPattern(MarkdownPattern):
+
+    def match(self, line):
+        return line.lower().startswith('# learning goals')
+
+    def to_html(self, chunk):
+        return '<div class="goals">' + super().to_html() + '</div>'
+    
+
 class Chunk:
 
     def __init__(self, raw_chunk, page_variables):
@@ -220,23 +250,35 @@ class YAMLChunk(Chunk):
 class YAMLVideoChunk(YAMLChunk):
 
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=['video'], optional=['start', 'caption'])
+        super().__init__(raw_chunk, dictionary, page_variables, required=['video'], optional=['start', 'caption', 'position'])
     
     def to_html(self):
         html = []
-        html.append('<div class="figure">')
+        video = self.dictionary['video']
+        url = 'https://youtu.be/{}'.format(video)
         start = ''
         if 'start' in self.dictionary:
             start = '?start={}'.format(self.dictionary['start'])
-        width = 560
-        height = 315
-        video = self.dictionary['video']
-        html.append('<iframe width="{}" height="{}" src="https://www.youtube.com/embed/{}{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(width, height, video, start))
-        if 'caption' in self.dictionary:
-            html.append('<span name="{}">&nbsp;</span>'.format(self.dictionary['video']))
-            html_caption = pypandoc.convert_text(self.dictionary['caption'], 'html', format='md')
-            html.append('<aside name="{}"><p>{}</p></aside>'.format(self.dictionary['video'], html_caption))
-        html.append('</div>')
+            url = url + start
+        if 'position' in self.dictionary and self.dictionary['position']=='aside':
+            shake.update('{}'.format(video).encode('utf-8'))
+            aside_id = shake.hexdigest(3)
+            html.append('<span name="{}"></span><aside name="{}">'.format(aside_id, aside_id))
+            html.append('<a href="{}"><img width="{}" src="https://img.youtube.com/vi/{}/sddefault.jpg"></img></a>'.format(url, 240, video))
+            if 'caption' in self.dictionary:
+                html_caption = pypandoc.convert_text(self.dictionary['caption'], 'html', format='md')
+                html.append(html_caption)
+            html.append('</aside>')
+        else:
+            html.append('<div class="figure">')
+            width = 560
+            height = 315
+            html.append('<iframe width="{}" height="{}" src="https://www.youtube.com/embed/{}{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(width, height, video, start))
+            if 'caption' in self.dictionary:
+                html.append('<span name="{}">&nbsp;</span>'.format(self.dictionary['video']))
+                html_caption = pypandoc.convert_text(self.dictionary['caption'], 'html', format='md')
+                html.append('<aside name="{}"><p>{}</p></aside>'.format(self.dictionary['video'], html_caption))
+            html.append('</div>')
         return '\n'.join(html)
 
 
@@ -284,26 +326,39 @@ class MarkdownChunk(Chunk):
 
     def __init__(self, raw_chunk, page_variables):
         super().__init__(raw_chunk, page_variables)
-        self.aside = super().get_first_line().strip().startswith('Aside:')
+        self.content = ''.join(self.raw_chunk.lines)
         self.is_section = super().get_first_line().startswith('# ')
+        if has_class_tag(super().get_first_line().strip()):
+            self.class_tag = super().get_first_line().strip().split(':')[1].lower()
+            self.aside = self.class_tag=='aside'
+            print('Found class tag {}'.format(self.class_tag))
+            self.content = self.content[len(self.class_tag)+2:].strip()
+        else:
+            self.class_tag = None
+            self.aside = False
+
+    def get_content(self):
+        return self.content
     
     def to_html(self):
         if self.aside:
-            content = self.get_content()[6:].strip() # remove 'aside: '
-            #aside_id = random_id()
-            shake.update(content.encode('utf-8'))
+            shake.update(self.content.encode('utf-8'))
             aside_id = shake.hexdigest(3)
             output = []
             output.append('<span name="{}"></span><aside name="{}">'.format(aside_id, aside_id))
             extra_args = ['--ascii', '--highlight-style', 'pygments']
             extra_args = ['--highlight-style', 'pygments']
-            output.append(pypandoc.convert_text(content, 'html', format='md', extra_args=extra_args))
+            output.append(pypandoc.convert_text(self.content, 'html', format='md', extra_args=extra_args))
             output.append('</aside>')
             return ''.join(output)
         else:
             extra_args = ['--ascii', '--highlight-style', 'pygments']
             extra_args = ['--highlight-style', 'pygments']
-            output = pypandoc.convert_text(self.get_content(), 'html', format='md', extra_args=extra_args)
+            if self.class_tag:
+                output = pypandoc.convert_text(self.get_content(), 'html', format='md', extra_args=extra_args)
+                output = '<div class="{}">{}</div>'.format(self.class_tag, output)
+            else:
+                output = pypandoc.convert_text(self.get_content(), 'html', format='md', extra_args=extra_args)
             return output
 
 
@@ -369,7 +424,7 @@ def arrange_assides(chunks):
             if current_main_chunk is not None:
                 current_main_chunk.asides.append(chunk)
             else:
-                tell('Aside chunk cannot be defined as first element.')
+                tell('Aside chunk cannot be defined as first element.', level='warn')
                 main_chunks.append(chunk)
         else:
             main_chunks.append(chunk)
@@ -401,13 +456,13 @@ def transform_page_to_html(lines, template, filepath, abort_draft):
                 # open a new section
                 content.append('    </section>')
                 content.append('    <section class="content">')
+            content.append(chunk.to_html())
             for aside in chunk.asides:
                 content.append(aside.to_html())
-            content.append(chunk.to_html())
         else:
+            content.append(chunk.to_html())
             for aside in chunk.asides:
                 content.append(aside.to_html())
-            content.append(chunk.to_html())
 
     content.append('    </section>')
     content.append('</div>')
