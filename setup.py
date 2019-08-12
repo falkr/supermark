@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name='supermark',
   packages=['supermark'],
-  version='0.1.1',
+  version='0.1.2',
   description='Pandoc-based transformation tool for documents containing different markup languages.',
   install_requires=['pypandoc', 'pyyaml', 'colorama', 'click', 'openpyxl', 'progressbar2'],
   package_data={

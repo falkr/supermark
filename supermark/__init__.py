@@ -285,24 +285,28 @@ class YAMLVideoChunk(YAMLChunk):
 class YAMLFigureChunk(YAMLChunk):
 
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=['source'], optional=['caption'])
+        super().__init__(raw_chunk, dictionary, page_variables, required=['source'], optional=['caption', 'link'])
+        # TODO: check if image file exists
 
     def to_html(self):
         html = []
         html.append('<div class="figure">')
-        if 'source' not in self.dictionary:
-            print('source attribute missing!')
-            print(''.join(self.raw_chunk.lines))
-        else:
-            if 'caption' in self.dictionary:
+        if 'caption' in self.dictionary:
+            if 'link' in self.dictionary:
+                html.append('<a href="{}"><img src="{}" alt="{}" width="100%"/></a>'.format(self.dictionary['link'], self.dictionary['source'], self.dictionary['caption']))
+            else:
                 html.append('<img src="{}" alt="{}" width="100%"/>'.format(self.dictionary['source'], self.dictionary['caption']))
-                html.append('<span name="{}">&nbsp;</span>'.format(self.dictionary['source']))
-                html_caption = pypandoc.convert_text(self.dictionary['caption'], 'html', format='md')
-                html.append('<aside name="{}"><p>{}</p></aside>'.format(self.dictionary['source'], html_caption))
+            html.append('<span name="{}">&nbsp;</span>'.format(self.dictionary['source']))
+            html_caption = pypandoc.convert_text(self.dictionary['caption'], 'html', format='md')
+            html.append('<aside name="{}"><p>{}</p></aside>'.format(self.dictionary['source'], html_caption))
+        else:
+            if 'link' in self.dictionary:
+                html.append('<a href="{}"><img src="{}" width="100%"/></a>'.format(self.dictionary['link'], self.dictionary['source']))
             else:
                 html.append('<img src="{}" width="100%"/>'.format(self.dictionary['source']))
         html.append('</div>')
         return '\n'.join(html)
+
 
 class YAMLButtonChunk(YAMLChunk):
 
@@ -316,11 +320,56 @@ class YAMLButtonChunk(YAMLChunk):
         return '\n'.join(html)
 
 
+class YAMLLinesChunk(YAMLChunk):
+
+    def __init__(self, raw_chunk, dictionary, page_variables):
+        super().__init__(raw_chunk, dictionary, page_variables, required=['lines'])
+
+    def to_html(self):
+        html = []
+        for _ in range(self.dictionary['lines']):
+            html.append('<hr class="lines"/>')
+        return '\n'.join(html)
+
+
 class YAMLDataChunk(YAMLChunk):
 
     def __init__(self, raw_chunk, dictionary, page_variables):
         super().__init__(raw_chunk, dictionary, page_variables, optional=['status'])
 
+
+HINT = []
+HINT.append('</section>')
+HINT.append('<section class="content">')
+HINT.append('<div class="hint_title">{}')
+HINT.append('<button type="button" class="btn btn-dark btn-sm" style="float: right" data-toggle="modal" data-target="#{}Modal">Show</button>')
+HINT.append('</div>')
+HINT.append('<div class="hint" style="-webkit-filter: blur(5px);" id="{}">{}')
+HINT.append('</div>')
+HINT.append('<div class="modal fade" id="{}Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">')
+HINT.append('  <div class="modal-dialog" role="document">')
+HINT.append('    <div class="modal-content">')
+HINT.append('      <div class="modal-header">')
+HINT.append('        <h5 class="modal-title" id="exampleModalLabel">Hint</h5>')
+HINT.append('        <button type="button" class="close" data-dismiss="modal" aria-label="Close">')
+HINT.append('          <span aria-hidden="true">&times;</span>')
+HINT.append('        </button>')
+HINT.append('      </div>')
+HINT.append('      <div class="modal-body">Are you sure you want to see the hint, or try a bit more on your own?</div>')
+HINT.append('      <div class="modal-footer">')
+HINT.append('        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>')
+HINT.append('        <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="document.getElementById(\'{}\').style.cssText = \'\'">Yes, show me!</button>')
+HINT.append('      </div>')
+HINT.append('    </div>')
+HINT.append('  </div>')
+HINT.append('</div>')
+HINT.append('</section>')
+HINT.append('<section class="content">')
+
+HINT = '\n'.join(HINT)
+
+def apply_hint_template(title, body, element_id):
+    return HINT.format(title, element_id, element_id, body, element_id, element_id)
 
 class MarkdownChunk(Chunk):
 
@@ -331,7 +380,6 @@ class MarkdownChunk(Chunk):
         if has_class_tag(super().get_first_line().strip()):
             self.class_tag = super().get_first_line().strip().split(':')[1].lower()
             self.aside = self.class_tag=='aside'
-            print('Found class tag {}'.format(self.class_tag))
             self.content = self.content[len(self.class_tag)+2:].strip()
         else:
             self.class_tag = None
@@ -356,7 +404,14 @@ class MarkdownChunk(Chunk):
             extra_args = ['--highlight-style', 'pygments']
             if self.class_tag:
                 output = pypandoc.convert_text(self.get_content(), 'html', format='md', extra_args=extra_args)
-                output = '<div class="{}">{}</div>'.format(self.class_tag, output)
+                if self.class_tag=='hint':
+                    title = "Hint"
+                    body = output
+                    shake.update(self.content.encode('utf-8'))
+                    element_id = shake.hexdigest(3)
+                    output = apply_hint_template(title, body, element_id)
+                else:   
+                    output = '<div class="{}">{}</div>'.format(self.class_tag, output)
             else:
                 output = pypandoc.convert_text(self.get_content(), 'html', format='md', extra_args=extra_args)
             return output
@@ -400,6 +455,8 @@ def cast(rawchunks):
                         chunks.append(YAMLFigureChunk(raw, dictionary, page_variables))
                     elif yaml_type == 'button':
                         chunks.append(YAMLButtonChunk(raw, dictionary, page_variables))
+                    elif yaml_type == 'lines':
+                        chunks.append(YAMLLinesChunk(raw, dictionary, page_variables))
                     # TODO warn if unknown type
                 else:
                     data_chunk = YAMLDataChunk(raw, dictionary, page_variables)

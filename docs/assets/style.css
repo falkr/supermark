@@ -336,10 +336,59 @@ a.help {
   border-color: #1481b8;
 }
 
+div.hint_title {
+  margin: -32px -32px 32px -32px; 
+  background-color:#f0e9db;
+  color: #868279; 
+  padding: 18px 32px 18px 32px
+}
 
+.steps ol {
+  counter-reset: section;
+  list-style: none;
+  margin-left: 10px
+}
+
+.steps li {
+  margin: 0 0 10px 0;
+  xline-height: 40px;
+  min-height: 40px
+}
+
+.steps li:before {
+  content: counter(section);
+  counter-increment: section;
+  xborder: 2px solid #1481b8;
+  xcolor: white;
+  xbackground-color: #1481b8;
+  border: 2px solid #868279;
+  color: #868279;
+  background-color: none;
+  font-family: "Source Sans Pro", Georgia, serif;
+  font-weight: bold;
+  border-radius: 100%;
+  text-align: center;
+  display: inline-block;
+  top:8px;
+  left:-30px;
+  width: 30px;
+  height: 30px;
+  position: relative;
+  margin-right:-10px;
+  margin-left:-20px;
+  margin-top:-20px;
+  margin-bottom:-20px;
+}
 
 code {
   font-size: 100%
+}
+
+pre.bash {
+    color: lightgrey;
+    background-color: #263238;
+    text-shadow: 0 0 1px white;
+    font-size: 100%
 }
 
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
@@ -371,3 +420,35 @@ code span.st { color: MEDIUMSLATEBLUE; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+
+
+.tree ul, .tree ul ul {
+  list-style: none;
+ } 
+.tree ul ul {
+ }
+ .tree ul li {
+  margin: 0;
+  padding: 0 7px;
+  line-height: 20px; 
+  border-left: 1px solid #868279;
+ }
+ .tree ul li:last-child {
+     border-left:none;
+ }
+ .tree ul li:before {
+    position:relative;
+    top:-0.3em;
+    height:22px;
+    width:12px;
+    color:white;
+    border-bottom:1px solid #868279;
+    content:"";
+    display:inline-block;
+    left:-7px;
+ }
+ .tree ul li:last-child:before {
+    border-left:1px solid #868279;
+    border-radius: 0px 0px 0px 3px   
+ }

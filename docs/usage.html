@@ -60,7 +60,8 @@
 <h1 id="usage">Usage</h1>
 
 <h2 id="default-directory-structure">Default Directory Structure</h2>
-<ul>
+
+<div class="tree"><ul>
 <li>course/
 <ul>
 <li>pages/
@@ -86,11 +87,20 @@
 </ul>
 <h2 id="default-command">Default Command</h2>
 <p>Move into the main folder of your project, and invoke the following command:</p>
+</div>
+<pre><code>supermark</code></pre>
 
-<pre><code>cd course
-supermark</code></pre>
+<p>Supermark will look for *.md files in the <code>pages</code> folder and transform each of them into a html file placed at the toplevel.</p>
 
-<p>Supermark will look for *.md files in the pages folder and transform each of them into a html placed at the toplevel.</p>
+<h2 id="options">Options</h2>
+<ul>
+<li><code>--all</code>, <code>-a</code> — re-generate <em>all</em> files, not only the ones changed. Use this option for example when the template changed.</li>
+<li><code>--verbose</code>, <code>-v</code> — tell more about what the program does.</li>
+<li><code>--draft</code>, <code>-d</code> — also print draft parts of the documents.</li>
+<li><code>--input</code>, <code>-i</code> — input directory containing the *.md files.</li>
+<li><code>--output</code>, <code>-o</code> — output directory.</li>
+<li><code>--template</code>, <code>-t</code> — template file for the transformation.</li>
+</ul>
 
     </section>
 </div>

@@ -12,6 +12,6 @@ Install [Pandoc](https://pandoc.org/installing.html).
 
 ## Install Supermark
 
-```
+```bash
 pip install supermark
 ```
