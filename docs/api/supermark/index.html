@@ -1045,6 +1045,7 @@ table {
   <ul>
     <li class="mono"><a href="#supermark.ENV_PATTERN">ENV_PATTERN</a></li>
     <li class="mono"><a href="#supermark.HINT">HINT</a></li>
+    <li class="mono"><a href="#supermark.HINT2">HINT2</a></li>
     <li class="mono"><a href="#supermark.LOG_VERBOSE">LOG_VERBOSE</a></li>
     <li class="mono"><a href="#supermark.shake">shake</a></li>
   </ul>
@@ -1654,31 +1655,43 @@ table {
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/section&gt;&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;section class=&quot;content&quot;&gt;&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;hint_title&quot;&gt;{}&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;button type=&quot;button&quot; class=&quot;btn btn-dark btn-sm&quot; style=&quot;float: right&quot; data-toggle=&quot;modal&quot; data-target=&quot;#{}Modal&quot;&gt;Show&lt;/button&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;button type=&quot;button&quot; class=&quot;btn btn-dark btn-sm&quot; style=&quot;float: right&quot; onclick=&quot;document.getElementById(</span><span class="se">\&#39;</span><span class="s1">{}</span><span class="se">\&#39;</span><span class="s1">).style.cssText = </span><span class="se">\&#39;\&#39;</span><span class="s1">&quot;&gt;Show&lt;/button&gt;&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;hint&quot; style=&quot;-webkit-filter: blur(5px);&quot; id=&quot;{}&quot;&gt;{}&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;modal fade&quot; id=&quot;{}Modal&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; aria-labelledby=&quot;exampleModalLabel&quot; aria-hidden=&quot;true&quot;&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;  &lt;div class=&quot;modal-dialog&quot; role=&quot;document&quot;&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &lt;div class=&quot;modal-content&quot;&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;div class=&quot;modal-header&quot;&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;h5 class=&quot;modal-title&quot; id=&quot;exampleModalLabel&quot;&gt;Hint&lt;/h5&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;          &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;/button&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;/div&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;div class=&quot;modal-body&quot;&gt;Are you sure you want to see the hint, or try a bit more on your own?&lt;/div&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;div class=&quot;modal-footer&quot;&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-dismiss=&quot;modal&quot; onclick=&quot;document.getElementById(</span><span class="se">\&#39;</span><span class="s1">{}</span><span class="se">\&#39;</span><span class="s1">).style.cssText = </span><span class="se">\&#39;\&#39;</span><span class="s1">&quot;&gt;Yes, show me!&lt;/button&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;/div&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &lt;/div&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;  &lt;/div&gt;&#39;</span><span class="p">)</span>
-<span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/section&gt;&#39;</span><span class="p">)</span>
 <span class="n">HINT</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;section class=&quot;content&quot;&gt;&#39;</span><span class="p">)</span>
-
 <span class="n">HINT</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">HINT</span><span class="p">)</span>
+
+<span class="c1"># the old defunkt hint with a modal dialog</span>
+<span class="n">HINT2</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/section&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;section class=&quot;content&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;hint_title&quot;&gt;{}&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;button type=&quot;button&quot; class=&quot;btn btn-dark btn-sm&quot; style=&quot;float: right&quot; data-toggle=&quot;modal&quot; data-target=&quot;#{}Modal&quot;&gt;Show&lt;/button&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;hint&quot; style=&quot;-webkit-filter: blur(5px);&quot; id=&quot;{}&quot;&gt;{}&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;modal fade&quot; id=&quot;{}Modal&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; aria-labelledby=&quot;exampleModalLabel&quot; aria-hidden=&quot;true&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;  &lt;div class=&quot;modal-dialog&quot; role=&quot;document&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &lt;div class=&quot;modal-content&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;div class=&quot;modal-header&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;h5 class=&quot;modal-title&quot; id=&quot;exampleModalLabel&quot;&gt;Hint&lt;/h5&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;          &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;/button&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;div class=&quot;modal-body&quot;&gt;Are you sure you want to see the hint, or try a bit more on your own?&lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;div class=&quot;modal-footer&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;        &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-dismiss=&quot;modal&quot; onclick=&quot;document.getElementById(</span><span class="se">\&#39;</span><span class="s1">{}</span><span class="se">\&#39;</span><span class="s1">).style.cssText = </span><span class="se">\&#39;\&#39;</span><span class="s1">&quot;&gt;Yes, show me!&lt;/button&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;      &lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;  &lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;/section&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&lt;section class=&quot;content&quot;&gt;&#39;</span><span class="p">)</span>
+<span class="n">HINT2</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">HINT2</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">apply_hint_template</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">element_id</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">HINT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">element_id</span><span class="p">,</span> <span class="n">element_id</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">element_id</span><span class="p">,</span> <span class="n">element_id</span><span class="p">)</span>
@@ -1918,6 +1931,14 @@ table {
       </div>
       <div class="item">
       <p id="supermark.HINT" class="name">var <span class="ident">HINT</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
+      <div class="item">
+      <p id="supermark.HINT2" class="name">var <span class="ident">HINT2</span></p>
       
   
   <div class="source_cont">

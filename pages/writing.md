@@ -6,6 +6,34 @@
 
 The Markdown chunks of the document should follow [Pandoc's Markdown syntax](https://pandoc.org/MANUAL.html#pandocs-markdown).
 
+## Sections
+
+Sections on different levels are written with preceeding `#`, `##`, `###`
+
+```markdown
+# Section Level 1
+```
+
+```markdown
+## Section Level 2
+```
+
+```markdown
+### Section Level 3
+```
+
+## Text Markup
+
+**bold** text __bold__ text.
+*emphasized* text, _emphasized text_
+
+
+
+
+## Lists
+
+
+
 
 # YAML Elements
 
@@ -30,6 +58,36 @@ caption: "The Pale Blue Dot."
 start: 80
 ---
 ```
+
+## Tables
+
+Tables can be included directly as HTML, or via the following YAML section that refers to a table stored in a file.
+The tabek in the file must use the [mediawiki syntax for tables](https://www.mediawiki.org/wiki/Help:Tables), with an example shown below.
+The optional class attribute placed a `<div>` element around the table for styling with the given class.
+
+```yaml
+---
+type: table
+file: tables/table.mw
+class: rubric
+caption: "Table with a caption."
+---
+```
+
+```mediawiki
+{|
+|Orange
+|Apple
+|-
+|Bread
+|Pie
+|-
+|Butter
+|Ice cream 
+|}
+```
+
+
 
 ## Figures
 
@@ -84,6 +142,26 @@ End the goal environment with two empty lines.
 :goals:
 - Learning Goal 1
 - Learning Goal 2
+
+
+## Tips
+
+:tip: A tip is shown in a highlighted box.
+
+
+```
+:tip: A tip is shown in a highlighted box.
+```
+
+
+## Warnings
+
+:warning: Use warnings to prevent harm or damage. Draw attention.
+
+
+```
+:warning: Use warnings to prevent harm or damage. Draw attention.
+```
 
 
 

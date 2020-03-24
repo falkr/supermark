@@ -452,3 +452,31 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     border-left:1px solid #868279;
     border-radius: 0px 0px 0px 3px   
  }
+ 
+div.task p {
+  padding: 10px;
+  background-color: #ffd9ab;
+  border-radius: 5px;
+  border-left: 6px solid #fc8c03 
+}
+
+div.task p::before { 
+  content: "Task: ";
+  font-weight: bold;
+  display: inline;
+}
+
+div.warning p {
+  padding: 10px
+  background-color: #ffd9ab;
+  border-radius: 5px;
+  border-left: 6px solid #fc8c03 
+}
+
+div.warning p::before { 
+  content: '\f071';
+  font-family: 'Font Awesome 5 Free';
+  color: #fc8c03;
+  font-size:14;
+  display: inline;
+}
