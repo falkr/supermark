@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.4" />
-<title>supermark API documentation</title>
+<title>supermark.chunks API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,73 +19,125 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>supermark</code></h1>
+<h1 class="title">Module <code>supermark.chunks</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .parse import RawChunk
-from .chunks import Chunk, YAMLChunk, YAMLDataChunk, MarkdownChunk, HTMLChunk
+<pre><code class="python">import hashlib
+import pypandoc
+import yaml
+from .parse import RawChunk, ParserState
+from .tell import tell
 
-__version__ = &#39;0.2.1&#39;
+shake = hashlib.shake_128()
 
-__all__ = [&#39;RawChunk&#39;, &#39;Chunk&#39;, &#39;YAMLChunk&#39;, &#39;YAMLDataChunk&#39;, &#39;MarkdownChunk&#39;, &#39;HTMLChunk&#39;]</code></pre>
+class Chunk:
+    &#34;&#34;&#34; Base class for a chunk.
+    &#34;&#34;&#34;
+    def __init__(self, raw_chunk, page_variables):
+        self.raw_chunk = raw_chunk
+        self.page_variables = page_variables
+        self.aside = False
+        self.asides = []
+
+    def is_aside(self):
+        return self.aside
+
+    def get_asides(self):
+        return self.asides
+
+    def get_first_line(self):
+        return self.raw_chunk.lines[0]
+
+    def get_type(self):
+        return self.raw_chunk.type
+    
+    def get_start_line_number(self):
+        return self.raw_chunk.start_line_number
+
+    def get_content(self):
+        return &#39;&#39;.join(self.raw_chunk.lines)
+    
+    @staticmethod
+    def create_hash(content):
+        shake.update(content)
+        return shake.hexdigest(3)
+
+
+class YAMLChunk(Chunk):
+
+     def __init__(self, raw_chunk, dictionary, page_variables, required=None, optional=None):
+          super().__init__(raw_chunk, page_variables)
+          self.dictionary = dictionary
+          required = required or []
+          optional = optional or []
+          for key in required:
+               if key not in self.dictionary:
+                    tell(&#34;YAML section misses required parameter &#39;{}&#39;.&#34;.format(key), level=&#39;error&#39;, chunk=raw_chunk)
+          for key in self.dictionary.keys():
+               if (key not in required) and (key not in optional) and (key != &#39;type&#39;):
+                    tell(&#34;YAML section has unknown parameter &#39;{}&#39;.&#34;.format(key), level=&#39;warn&#39;, chunk=raw_chunk)
+                    
+
+class YAMLDataChunk(YAMLChunk):
+
+    def __init__(self, raw_chunk, dictionary, page_variables):
+        super().__init__(raw_chunk, dictionary, page_variables, optional=[&#39;status&#39;])
+
+
+class MarkdownChunk(Chunk):
+
+    def __init__(self, raw_chunk, page_variables):
+        super().__init__(raw_chunk, page_variables)
+        self.content = &#39;&#39;.join(self.raw_chunk.lines)
+        self.is_section = super().get_first_line().startswith(&#39;# &#39;)
+        if raw_chunk.get_tag() is not None:
+            self.class_tag = super().get_first_line().strip().split(&#39;:&#39;)[1].lower()
+            self.aside = self.class_tag==&#39;aside&#39;
+            self.content = self.content[len(self.class_tag)+2:].strip()
+        else:
+            self.class_tag = None
+            self.aside = False
+
+    def get_content(self):
+        return self.content
+        
+    def pandoc_to_html(self):
+        extra_args = [&#39;--ascii&#39;, &#39;--highlight-style&#39;, &#39;pygments&#39;]
+        extra_args = [&#39;--highlight-style&#39;, &#39;pygments&#39;]
+        return pypandoc.convert_text(self.get_content(), &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
+    
+    def to_html(self):
+        if self.aside:
+            shake.update(self.content.encode(&#39;utf-8&#39;))
+            aside_id = shake.hexdigest(3)
+            output = []
+            output.append(&#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id))
+            output.append(self.pandoc_to_html())
+            output.append(&#39;&lt;/aside&gt;&#39;)
+            return &#39;&#39;.join(output)
+        else:
+            if self.class_tag:
+                output = self.pandoc_to_html()
+                output = &#39;&lt;div class=&#34;{}&#34;&gt;{}&lt;/div&gt;&#39;.format(self.class_tag, output)
+            else:
+                output = self.pandoc_to_html()
+            return output
+
+
+class HTMLChunk(Chunk):
+
+    def __init__(self, raw_chunk, page_variables):
+        super().__init__(raw_chunk, page_variables)
+    
+    def to_html(self):
+        return super().get_content()</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="supermark.button" href="button.html">supermark.button</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.chunks" href="chunks.html">supermark.chunks</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.code" href="code.html">supermark.code</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.command" href="command.html">supermark.command</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.core" href="core.html">supermark.core</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.figure" href="figure.html">supermark.figure</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.hint" href="hint.html">supermark.hint</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.lines" href="lines.html">supermark.lines</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.parse" href="parse.html">supermark.parse</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.table" href="table.html">supermark.table</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.tell" href="tell.html">supermark.tell</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="supermark.video" href="video.html">supermark.video</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -94,7 +146,7 @@ __all__ = [&#39;RawChunk&#39;, &#39;Chunk&#39;, &#39;YAMLChunk&#39;, &#39;YAMLDa
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="supermark.Chunk"><code class="flex name class">
+<dt id="supermark.chunks.Chunk"><code class="flex name class">
 <span>class <span class="ident">Chunk</span></span>
 <span>(</span><span>raw_chunk, page_variables)</span>
 </code></dt>
@@ -138,14 +190,14 @@ __all__ = [&#39;RawChunk&#39;, &#39;Chunk&#39;, &#39;YAMLChunk&#39;, &#39;YAMLDa
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="supermark.chunks.HTMLChunk" href="chunks.html#supermark.chunks.HTMLChunk">HTMLChunk</a></li>
-<li><a title="supermark.chunks.MarkdownChunk" href="chunks.html#supermark.chunks.MarkdownChunk">MarkdownChunk</a></li>
-<li><a title="supermark.chunks.YAMLChunk" href="chunks.html#supermark.chunks.YAMLChunk">YAMLChunk</a></li>
+<li><a title="supermark.chunks.HTMLChunk" href="#supermark.chunks.HTMLChunk">HTMLChunk</a></li>
+<li><a title="supermark.chunks.MarkdownChunk" href="#supermark.chunks.MarkdownChunk">MarkdownChunk</a></li>
+<li><a title="supermark.chunks.YAMLChunk" href="#supermark.chunks.YAMLChunk">YAMLChunk</a></li>
 <li><a title="supermark.code.Code" href="code.html#supermark.code.Code">Code</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="supermark.Chunk.create_hash"><code class="name flex">
+<dt id="supermark.chunks.Chunk.create_hash"><code class="name flex">
 <span>def <span class="ident">create_hash</span></span>(<span>content)</span>
 </code></dt>
 <dd>
@@ -163,7 +215,7 @@ def create_hash(content):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="supermark.Chunk.get_asides"><code class="name flex">
+<dt id="supermark.chunks.Chunk.get_asides"><code class="name flex">
 <span>def <span class="ident">get_asides</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -176,7 +228,7 @@ def create_hash(content):
     return self.asides</code></pre>
 </details>
 </dd>
-<dt id="supermark.Chunk.get_content"><code class="name flex">
+<dt id="supermark.chunks.Chunk.get_content"><code class="name flex">
 <span>def <span class="ident">get_content</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -189,7 +241,7 @@ def create_hash(content):
     return &#39;&#39;.join(self.raw_chunk.lines)</code></pre>
 </details>
 </dd>
-<dt id="supermark.Chunk.get_first_line"><code class="name flex">
+<dt id="supermark.chunks.Chunk.get_first_line"><code class="name flex">
 <span>def <span class="ident">get_first_line</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -202,7 +254,7 @@ def create_hash(content):
     return self.raw_chunk.lines[0]</code></pre>
 </details>
 </dd>
-<dt id="supermark.Chunk.get_start_line_number"><code class="name flex">
+<dt id="supermark.chunks.Chunk.get_start_line_number"><code class="name flex">
 <span>def <span class="ident">get_start_line_number</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -215,7 +267,7 @@ def create_hash(content):
     return self.raw_chunk.start_line_number</code></pre>
 </details>
 </dd>
-<dt id="supermark.Chunk.get_type"><code class="name flex">
+<dt id="supermark.chunks.Chunk.get_type"><code class="name flex">
 <span>def <span class="ident">get_type</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -228,7 +280,7 @@ def create_hash(content):
     return self.raw_chunk.type</code></pre>
 </details>
 </dd>
-<dt id="supermark.Chunk.is_aside"><code class="name flex">
+<dt id="supermark.chunks.Chunk.is_aside"><code class="name flex">
 <span>def <span class="ident">is_aside</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -243,7 +295,7 @@ def create_hash(content):
 </dd>
 </dl>
 </dd>
-<dt id="supermark.HTMLChunk"><code class="flex name class">
+<dt id="supermark.chunks.HTMLChunk"><code class="flex name class">
 <span>class <span class="ident">HTMLChunk</span></span>
 <span>(</span><span>raw_chunk, page_variables)</span>
 </code></dt>
@@ -263,11 +315,11 @@ def create_hash(content):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="supermark.chunks.Chunk" href="chunks.html#supermark.chunks.Chunk">Chunk</a></li>
+<li><a title="supermark.chunks.Chunk" href="#supermark.chunks.Chunk">Chunk</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="supermark.HTMLChunk.to_html"><code class="name flex">
+<dt id="supermark.chunks.HTMLChunk.to_html"><code class="name flex">
 <span>def <span class="ident">to_html</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -282,7 +334,7 @@ def create_hash(content):
 </dd>
 </dl>
 </dd>
-<dt id="supermark.MarkdownChunk"><code class="flex name class">
+<dt id="supermark.chunks.MarkdownChunk"><code class="flex name class">
 <span>class <span class="ident">MarkdownChunk</span></span>
 <span>(</span><span>raw_chunk, page_variables)</span>
 </code></dt>
@@ -333,7 +385,7 @@ def create_hash(content):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="supermark.chunks.Chunk" href="chunks.html#supermark.chunks.Chunk">Chunk</a></li>
+<li><a title="supermark.chunks.Chunk" href="#supermark.chunks.Chunk">Chunk</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -341,7 +393,7 @@ def create_hash(content):
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="supermark.MarkdownChunk.get_content"><code class="name flex">
+<dt id="supermark.chunks.MarkdownChunk.get_content"><code class="name flex">
 <span>def <span class="ident">get_content</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -354,7 +406,7 @@ def create_hash(content):
     return self.content</code></pre>
 </details>
 </dd>
-<dt id="supermark.MarkdownChunk.pandoc_to_html"><code class="name flex">
+<dt id="supermark.chunks.MarkdownChunk.pandoc_to_html"><code class="name flex">
 <span>def <span class="ident">pandoc_to_html</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -369,7 +421,7 @@ def create_hash(content):
     return pypandoc.convert_text(self.get_content(), &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)</code></pre>
 </details>
 </dd>
-<dt id="supermark.MarkdownChunk.to_html"><code class="name flex">
+<dt id="supermark.chunks.MarkdownChunk.to_html"><code class="name flex">
 <span>def <span class="ident">to_html</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -398,112 +450,7 @@ def create_hash(content):
 </dd>
 </dl>
 </dd>
-<dt id="supermark.RawChunk"><code class="flex name class">
-<span>class <span class="ident">RawChunk</span></span>
-<span>(</span><span>lines, chunk_type, start_line_number, path)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class RawChunk:
-
-    def __init__(self, lines, chunk_type, start_line_number, path):
-        self.lines = lines
-        self.type = chunk_type
-        self.start_line_number = start_line_number
-        self.path = path
-        # check if we only got empty lines
-        def all_empty(lines):
-            if len(lines) == 0: return True
-            for line in lines:
-                if line.strip(): return False
-            return True
-        self._is_empty = all_empty(self.lines)
-        # remove blank lines from the beginning
-        while (len(self.lines)&gt;0 and is_empty(self.lines[0].strip())):
-            self.lines.pop(0)
-            self.start_line_number = self.start_line_number + 1
-        self.tag = None
-        if len(self.lines) &gt; 0:
-            if has_class_tag(self.lines[0]):
-                self.tag = self.lines[0].strip().split(&#39;:&#39;)[1].lower()
-    
-    def get_tag(self):
-        return self.tag
-    
-    def is_empty(self):
-        return self._is_empty
-
-    def get_type(self):
-        return self.type
-
-    def get_first_line(self):
-        if len(self.lines) == 0:
-            return &#39;empty&#39;
-        return self.lines[0]</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="supermark.RawChunk.get_first_line"><code class="name flex">
-<span>def <span class="ident">get_first_line</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_first_line(self):
-    if len(self.lines) == 0:
-        return &#39;empty&#39;
-    return self.lines[0]</code></pre>
-</details>
-</dd>
-<dt id="supermark.RawChunk.get_tag"><code class="name flex">
-<span>def <span class="ident">get_tag</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_tag(self):
-    return self.tag</code></pre>
-</details>
-</dd>
-<dt id="supermark.RawChunk.get_type"><code class="name flex">
-<span>def <span class="ident">get_type</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_type(self):
-    return self.type</code></pre>
-</details>
-</dd>
-<dt id="supermark.RawChunk.is_empty"><code class="name flex">
-<span>def <span class="ident">is_empty</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_empty(self):
-    return self._is_empty</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="supermark.YAMLChunk"><code class="flex name class">
+<dt id="supermark.chunks.YAMLChunk"><code class="flex name class">
 <span>class <span class="ident">YAMLChunk</span></span>
 <span>(</span><span>raw_chunk, dictionary, page_variables, required=None, optional=None)</span>
 </code></dt>
@@ -529,19 +476,19 @@ def create_hash(content):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="supermark.chunks.Chunk" href="chunks.html#supermark.chunks.Chunk">Chunk</a></li>
+<li><a title="supermark.chunks.Chunk" href="#supermark.chunks.Chunk">Chunk</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="supermark.button.Button" href="button.html#supermark.button.Button">Button</a></li>
-<li><a title="supermark.chunks.YAMLDataChunk" href="chunks.html#supermark.chunks.YAMLDataChunk">YAMLDataChunk</a></li>
+<li><a title="supermark.chunks.YAMLDataChunk" href="#supermark.chunks.YAMLDataChunk">YAMLDataChunk</a></li>
 <li><a title="supermark.figure.Figure" href="figure.html#supermark.figure.Figure">Figure</a></li>
 <li><a title="supermark.lines.Lines" href="lines.html#supermark.lines.Lines">Lines</a></li>
 <li><a title="supermark.table.Table" href="table.html#supermark.table.Table">Table</a></li>
 <li><a title="supermark.video.Video" href="video.html#supermark.video.Video">Video</a></li>
 </ul>
 </dd>
-<dt id="supermark.YAMLDataChunk"><code class="flex name class">
+<dt id="supermark.chunks.YAMLDataChunk"><code class="flex name class">
 <span>class <span class="ident">YAMLDataChunk</span></span>
 <span>(</span><span>raw_chunk, dictionary, page_variables)</span>
 </code></dt>
@@ -558,8 +505,8 @@ def create_hash(content):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="supermark.chunks.YAMLChunk" href="chunks.html#supermark.chunks.YAMLChunk">YAMLChunk</a></li>
-<li><a title="supermark.chunks.Chunk" href="chunks.html#supermark.chunks.Chunk">Chunk</a></li>
+<li><a title="supermark.chunks.YAMLChunk" href="#supermark.chunks.YAMLChunk">YAMLChunk</a></li>
+<li><a title="supermark.chunks.Chunk" href="#supermark.chunks.Chunk">Chunk</a></li>
 </ul>
 </dd>
 </dl>
@@ -571,64 +518,44 @@ def create_hash(content):
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="supermark.button" href="button.html">supermark.button</a></code></li>
-<li><code><a title="supermark.chunks" href="chunks.html">supermark.chunks</a></code></li>
-<li><code><a title="supermark.code" href="code.html">supermark.code</a></code></li>
-<li><code><a title="supermark.command" href="command.html">supermark.command</a></code></li>
-<li><code><a title="supermark.core" href="core.html">supermark.core</a></code></li>
-<li><code><a title="supermark.figure" href="figure.html">supermark.figure</a></code></li>
-<li><code><a title="supermark.hint" href="hint.html">supermark.hint</a></code></li>
-<li><code><a title="supermark.lines" href="lines.html">supermark.lines</a></code></li>
-<li><code><a title="supermark.parse" href="parse.html">supermark.parse</a></code></li>
-<li><code><a title="supermark.table" href="table.html">supermark.table</a></code></li>
-<li><code><a title="supermark.tell" href="tell.html">supermark.tell</a></code></li>
-<li><code><a title="supermark.video" href="video.html">supermark.video</a></code></li>
+<li><code><a title="supermark" href="index.html">supermark</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="supermark.Chunk" href="#supermark.Chunk">Chunk</a></code></h4>
+<h4><code><a title="supermark.chunks.Chunk" href="#supermark.chunks.Chunk">Chunk</a></code></h4>
 <ul class="">
-<li><code><a title="supermark.Chunk.create_hash" href="#supermark.Chunk.create_hash">create_hash</a></code></li>
-<li><code><a title="supermark.Chunk.get_asides" href="#supermark.Chunk.get_asides">get_asides</a></code></li>
-<li><code><a title="supermark.Chunk.get_content" href="#supermark.Chunk.get_content">get_content</a></code></li>
-<li><code><a title="supermark.Chunk.get_first_line" href="#supermark.Chunk.get_first_line">get_first_line</a></code></li>
-<li><code><a title="supermark.Chunk.get_start_line_number" href="#supermark.Chunk.get_start_line_number">get_start_line_number</a></code></li>
-<li><code><a title="supermark.Chunk.get_type" href="#supermark.Chunk.get_type">get_type</a></code></li>
-<li><code><a title="supermark.Chunk.is_aside" href="#supermark.Chunk.is_aside">is_aside</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.create_hash" href="#supermark.chunks.Chunk.create_hash">create_hash</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.get_asides" href="#supermark.chunks.Chunk.get_asides">get_asides</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.get_content" href="#supermark.chunks.Chunk.get_content">get_content</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.get_first_line" href="#supermark.chunks.Chunk.get_first_line">get_first_line</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.get_start_line_number" href="#supermark.chunks.Chunk.get_start_line_number">get_start_line_number</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.get_type" href="#supermark.chunks.Chunk.get_type">get_type</a></code></li>
+<li><code><a title="supermark.chunks.Chunk.is_aside" href="#supermark.chunks.Chunk.is_aside">is_aside</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="supermark.HTMLChunk" href="#supermark.HTMLChunk">HTMLChunk</a></code></h4>
+<h4><code><a title="supermark.chunks.HTMLChunk" href="#supermark.chunks.HTMLChunk">HTMLChunk</a></code></h4>
 <ul class="">
-<li><code><a title="supermark.HTMLChunk.to_html" href="#supermark.HTMLChunk.to_html">to_html</a></code></li>
+<li><code><a title="supermark.chunks.HTMLChunk.to_html" href="#supermark.chunks.HTMLChunk.to_html">to_html</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="supermark.MarkdownChunk" href="#supermark.MarkdownChunk">MarkdownChunk</a></code></h4>
+<h4><code><a title="supermark.chunks.MarkdownChunk" href="#supermark.chunks.MarkdownChunk">MarkdownChunk</a></code></h4>
 <ul class="">
-<li><code><a title="supermark.MarkdownChunk.get_content" href="#supermark.MarkdownChunk.get_content">get_content</a></code></li>
-<li><code><a title="supermark.MarkdownChunk.pandoc_to_html" href="#supermark.MarkdownChunk.pandoc_to_html">pandoc_to_html</a></code></li>
-<li><code><a title="supermark.MarkdownChunk.to_html" href="#supermark.MarkdownChunk.to_html">to_html</a></code></li>
+<li><code><a title="supermark.chunks.MarkdownChunk.get_content" href="#supermark.chunks.MarkdownChunk.get_content">get_content</a></code></li>
+<li><code><a title="supermark.chunks.MarkdownChunk.pandoc_to_html" href="#supermark.chunks.MarkdownChunk.pandoc_to_html">pandoc_to_html</a></code></li>
+<li><code><a title="supermark.chunks.MarkdownChunk.to_html" href="#supermark.chunks.MarkdownChunk.to_html">to_html</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="supermark.RawChunk" href="#supermark.RawChunk">RawChunk</a></code></h4>
-<ul class="">
-<li><code><a title="supermark.RawChunk.get_first_line" href="#supermark.RawChunk.get_first_line">get_first_line</a></code></li>
-<li><code><a title="supermark.RawChunk.get_tag" href="#supermark.RawChunk.get_tag">get_tag</a></code></li>
-<li><code><a title="supermark.RawChunk.get_type" href="#supermark.RawChunk.get_type">get_type</a></code></li>
-<li><code><a title="supermark.RawChunk.is_empty" href="#supermark.RawChunk.is_empty">is_empty</a></code></li>
-</ul>
+<h4><code><a title="supermark.chunks.YAMLChunk" href="#supermark.chunks.YAMLChunk">YAMLChunk</a></code></h4>
 </li>
 <li>
-<h4><code><a title="supermark.YAMLChunk" href="#supermark.YAMLChunk">YAMLChunk</a></code></h4>
-</li>
-<li>
-<h4><code><a title="supermark.YAMLDataChunk" href="#supermark.YAMLDataChunk">YAMLDataChunk</a></code></h4>
+<h4><code><a title="supermark.chunks.YAMLDataChunk" href="#supermark.chunks.YAMLDataChunk">YAMLDataChunk</a></code></h4>
 </li>
 </ul>
 </li>

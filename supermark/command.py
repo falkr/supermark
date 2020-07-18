@@ -1,6 +1,6 @@
 import os
 import click
-from supermark import build
+from .core import build
 
 @click.command()
 @click.option('-a', '--all', is_flag=True, default=False, help="Rebuild all pages, do not regard file timestamps.")
@@ -10,6 +10,7 @@ from supermark import build
 @click.option('-o', '--output', 'output', type=click.Path(exists=True), help='Output directory.')
 @click.option('-t', '--template', 'template', type=click.File('rb'), help='Template file for the transformation.')
 def run(all, verbose, draft, input=None, output=None, template=None):
+    print('1')
     input_path = input or os.path.join(os.getcwd(), 'pages')
     output_path = output or os.getcwd()
     template_path = template or os.path.join(os.getcwd(), 'templates/page.html')

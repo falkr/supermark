@@ -2,7 +2,7 @@ all:
 	@echo "Specify a target."
 
 docs:
-	pdoc --html --overwrite --html-dir ./docs/api ./supermark
+	pdoc3 --html --force --output-dir ./docs/api ./supermark
 	supermark --all --input ./pages --output ./docs
 
 pypi: docs

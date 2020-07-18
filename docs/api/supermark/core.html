@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.4" />
+<title>supermark.core API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>supermark.core</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import os
+import yaml
+import pypandoc
+
+import random
+import string
+import re
+
+
+from .tell import tell
+from .parse import _parse, ParserState
+from .chunks import YAMLDataChunk, MarkdownChunk, HTMLChunk
+from .figure import Figure
+from .button import Button
+from .video import Video
+from .lines import Lines
+from .hint import Hint
+from .code import Code
+from .table import Table
+
+
+def random_id():
+    return &#39;&#39;.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+
+&#34;&#34;&#34;
+   Chunk  |- HTML
+          |- Code
+          |- YamlChunk --- YamlDataChunk
+          |             |- Table
+          |             |- Video
+          |             |- Figure
+          |             |- Lines
+          |             |- Button
+          |             |- Lines
+          |- Markdown
+                |- Hint     
+&#34;&#34;&#34;
+def cast(rawchunks):
+    chunks = []
+    page_variables = {}
+    for raw in rawchunks:
+        chunk_type = raw.get_type()
+        if chunk_type==ParserState.MARKDOWN:
+            if raw.get_tag() == &#39;hint&#39;:
+                chunks.append(Hint(raw, page_variables))
+            else:
+                chunks.append(MarkdownChunk(raw, page_variables))
+        elif chunk_type==ParserState.YAML:
+            dictionary = yaml.safe_load(&#39;&#39;.join(raw.lines))
+            if isinstance(dictionary, dict):
+                if &#39;type&#39; in dictionary:
+                    yaml_type = dictionary[&#39;type&#39;]
+                    if yaml_type == &#39;youtube&#39;:
+                        chunks.append(Video(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;figure&#39;:
+                        chunks.append(Figure(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;button&#39;:
+                        chunks.append(Button(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;lines&#39;:
+                        chunks.append(Lines(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;table&#39;:
+                        chunks.append(Table(raw, dictionary, page_variables))
+                    # TODO warn if unknown type
+                else:
+                    data_chunk = YAMLDataChunk(raw, dictionary, page_variables)
+                    try:
+                        page_variables.update(data_chunk.dictionary)
+                    except ValueError as e:
+                        print(e)
+                    chunks.append(data_chunk)
+            else:
+                tell(&#39;Something is wrong with the YAML section.&#39;, level=&#39;error&#39;, chunk=raw)
+        elif chunk_type==ParserState.HTML:
+            chunks.append(HTMLChunk(raw, page_variables))
+        elif chunk_type==ParserState.CODE:
+            chunks.append(Code(raw, page_variables))
+    return chunks
+
+def arrange_assides(chunks):
+    main_chunks = []
+    current_main_chunk = None
+    for chunk in chunks:
+        if chunk.is_aside():
+            if current_main_chunk is not None:
+                current_main_chunk.asides.append(chunk)
+            else:
+                tell(&#39;Aside chunk cannot be defined as first element.&#39;, level=&#39;warn&#39;)
+                main_chunks.append(chunk)
+        else:
+            main_chunks.append(chunk)
+            current_main_chunk = chunk
+    return main_chunks
+
+def transform_page_to_html(lines, template, filepath, abort_draft):
+    chunks = _parse(lines, filepath)
+    chunks = cast(chunks)
+    chunks = arrange_assides(chunks)
+
+    content = []
+    content.append(&#39;&lt;div class=&#34;page&#34;&gt;&#39;)
+    if len(chunks)==0:
+        pass
+    else:
+        first_chunk = chunks[0]
+        if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
+            content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
+
+    for chunk in chunks:
+        if &#39;status&#39; in chunk.page_variables and abort_draft and chunk.page_variables[&#39;status&#39;] == &#39;draft&#39;:
+            content.append(&#39;&lt;mark&gt;This site is under construction.&lt;/mark&gt;&#39;)
+            break
+        if isinstance(chunk, YAMLDataChunk):
+            pass
+        elif isinstance(chunk, MarkdownChunk):
+            if chunk.is_section:
+                # open a new section
+                content.append(&#39;    &lt;/section&gt;&#39;)
+                content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
+            content.append(chunk.to_html())
+            for aside in chunk.asides:
+                content.append(aside.to_html())
+        else:
+            content.append(chunk.to_html())
+            for aside in chunk.asides:
+                content.append(aside.to_html())
+
+    content.append(&#39;    &lt;/section&gt;&#39;)
+    content.append(&#39;&lt;/div&gt;&#39;)
+    content = &#39;\n&#39;.join(content)
+    parameters = {&#39;content&#39;: content}
+    html = template.format(**parameters)
+    return html
+
+def _create_target(source_file_path, target_file_path, template_file_path, overwrite):
+    if not os.path.isfile(target_file_path):
+        return True
+    if overwrite:
+        return True
+    if not os.path.isfile(template_file_path):
+        return os.path.getmtime(target_file_path) &lt; os.path.getmtime(source_file_path)
+    else:
+        return os.path.getmtime(target_file_path) &lt; os.path.getmtime(source_file_path) or os.path.getmtime(target_file_path) &lt; os.path.getmtime(template_file_path)
+
+def write_file(html, target_file_path):
+    encoding = &#39;utf-8&#39;
+    try:
+        with open(target_file_path, &#34;w&#34;, encoding=encoding) as html_file:
+            html_file.write(html)
+    except UnicodeEncodeError as error:
+        tell(&#39;Encoding error when writing file {}.&#39;.format(target_file_path))
+        character = error.object[error.start:error.end]
+        line = html.count(&#34;\n&#34;,0,error.start)+1
+        tell(&#39;Character {} in line {} cannot be saved with encoding {}.&#39;.format(character, line, encoding))
+        with open(target_file_path, &#34;w&#34;, encoding=encoding, errors=&#39;ignore&#39;) as html_file:
+            html_file.write(html)
+
+def process_file(source_file_path, target_file_path, template, abort_draft):
+     with open(source_file_path, &#39;r&#39;, encoding=&#39;utf-8&#39;) as file:
+          lines = file.readlines()
+          tell(&#39;{}&#39;.format(source_file_path), &#39;info&#39;)
+          html = transform_page_to_html(lines, template, source_file_path, abort_draft)
+          write_file(html, target_file_path)
+
+def default_html_template():
+    html = []
+    html.append(&#39;&lt;head&gt;&lt;title&gt;&lt;/title&gt;&lt;/head&gt;&#39;)
+    html.append(&#39;&lt;body&gt;&#39;)
+    html.append(&#39;{content}&#39;)
+    html.append(&#39;&lt;/body&gt;&#39;)
+    html.append(&#39;&lt;/html&gt;&#39;)
+    return &#39;\n&#39;.join(html)
+
+def load_html_template(template_path):
+    try:
+        with open(template_path, &#39;r&#39;, encoding=&#39;utf-8&#39;, errors=&#34;surrogateescape&#34;) as templatefile:
+            template = templatefile.read()
+            tell(&#39;Loading template {}.&#39;.format(template_path), &#39;info&#39;)
+            return template
+    except FileNotFoundError:
+        tell(&#39;Template file missing. Expected at {}. Using default template.&#39;.format(template_path), &#39;warn&#39;)
+        return default_html_template()
+
+def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True, verbose=False):
+    #global LOG_VERBOSE
+    LOG_VERBOSE = verbose
+    template = load_html_template(template_file)
+    for filename in os.listdir(input_path):
+        source_file_path = os.path.join(input_path, filename)
+        if os.path.isfile(source_file_path) and filename.endswith(&#39;.md&#39;):
+            target_file_name = os.path.splitext(os.path.basename(filename))[0] + &#39;.html&#39;
+            target_file_path = os.path.join(output_path, target_file_name)
+            if _create_target(source_file_path, target_file_path, template_file, rebuild_all_pages):
+                process_file(source_file_path, target_file_path, template, abort_draft)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="supermark.core.arrange_assides"><code class="name flex">
+<span>def <span class="ident">arrange_assides</span></span>(<span>chunks)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def arrange_assides(chunks):
+    main_chunks = []
+    current_main_chunk = None
+    for chunk in chunks:
+        if chunk.is_aside():
+            if current_main_chunk is not None:
+                current_main_chunk.asides.append(chunk)
+            else:
+                tell(&#39;Aside chunk cannot be defined as first element.&#39;, level=&#39;warn&#39;)
+                main_chunks.append(chunk)
+        else:
+            main_chunks.append(chunk)
+            current_main_chunk = chunk
+    return main_chunks</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.build"><code class="name flex">
+<span>def <span class="ident">build</span></span>(<span>input_path, output_path, template_file, rebuild_all_pages=True, abort_draft=True, verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True, verbose=False):
+    #global LOG_VERBOSE
+    LOG_VERBOSE = verbose
+    template = load_html_template(template_file)
+    for filename in os.listdir(input_path):
+        source_file_path = os.path.join(input_path, filename)
+        if os.path.isfile(source_file_path) and filename.endswith(&#39;.md&#39;):
+            target_file_name = os.path.splitext(os.path.basename(filename))[0] + &#39;.html&#39;
+            target_file_path = os.path.join(output_path, target_file_name)
+            if _create_target(source_file_path, target_file_path, template_file, rebuild_all_pages):
+                process_file(source_file_path, target_file_path, template, abort_draft)</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.cast"><code class="name flex">
+<span>def <span class="ident">cast</span></span>(<span>rawchunks)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cast(rawchunks):
+    chunks = []
+    page_variables = {}
+    for raw in rawchunks:
+        chunk_type = raw.get_type()
+        if chunk_type==ParserState.MARKDOWN:
+            if raw.get_tag() == &#39;hint&#39;:
+                chunks.append(Hint(raw, page_variables))
+            else:
+                chunks.append(MarkdownChunk(raw, page_variables))
+        elif chunk_type==ParserState.YAML:
+            dictionary = yaml.safe_load(&#39;&#39;.join(raw.lines))
+            if isinstance(dictionary, dict):
+                if &#39;type&#39; in dictionary:
+                    yaml_type = dictionary[&#39;type&#39;]
+                    if yaml_type == &#39;youtube&#39;:
+                        chunks.append(Video(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;figure&#39;:
+                        chunks.append(Figure(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;button&#39;:
+                        chunks.append(Button(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;lines&#39;:
+                        chunks.append(Lines(raw, dictionary, page_variables))
+                    elif yaml_type == &#39;table&#39;:
+                        chunks.append(Table(raw, dictionary, page_variables))
+                    # TODO warn if unknown type
+                else:
+                    data_chunk = YAMLDataChunk(raw, dictionary, page_variables)
+                    try:
+                        page_variables.update(data_chunk.dictionary)
+                    except ValueError as e:
+                        print(e)
+                    chunks.append(data_chunk)
+            else:
+                tell(&#39;Something is wrong with the YAML section.&#39;, level=&#39;error&#39;, chunk=raw)
+        elif chunk_type==ParserState.HTML:
+            chunks.append(HTMLChunk(raw, page_variables))
+        elif chunk_type==ParserState.CODE:
+            chunks.append(Code(raw, page_variables))
+    return chunks</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.default_html_template"><code class="name flex">
+<span>def <span class="ident">default_html_template</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def default_html_template():
+    html = []
+    html.append(&#39;&lt;head&gt;&lt;title&gt;&lt;/title&gt;&lt;/head&gt;&#39;)
+    html.append(&#39;&lt;body&gt;&#39;)
+    html.append(&#39;{content}&#39;)
+    html.append(&#39;&lt;/body&gt;&#39;)
+    html.append(&#39;&lt;/html&gt;&#39;)
+    return &#39;\n&#39;.join(html)</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.load_html_template"><code class="name flex">
+<span>def <span class="ident">load_html_template</span></span>(<span>template_path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_html_template(template_path):
+    try:
+        with open(template_path, &#39;r&#39;, encoding=&#39;utf-8&#39;, errors=&#34;surrogateescape&#34;) as templatefile:
+            template = templatefile.read()
+            tell(&#39;Loading template {}.&#39;.format(template_path), &#39;info&#39;)
+            return template
+    except FileNotFoundError:
+        tell(&#39;Template file missing. Expected at {}. Using default template.&#39;.format(template_path), &#39;warn&#39;)
+        return default_html_template()</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.process_file"><code class="name flex">
+<span>def <span class="ident">process_file</span></span>(<span>source_file_path, target_file_path, template, abort_draft)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process_file(source_file_path, target_file_path, template, abort_draft):
+     with open(source_file_path, &#39;r&#39;, encoding=&#39;utf-8&#39;) as file:
+          lines = file.readlines()
+          tell(&#39;{}&#39;.format(source_file_path), &#39;info&#39;)
+          html = transform_page_to_html(lines, template, source_file_path, abort_draft)
+          write_file(html, target_file_path)</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.random_id"><code class="name flex">
+<span>def <span class="ident">random_id</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_id():
+    return &#39;&#39;.join(random.choices(string.ascii_uppercase + string.digits, k=5))</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.transform_page_to_html"><code class="name flex">
+<span>def <span class="ident">transform_page_to_html</span></span>(<span>lines, template, filepath, abort_draft)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform_page_to_html(lines, template, filepath, abort_draft):
+    chunks = _parse(lines, filepath)
+    chunks = cast(chunks)
+    chunks = arrange_assides(chunks)
+
+    content = []
+    content.append(&#39;&lt;div class=&#34;page&#34;&gt;&#39;)
+    if len(chunks)==0:
+        pass
+    else:
+        first_chunk = chunks[0]
+        if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
+            content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
+
+    for chunk in chunks:
+        if &#39;status&#39; in chunk.page_variables and abort_draft and chunk.page_variables[&#39;status&#39;] == &#39;draft&#39;:
+            content.append(&#39;&lt;mark&gt;This site is under construction.&lt;/mark&gt;&#39;)
+            break
+        if isinstance(chunk, YAMLDataChunk):
+            pass
+        elif isinstance(chunk, MarkdownChunk):
+            if chunk.is_section:
+                # open a new section
+                content.append(&#39;    &lt;/section&gt;&#39;)
+                content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
+            content.append(chunk.to_html())
+            for aside in chunk.asides:
+                content.append(aside.to_html())
+        else:
+            content.append(chunk.to_html())
+            for aside in chunk.asides:
+                content.append(aside.to_html())
+
+    content.append(&#39;    &lt;/section&gt;&#39;)
+    content.append(&#39;&lt;/div&gt;&#39;)
+    content = &#39;\n&#39;.join(content)
+    parameters = {&#39;content&#39;: content}
+    html = template.format(**parameters)
+    return html</code></pre>
+</details>
+</dd>
+<dt id="supermark.core.write_file"><code class="name flex">
+<span>def <span class="ident">write_file</span></span>(<span>html, target_file_path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_file(html, target_file_path):
+    encoding = &#39;utf-8&#39;
+    try:
+        with open(target_file_path, &#34;w&#34;, encoding=encoding) as html_file:
+            html_file.write(html)
+    except UnicodeEncodeError as error:
+        tell(&#39;Encoding error when writing file {}.&#39;.format(target_file_path))
+        character = error.object[error.start:error.end]
+        line = html.count(&#34;\n&#34;,0,error.start)+1
+        tell(&#39;Character {} in line {} cannot be saved with encoding {}.&#39;.format(character, line, encoding))
+        with open(target_file_path, &#34;w&#34;, encoding=encoding, errors=&#39;ignore&#39;) as html_file:
+            html_file.write(html)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="supermark" href="index.html">supermark</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="supermark.core.arrange_assides" href="#supermark.core.arrange_assides">arrange_assides</a></code></li>
+<li><code><a title="supermark.core.build" href="#supermark.core.build">build</a></code></li>
+<li><code><a title="supermark.core.cast" href="#supermark.core.cast">cast</a></code></li>
+<li><code><a title="supermark.core.default_html_template" href="#supermark.core.default_html_template">default_html_template</a></code></li>
+<li><code><a title="supermark.core.load_html_template" href="#supermark.core.load_html_template">load_html_template</a></code></li>
+<li><code><a title="supermark.core.process_file" href="#supermark.core.process_file">process_file</a></code></li>
+<li><code><a title="supermark.core.random_id" href="#supermark.core.random_id">random_id</a></code></li>
+<li><code><a title="supermark.core.transform_page_to_html" href="#supermark.core.transform_page_to_html">transform_page_to_html</a></code></li>
+<li><code><a title="supermark.core.write_file" href="#supermark.core.write_file">write_file</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+</footer>
+</body>
+</html>

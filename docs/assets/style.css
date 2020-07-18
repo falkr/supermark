@@ -1,14 +1,20 @@
 @import url('https://fonts.googleapis.com/css?family=Merriweather:400,400italic,700,700italic|Source+Code+Pro|Source+Sans+Pro:200,300,400,600,400italic,600italic|Rock+Salt');
 
+  @import url('https://fonts.googleapis.com/css?family=Crimson+Text:400,400i,700,700i');
+
 .page, .content, aside {
 	box-sizing: content-box;
 }
+
+div { outline: 1px dashed blue !important } 
+span { outline: 1px dashed green !important }
 
 body {
   line-height: 24px;
   color: #222;
   font: normal 14px/24px "Merriweather", Georgia, serif;
-  background: #fbfaf8; 
+  background: #f8f9fa;
+  /*font: normal 18px 'Crimson Text', serif;*/
 }
 
 td {
@@ -26,7 +32,7 @@ li p {
 }
 
 .page {
-  background: #fbfaf8;
+  background: white; /*#fbfaf8;*/
   max-width: 640px;
   margin: 0 auto;
   position: relative;
@@ -39,8 +45,9 @@ li p {
   margin-top: 20px;
   border-radius: .25rem;
   padding: 2rem 2rem 1rem;
-  border: 1px solid #e8e8e8;
-  overflow: hidden
+  border: 0.5px solid #e8e8e8;
+  overflow: hidden;
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
 
 p.subtitle {
@@ -282,8 +289,8 @@ a.ntnu-button {
     background: #fff;
     color: #00509e;
     border: 1px solid #00509e;
-    border-color: #00509e !important
-    border-style: solid !important;
+    border-color: #00509e;
+    border-style: solid;
     border-radius: 10rem;
     display: inline-block;
     padding: 5px 15px;
@@ -361,11 +368,12 @@ div.hint_title {
   xborder: 2px solid #1481b8;
   xcolor: white;
   xbackground-color: #1481b8;
-  border: 2px solid #868279;
-  color: #868279;
+  border: 1px solid #1481b8;
+  color: #1481b8;
   background-color: none;
   font-family: "Source Sans Pro", Georgia, serif;
-  font-weight: bold;
+  font-weight: 400;
+  font-size: 16px;
   border-radius: 100%;
   text-align: center;
   display: inline-block;
@@ -467,9 +475,10 @@ div.task p::before {
 }
 
 div.warning p {
-  padding: 10px
+  padding: 10px;
   background-color: #ffd9ab;
   border-radius: 5px;
+  font: normal 14px "Source Sans Pro", Menlo, Consolas, Monaco, monospace;
   border-left: 6px solid #fc8c03 
 }
 

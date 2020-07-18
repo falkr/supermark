@@ -57,14 +57,50 @@
 <div class="page">
     </section>
     <section class="content">
-<h1 id="installation">Installation</h1>
-<h2 id="install-python">Install Python</h2>
-<p>Install <a href="https://www.python.org">Python 3.x</a>. Make sure that you let the installer add the Python command line tools to your path, so that you can later execute the pip command and the other commands that Supermark comes with.</p>
-<h2 id="install-pandoc">Install Pandoc</h2>
-<p>Install <a href="https://pandoc.org/installing.html">Pandoc</a>.</p>
-<h2 id="install-supermark">Install Supermark</h2>
+<h1 id="usage">Usage</h1>
 
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ex">pip</span> install supermark</a></code></pre></div>
+<h2 id="default-directory-structure">Default Directory Structure</h2>
+
+<div class="tree"><ul>
+<li>course/
+<ul>
+<li>pages/
+<ul>
+<li>index.md</li>
+<li>hello.md</li>
+</ul></li>
+<li>templates/
+<ul>
+<li>page.html</li>
+</ul></li>
+<li>assets/
+<ul>
+<li>…</li>
+</ul></li>
+<li>figures/
+<ul>
+<li>…</li>
+</ul></li>
+<li>index.html</li>
+<li>hello.html</li>
+</ul></li>
+</ul>
+<h2 id="default-command">Default Command</h2>
+<p>Move into the main folder of your project, and invoke the following command:</p>
+</div>
+<pre><code>supermark</code></pre>
+
+<p>Supermark will look for *.md files in the <code>pages</code> folder and transform each of them into a html file placed at the toplevel.</p>
+
+<h2 id="options">Options</h2>
+<ul>
+<li><code>--all</code>, <code>-a</code> — re-generate <em>all</em> files, not only the ones changed. Use this option for example when the template changed.</li>
+<li><code>--verbose</code>, <code>-v</code> — tell more about what the program does.</li>
+<li><code>--draft</code>, <code>-d</code> — also print draft parts of the documents.</li>
+<li><code>--input</code>, <code>-i</code> — input directory containing the *.md files.</li>
+<li><code>--output</code>, <code>-o</code> — output directory.</li>
+<li><code>--template</code>, <code>-t</code> — template file for the transformation.</li>
+</ul>
 
     </section>
 </div>
