@@ -1,6 +1,9 @@
 import os
 import click
 from .core import build
+from . import __version__
+
+@click.version_option(version=__version__)
 
 @click.command()
 @click.option('-a', '--all', is_flag=True, default=False, help="Rebuild all pages, do not regard file timestamps.")
