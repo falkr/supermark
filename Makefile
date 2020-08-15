@@ -8,6 +8,9 @@ docs:
 pypi: docs
 	sudo python2 setup.py register sdist upload
 
+dev-code:
+	python3 -m black .
+
 dev-install: docs
 	rm -rf ./dist
 	python3 setup.py sdist
