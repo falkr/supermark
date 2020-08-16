@@ -18,7 +18,6 @@ from .lines import Lines
 from .parse import ParserState, _parse
 from .report import Report, print_reports
 from .table import Table
-from .tell import tell
 from .video import Video
 
 

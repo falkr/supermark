@@ -14,7 +14,6 @@ from .hint import Hint
 from .lines import Lines
 from .parse import ParserState, _parse
 from .table import Table
-from .tell import tell
 from .video import Video
 from .report import Report
 

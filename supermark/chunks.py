@@ -4,7 +4,6 @@ import pypandoc
 import yaml
 
 from .parse import ParserState, RawChunk
-from .tell import tell
 from .report import Report
 
 

@@ -6,7 +6,6 @@ import pypandoc
 
 from .chunks import YAMLChunk
 from .report import Report
-from .tell import tell
 
 
 class Figure(YAMLChunk):

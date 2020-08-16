@@ -5,7 +5,6 @@ import pypandoc
 import wikitextparser as wtp
 
 from .chunks import YAMLChunk
-from .tell import tell
 from .report import Report
 
 
