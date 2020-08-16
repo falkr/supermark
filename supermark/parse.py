@@ -20,12 +20,13 @@ def is_empty(s_line):
 
 
 class RawChunk:
-    def __init__(self, lines, chunk_type, start_line_number, path):
+    def __init__(self, lines, chunk_type, start_line_number, path, report):
         self.lines = lines
         self.type = chunk_type
         self.start_line_number = start_line_number
         self.path = path
         self.parent_path = Path(path).parent.parent
+        self.report = report
         # check if we only got empty lines
         def all_empty(lines):
             if len(lines) == 0:
@@ -98,7 +99,7 @@ def code_stop(s_line):
     return s_line.startswith("```")
 
 
-def _parse(lines, path):
+def _parse(lines, path, report):
     chunks = []
     current_lines = []
     empty_lines = 0
@@ -115,7 +116,11 @@ def _parse(lines, path):
             elif yaml_start(s_line):
                 chunks.append(
                     RawChunk(
-                        current_lines, ParserState.MARKDOWN, start_line_number, path
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
                     )
                 )
                 state = ParserState.YAML
@@ -125,7 +130,11 @@ def _parse(lines, path):
             elif code_start(s_line):
                 chunks.append(
                     RawChunk(
-                        current_lines, ParserState.MARKDOWN, start_line_number, path
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
                     )
                 )
                 state = ParserState.CODE
@@ -135,7 +144,11 @@ def _parse(lines, path):
             elif html_start(s_line, empty_lines):
                 chunks.append(
                     RawChunk(
-                        current_lines, ParserState.MARKDOWN, start_line_number, path
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
                     )
                 )
                 state = ParserState.HTML
@@ -146,7 +159,11 @@ def _parse(lines, path):
             elif markdown_start(s_line, empty_lines):
                 chunks.append(
                     RawChunk(
-                        current_lines, ParserState.MARKDOWN, start_line_number, path
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
                     )
                 )
                 state = ParserState.MARKDOWN
@@ -160,7 +177,7 @@ def _parse(lines, path):
         elif state == ParserState.YAML:
             if yaml_stop(s_line):
                 previous_yaml_chunk = RawChunk(
-                    current_lines, ParserState.YAML, start_line_number, path
+                    current_lines, ParserState.YAML, start_line_number, path, report
                 )
                 chunks.append(previous_yaml_chunk)
                 state = ParserState.AFTER_YAML
@@ -189,7 +206,9 @@ def _parse(lines, path):
             if code_stop(s_line):
                 current_lines.append(line)
                 chunks.append(
-                    RawChunk(current_lines, ParserState.CODE, start_line_number, path)
+                    RawChunk(
+                        current_lines, ParserState.CODE, start_line_number, path, report
+                    )
                 )
                 state = ParserState.MARKDOWN
                 current_lines = []
@@ -202,7 +221,9 @@ def _parse(lines, path):
                 current_lines.append(line)
             elif html_stop(empty_lines):
                 chunks.append(
-                    RawChunk(current_lines, ParserState.HTML, start_line_number, path)
+                    RawChunk(
+                        current_lines, ParserState.HTML, start_line_number, path, report
+                    )
                 )
                 state = ParserState.MARKDOWN
                 current_lines = []
@@ -213,7 +234,7 @@ def _parse(lines, path):
                 current_lines.append(line)
                 empty_lines = 0
     # create last chunk
-    chunks.append(RawChunk(current_lines, state, start_line_number, path))
+    chunks.append(RawChunk(current_lines, state, start_line_number, path, report))
     # remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
     return chunks

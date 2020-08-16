@@ -5,6 +5,7 @@ import cairosvg
 import pypandoc
 
 from .chunks import YAMLChunk
+from .report import Report
 from .tell import tell
 
 
@@ -20,17 +21,18 @@ class Figure(YAMLChunk):
         if dictionary["source"].startswith("http://") or dictionary[
             "source"
         ].startswith("https://"):
-            tell(
-                "Refer to remote figure: {}".format(dictionary["source"]), level="warn"
+            raw_chunk.report.tell(
+                "Refer to remote figure: {}".format(dictionary["source"]),
+                level=Report.WARNING,
             )
         else:
             self.file_path = os.path.join(
                 os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary["source"]
             )
             if not os.path.exists(self.file_path):
-                tell(
+                raw_chunk.report.tell(
                     "Figure file {} does not exist.".format(self.file_path),
-                    level="warn",
+                    level=Report.WARNING,
                 )
 
     def to_html(self):
@@ -84,11 +86,11 @@ class Figure(YAMLChunk):
         figure_file = self.raw_chunk.parent_path / self.dictionary["source"]
         # print(figure_file.suffix)
         if figure_file.suffix == ".gif":
-            tell(
+            self.raw_chunk.report.tell(
                 "Figure file {} in gif format is not compatible with LaTeX.".format(
                     self.file_path
                 ),
-                level="warn",
+                level=Report.WARNING,
             )
             return None
         if figure_file.suffix == ".svg":
@@ -103,7 +105,7 @@ class Figure(YAMLChunk):
         # print('figure_file: {}'.format(figure_file))
         s.append("\\includegraphics[width=\\linewidth]{{{}}}%".format(figure_file))
         if "caption" in self.dictionary:
-            caption = html_caption = pypandoc.convert_text(
+            caption = pypandoc.convert_text(
                 self.dictionary["caption"], "latex", format="md"
             ).strip()
             s.append("\\caption{{{}}}".format(caption))

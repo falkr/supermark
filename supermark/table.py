@@ -6,6 +6,7 @@ import wikitextparser as wtp
 
 from .chunks import YAMLChunk
 from .tell import tell
+from .report import Report
 
 
 class Table(YAMLChunk):
@@ -25,7 +26,10 @@ class Table(YAMLChunk):
                 os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary["file"]
             )
             if not os.path.exists(file_path):
-                tell("Table file {} does not exist.".format(file_path), level="error")
+                raw_chunk.report.tell(
+                    "Table file {} does not exist.".format(file_path),
+                    level=Report.ERROR,
+                )
                 # TODO somehow mark this chunk and do not try to generate HTML or Latex from it
             else:
                 with open(file_path, "r") as myfile:

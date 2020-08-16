@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pypandoc
 import yaml
+from tqdm import tqdm
 
 from .button import Button
 from .chunks import HTMLChunk, MarkdownChunk, YAMLDataChunk
@@ -15,13 +16,14 @@ from .figure import Figure
 from .hint import Hint
 from .lines import Lines
 from .parse import ParserState, _parse
+from .report import Report, print_reports
 from .table import Table
 from .tell import tell
 from .video import Video
 
 
-def transform_page_to_html(lines, template, filepath, abort_draft):
-    chunks = _parse(lines, filepath)
+def transform_page_to_html(lines, template, filepath, abort_draft, report):
+    chunks = _parse(lines, filepath, report)
     chunks = cast(chunks)
     chunks = arrange_assides(chunks)
 
@@ -78,19 +80,23 @@ def _create_target(source_file_path, target_file_path, template_file_path, overw
         ) or os.path.getmtime(target_file_path) < os.path.getmtime(template_file_path)
 
 
-def write_file(html, target_file_path):
+def write_file(html, target_file_path, report):
     encoding = "utf-8"
     try:
         with open(target_file_path, "w", encoding=encoding) as html_file:
             html_file.write(html)
     except UnicodeEncodeError as error:
-        tell("Encoding error when writing file {}.".format(target_file_path))
+        report.tell(
+            "Encoding error when writing file {}.".format(target_file_path),
+            level=Report.ERROR,
+        )
         character = error.object[error.start : error.end]
         line = html.count("\n", 0, error.start) + 1
-        tell(
+        report.tell(
             "Character {} in line {} cannot be saved with encoding {}.".format(
                 character, line, encoding
-            )
+            ),
+            level=Report.ERROR,
         )
         with open(
             target_file_path, "w", encoding=encoding, errors="ignore"
@@ -100,10 +106,14 @@ def write_file(html, target_file_path):
 
 def process_file(source_file_path, target_file_path, template, abort_draft):
     with open(source_file_path, "r", encoding="utf-8") as file:
+        report = Report(source_file_path)
         lines = file.readlines()
-        tell("{}".format(source_file_path), "info")
-        html = transform_page_to_html(lines, template, source_file_path, abort_draft)
-        write_file(html, target_file_path)
+        report.tell("{}".format(source_file_path), Report.INFO)
+        html = transform_page_to_html(
+            lines, template, source_file_path, abort_draft, report
+        )
+        write_file(html, target_file_path, report)
+        return report
 
 
 def default_html_template():
@@ -116,20 +126,20 @@ def default_html_template():
     return "\n".join(html)
 
 
-def load_html_template(template_path):
+def load_html_template(template_path, report):
     try:
         with open(
             template_path, "r", encoding="utf-8", errors="surrogateescape"
         ) as templatefile:
             template = templatefile.read()
-            tell("Loading template {}.".format(template_path), "info")
+            report.tell("Loading template {}.".format(template_path), Report.INFO)
             return template
     except FileNotFoundError:
-        tell(
+        report.tell(
             "Template file missing. Expected at {}. Using default template.".format(
                 template_path
             ),
-            "warn",
+            Report.WARNING,
         )
         return default_html_template()
 
@@ -142,9 +152,9 @@ def build_html(
     abort_draft=True,
     verbose=False,
 ):
-    # global LOG_VERBOSE
-    LOG_VERBOSE = verbose
-    template = load_html_template(template_file)
+    reports = []
+    report = Report(None)
+    template = load_html_template(template_file, report)
     jobs = []
     for filename in os.listdir(input_path):
         source_file_path = os.path.join(input_path, filename)
@@ -163,11 +173,18 @@ def build_html(
                     }
                 )
     with ThreadPoolExecutor() as e:
-        for job in jobs:
-            e.submit(
-                process_file,
-                job["source_file_path"],
-                job["target_file_path"],
-                job["template"],
-                job["abort_draft"],
-            )
+        with tqdm(total=len(jobs)) as progress:
+            futures = []
+            for job in jobs:
+                future = e.submit(
+                    process_file,
+                    job["source_file_path"],
+                    job["target_file_path"],
+                    job["template"],
+                    job["abort_draft"],
+                )
+                future.add_done_callback(lambda p: progress.update())
+                futures.append(future)
+            for future in futures:
+                reports.append(future.result())
+    print_reports(reports)

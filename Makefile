@@ -8,7 +8,8 @@ docs:
 pypi: docs
 	sudo python2 setup.py register sdist upload
 
-dev-code:
+code:
+	python3 -m isort .
 	python3 -m black .
 
 dev-install: docs
@@ -28,5 +29,9 @@ push:
 	git push origin master
 	git push github master
 
-runtests:
-	python -m unittest tests/test_teampy.py
+test:
+	python3 -m pytest tests/test_sites.py
+
+coverage:
+	coverage run -m pytest tests/test_sites.py
+	coverage html -d coverage_html

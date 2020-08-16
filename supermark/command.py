@@ -56,12 +56,7 @@ def run(all, verbose, draft, input=None, output=None, template=None):
     template_path = template or os.path.join(os.getcwd(), "templates/page.html")
     if format == "pdf":
         build_latex(
-            input_path,
-            output_path,
-            template_path,
-            rebuild_all_pages=all,
-            abort_draft=not draft,
-            verbose=verbose,
+            input_path, output_path,
         )
     else:
         build_html(

@@ -16,6 +16,7 @@ from .parse import ParserState, _parse
 from .table import Table
 from .tell import tell
 from .video import Video
+from .report import Report
 
 
 def random_id():
@@ -71,9 +72,9 @@ def cast(rawchunks):
                         print(e)
                     chunks.append(data_chunk)
             else:
-                tell(
+                raw.report.tell(
                     "Something is wrong with the YAML section.",
-                    level="error",
+                    level=Report.ERROR,
                     chunk=raw,
                 )
         elif chunk_type == ParserState.HTML:
@@ -91,7 +92,10 @@ def arrange_assides(chunks):
             if current_main_chunk is not None:
                 current_main_chunk.asides.append(chunk)
             else:
-                tell("Aside chunk cannot be defined as first element.", level="warn")
+                chunk.raw_chunk.report.tell(
+                    "Aside chunk cannot be defined as first element.",
+                    level=Report.WARNING,
+                )
                 main_chunks.append(chunk)
         else:
             main_chunks.append(chunk)

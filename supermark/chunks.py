@@ -5,6 +5,7 @@ import yaml
 
 from .parse import ParserState, RawChunk
 from .tell import tell
+from .report import Report
 
 
 class Chunk:
@@ -64,16 +65,16 @@ class YAMLChunk(Chunk):
         optional = optional or []
         for key in required:
             if key not in self.dictionary:
-                tell(
+                raw_chunk.report.tell(
                     "YAML section misses required parameter '{}'.".format(key),
-                    level="error",
+                    level=Report.ERROR,
                     chunk=raw_chunk,
                 )
         for key in self.dictionary.keys():
             if (key not in required) and (key not in optional) and (key != "type"):
-                tell(
+                raw_chunk.report.tell(
                     "YAML section has unknown parameter '{}'.".format(key),
-                    level="warn",
+                    level=Report.WARNING,
                     chunk=raw_chunk,
                 )
 
@@ -137,7 +138,7 @@ class MarkdownChunk(Chunk):
         return (
             "\\begin{tcolorbox}[colback=red!5!white,colframe=red!75!black,arc=0pt,outer arc=0pt,leftrule=2pt,rightrule=0pt,toprule=0pt,bottomrule=0pt]"
             + content
-            + "\end{tcolorbox}"
+            + r"\end{tcolorbox}"
         )
 
     def bold_prefix(self, prefix):
