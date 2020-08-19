@@ -27,37 +27,119 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import os
+from pathlib import Path
+
+import cairosvg
 import pypandoc
+
 from .chunks import YAMLChunk
-from .tell import tell
+from .report import Report
+
 
 class Figure(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;source&#39;], optional=[&#39;caption&#39;, &#39;link&#39;])
-        file_path = os.path.join(os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#39;source&#39;])
-        if file_path.startswith(&#39;http://&#39;) or file_path.startswith(&#39;https://&#39;):
-            if not os.path.exists(file_path):
-                tell(&#39;Figure file {} does not exist.&#39;.format(file_path), level=&#39;warn&#39;)
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[&#34;source&#34;],
+            optional=[&#34;caption&#34;, &#34;link&#34;],
+        )
+        if dictionary[&#34;source&#34;].startswith(&#34;http://&#34;) or dictionary[
+            &#34;source&#34;
+        ].startswith(&#34;https://&#34;):
+            raw_chunk.report.tell(
+                &#34;Refer to remote figure: {}&#34;.format(dictionary[&#34;source&#34;]),
+                level=Report.WARNING,
+            )
+        else:
+            self.file_path = os.path.join(
+                os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#34;source&#34;]
+            )
+            if not os.path.exists(self.file_path):
+                raw_chunk.report.tell(
+                    &#34;Figure file {} does not exist.&#34;.format(self.file_path),
+                    level=Report.WARNING,
+                )
 
     def to_html(self):
         html = []
         html.append(&#39;&lt;div class=&#34;figure&#34;&gt;&#39;)
-        if &#39;caption&#39; in self.dictionary:
-            if &#39;link&#39; in self.dictionary:
-                html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(self.dictionary[&#39;link&#39;], self.dictionary[&#39;source&#39;], self.dictionary[&#39;caption&#39;]))
+        if &#34;caption&#34; in self.dictionary:
+            if &#34;link&#34; in self.dictionary:
+                html.append(
+                    &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(
+                        self.dictionary[&#34;link&#34;],
+                        self.dictionary[&#34;source&#34;],
+                        self.dictionary[&#34;caption&#34;],
+                    )
+                )
             else:
-                html.append(&#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#39;source&#39;], self.dictionary[&#39;caption&#39;]))
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;source&#39;]))
-            html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-            html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;source&#39;], html_caption))
+                html.append(
+                    &#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(
+                        self.dictionary[&#34;source&#34;], self.dictionary[&#34;caption&#34;]
+                    )
+                )
+            html.append(
+                &#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;source&#34;])
+            )
+            html_caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+            )
+            html.append(
+                &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                    self.dictionary[&#34;source&#34;], html_caption
+                )
+            )
         else:
-            if &#39;link&#39; in self.dictionary:
-                html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(self.dictionary[&#39;link&#39;], self.dictionary[&#39;source&#39;]))
+            if &#34;link&#34; in self.dictionary:
+                html.append(
+                    &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(
+                        self.dictionary[&#34;link&#34;], self.dictionary[&#34;source&#34;]
+                    )
+                )
             else:
-                html.append(&#39;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#39;source&#39;]))
-        html.append(&#39;&lt;/div&gt;&#39;)
-        return &#39;\n&#39;.join(html)</code></pre>
+                html.append(
+                    &#39;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#34;source&#34;])
+                )
+        html.append(&#34;&lt;/div&gt;&#34;)
+        return &#34;\n&#34;.join(html)
+
+    def to_latex(self, builder):
+        s = []
+        s.append(&#34;\\begin{figure}[htbp]&#34;)
+        # s.append(&#39;\\begin{center}&#39;)
+        # file = &#39;../&#39; + self.dictionary[&#39;source&#39;]
+        figure_file = self.raw_chunk.parent_path / self.dictionary[&#34;source&#34;]
+        # print(figure_file.suffix)
+        if figure_file.suffix == &#34;.gif&#34;:
+            self.raw_chunk.report.tell(
+                &#34;Figure file {} in gif format is not compatible with LaTeX.&#34;.format(
+                    self.file_path
+                ),
+                level=Report.WARNING,
+            )
+            return None
+        if figure_file.suffix == &#34;.svg&#34;:
+            # file = Path(file)
+            target_path = self.get_dir_cached() / &#34;{}.pdf&#34;.format(figure_file.stem)
+            if not target_path.exists():
+                # file = self.raw_chunk.parent_path / self.dictionary[&#39;source&#39;]
+                cairosvg.svg2pdf(url=str(figure_file), write_to=str(target_path))
+            # s.append(&#39;\\includegraphics[width=\\linewidth]{{{}}}%&#39;.format(target_path))
+            figure_file = target_path
+        figure_file = figure_file.relative_to(builder.output_file.parent)
+        # print(&#39;figure_file: {}&#39;.format(figure_file))
+        s.append(&#34;\\includegraphics[width=\\linewidth]{{{}}}%&#34;.format(figure_file))
+        if &#34;caption&#34; in self.dictionary:
+            caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+            ).strip()
+            s.append(&#34;\\caption{{{}}}&#34;.format(caption))
+        s.append(&#34;\\label{default}&#34;)
+        # s.append(&#39;\\end{center}&#39;)
+        s.append(&#34;\\end{figure}&#34;)
+        return &#34;\n&#34;.join(s)</code></pre>
 </details>
 </section>
 <section>
@@ -80,32 +162,109 @@ class Figure(YAMLChunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Figure(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;source&#39;], optional=[&#39;caption&#39;, &#39;link&#39;])
-        file_path = os.path.join(os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#39;source&#39;])
-        if file_path.startswith(&#39;http://&#39;) or file_path.startswith(&#39;https://&#39;):
-            if not os.path.exists(file_path):
-                tell(&#39;Figure file {} does not exist.&#39;.format(file_path), level=&#39;warn&#39;)
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[&#34;source&#34;],
+            optional=[&#34;caption&#34;, &#34;link&#34;],
+        )
+        if dictionary[&#34;source&#34;].startswith(&#34;http://&#34;) or dictionary[
+            &#34;source&#34;
+        ].startswith(&#34;https://&#34;):
+            raw_chunk.report.tell(
+                &#34;Refer to remote figure: {}&#34;.format(dictionary[&#34;source&#34;]),
+                level=Report.WARNING,
+            )
+        else:
+            self.file_path = os.path.join(
+                os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#34;source&#34;]
+            )
+            if not os.path.exists(self.file_path):
+                raw_chunk.report.tell(
+                    &#34;Figure file {} does not exist.&#34;.format(self.file_path),
+                    level=Report.WARNING,
+                )
 
     def to_html(self):
         html = []
         html.append(&#39;&lt;div class=&#34;figure&#34;&gt;&#39;)
-        if &#39;caption&#39; in self.dictionary:
-            if &#39;link&#39; in self.dictionary:
-                html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(self.dictionary[&#39;link&#39;], self.dictionary[&#39;source&#39;], self.dictionary[&#39;caption&#39;]))
+        if &#34;caption&#34; in self.dictionary:
+            if &#34;link&#34; in self.dictionary:
+                html.append(
+                    &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(
+                        self.dictionary[&#34;link&#34;],
+                        self.dictionary[&#34;source&#34;],
+                        self.dictionary[&#34;caption&#34;],
+                    )
+                )
             else:
-                html.append(&#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#39;source&#39;], self.dictionary[&#39;caption&#39;]))
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;source&#39;]))
-            html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-            html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;source&#39;], html_caption))
+                html.append(
+                    &#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(
+                        self.dictionary[&#34;source&#34;], self.dictionary[&#34;caption&#34;]
+                    )
+                )
+            html.append(
+                &#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;source&#34;])
+            )
+            html_caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+            )
+            html.append(
+                &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                    self.dictionary[&#34;source&#34;], html_caption
+                )
+            )
         else:
-            if &#39;link&#39; in self.dictionary:
-                html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(self.dictionary[&#39;link&#39;], self.dictionary[&#39;source&#39;]))
+            if &#34;link&#34; in self.dictionary:
+                html.append(
+                    &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(
+                        self.dictionary[&#34;link&#34;], self.dictionary[&#34;source&#34;]
+                    )
+                )
             else:
-                html.append(&#39;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#39;source&#39;]))
-        html.append(&#39;&lt;/div&gt;&#39;)
-        return &#39;\n&#39;.join(html)</code></pre>
+                html.append(
+                    &#39;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#34;source&#34;])
+                )
+        html.append(&#34;&lt;/div&gt;&#34;)
+        return &#34;\n&#34;.join(html)
+
+    def to_latex(self, builder):
+        s = []
+        s.append(&#34;\\begin{figure}[htbp]&#34;)
+        # s.append(&#39;\\begin{center}&#39;)
+        # file = &#39;../&#39; + self.dictionary[&#39;source&#39;]
+        figure_file = self.raw_chunk.parent_path / self.dictionary[&#34;source&#34;]
+        # print(figure_file.suffix)
+        if figure_file.suffix == &#34;.gif&#34;:
+            self.raw_chunk.report.tell(
+                &#34;Figure file {} in gif format is not compatible with LaTeX.&#34;.format(
+                    self.file_path
+                ),
+                level=Report.WARNING,
+            )
+            return None
+        if figure_file.suffix == &#34;.svg&#34;:
+            # file = Path(file)
+            target_path = self.get_dir_cached() / &#34;{}.pdf&#34;.format(figure_file.stem)
+            if not target_path.exists():
+                # file = self.raw_chunk.parent_path / self.dictionary[&#39;source&#39;]
+                cairosvg.svg2pdf(url=str(figure_file), write_to=str(target_path))
+            # s.append(&#39;\\includegraphics[width=\\linewidth]{{{}}}%&#39;.format(target_path))
+            figure_file = target_path
+        figure_file = figure_file.relative_to(builder.output_file.parent)
+        # print(&#39;figure_file: {}&#39;.format(figure_file))
+        s.append(&#34;\\includegraphics[width=\\linewidth]{{{}}}%&#34;.format(figure_file))
+        if &#34;caption&#34; in self.dictionary:
+            caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+            ).strip()
+            s.append(&#34;\\caption{{{}}}&#34;.format(caption))
+        s.append(&#34;\\label{default}&#34;)
+        # s.append(&#39;\\end{center}&#39;)
+        s.append(&#34;\\end{figure}&#34;)
+        return &#34;\n&#34;.join(s)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -126,21 +285,91 @@ class Figure(YAMLChunk):
 <pre><code class="python">def to_html(self):
     html = []
     html.append(&#39;&lt;div class=&#34;figure&#34;&gt;&#39;)
-    if &#39;caption&#39; in self.dictionary:
-        if &#39;link&#39; in self.dictionary:
-            html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(self.dictionary[&#39;link&#39;], self.dictionary[&#39;source&#39;], self.dictionary[&#39;caption&#39;]))
+    if &#34;caption&#34; in self.dictionary:
+        if &#34;link&#34; in self.dictionary:
+            html.append(
+                &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(
+                    self.dictionary[&#34;link&#34;],
+                    self.dictionary[&#34;source&#34;],
+                    self.dictionary[&#34;caption&#34;],
+                )
+            )
         else:
-            html.append(&#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#39;source&#39;], self.dictionary[&#39;caption&#39;]))
-        html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;source&#39;]))
-        html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-        html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;source&#39;], html_caption))
+            html.append(
+                &#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(
+                    self.dictionary[&#34;source&#34;], self.dictionary[&#34;caption&#34;]
+                )
+            )
+        html.append(
+            &#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;source&#34;])
+        )
+        html_caption = pypandoc.convert_text(
+            self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+        )
+        html.append(
+            &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                self.dictionary[&#34;source&#34;], html_caption
+            )
+        )
     else:
-        if &#39;link&#39; in self.dictionary:
-            html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(self.dictionary[&#39;link&#39;], self.dictionary[&#39;source&#39;]))
+        if &#34;link&#34; in self.dictionary:
+            html.append(
+                &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&lt;/a&gt;&#39;.format(
+                    self.dictionary[&#34;link&#34;], self.dictionary[&#34;source&#34;]
+                )
+            )
         else:
-            html.append(&#39;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#39;source&#39;]))
-    html.append(&#39;&lt;/div&gt;&#39;)
-    return &#39;\n&#39;.join(html)</code></pre>
+            html.append(
+                &#39;&lt;img src=&#34;{}&#34; width=&#34;100%&#34;/&gt;&#39;.format(self.dictionary[&#34;source&#34;])
+            )
+    html.append(&#34;&lt;/div&gt;&#34;)
+    return &#34;\n&#34;.join(html)</code></pre>
+</details>
+</dd>
+<dt id="supermark.figure.Figure.to_latex"><code class="name flex">
+<span>def <span class="ident">to_latex</span></span>(<span>self, builder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_latex(self, builder):
+    s = []
+    s.append(&#34;\\begin{figure}[htbp]&#34;)
+    # s.append(&#39;\\begin{center}&#39;)
+    # file = &#39;../&#39; + self.dictionary[&#39;source&#39;]
+    figure_file = self.raw_chunk.parent_path / self.dictionary[&#34;source&#34;]
+    # print(figure_file.suffix)
+    if figure_file.suffix == &#34;.gif&#34;:
+        self.raw_chunk.report.tell(
+            &#34;Figure file {} in gif format is not compatible with LaTeX.&#34;.format(
+                self.file_path
+            ),
+            level=Report.WARNING,
+        )
+        return None
+    if figure_file.suffix == &#34;.svg&#34;:
+        # file = Path(file)
+        target_path = self.get_dir_cached() / &#34;{}.pdf&#34;.format(figure_file.stem)
+        if not target_path.exists():
+            # file = self.raw_chunk.parent_path / self.dictionary[&#39;source&#39;]
+            cairosvg.svg2pdf(url=str(figure_file), write_to=str(target_path))
+        # s.append(&#39;\\includegraphics[width=\\linewidth]{{{}}}%&#39;.format(target_path))
+        figure_file = target_path
+    figure_file = figure_file.relative_to(builder.output_file.parent)
+    # print(&#39;figure_file: {}&#39;.format(figure_file))
+    s.append(&#34;\\includegraphics[width=\\linewidth]{{{}}}%&#34;.format(figure_file))
+    if &#34;caption&#34; in self.dictionary:
+        caption = pypandoc.convert_text(
+            self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+        ).strip()
+        s.append(&#34;\\caption{{{}}}&#34;.format(caption))
+    s.append(&#34;\\label{default}&#34;)
+    # s.append(&#39;\\end{center}&#39;)
+    s.append(&#34;\\end{figure}&#34;)
+    return &#34;\n&#34;.join(s)</code></pre>
 </details>
 </dd>
 </dl>
@@ -165,6 +394,7 @@ class Figure(YAMLChunk):
 <h4><code><a title="supermark.figure.Figure" href="#supermark.figure.Figure">Figure</a></code></h4>
 <ul class="">
 <li><code><a title="supermark.figure.Figure.to_html" href="#supermark.figure.Figure.to_html">to_html</a></code></li>
+<li><code><a title="supermark.figure.Figure.to_latex" href="#supermark.figure.Figure.to_latex">to_latex</a></code></li>
 </ul>
 </li>
 </ul>

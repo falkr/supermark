@@ -194,13 +194,19 @@ def _parse(lines, path, report):
             else:
                 current_lines.append(line)
                 state = ParserState.AFTER_YAML_CONTENT
+                empty_lines = 0
         elif state == ParserState.AFTER_YAML_CONTENT:
             if is_empty(s_line):
-                previous_yaml_chunk.post_yaml = current_lines
-                state = ParserState.MARKDOWN
-                current_lines = []
+                empty_lines = empty_lines + 1
+                if empty_lines > 1:
+                    previous_yaml_chunk.post_yaml = current_lines
+                    state = ParserState.MARKDOWN
+                    current_lines = []
+                else:
+                    current_lines.append(line)
                 start_line_number = line_number + 1
             else:
+                empty_lines = 0
                 current_lines.append(line)
         elif state == ParserState.CODE:
             if code_stop(s_line):

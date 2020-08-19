@@ -26,41 +26,114 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .chunks import YAMLChunk
+<pre><code class="python">from pathlib import Path
+
 import pypandoc
+import requests
+
+from .chunks import YAMLChunk
+
+
+def download_preview(url, target_path):
+    if not target_path.exists():
+        data = requests.get(url).content
+        with open(target_path, &#34;wb&#34;) as handler:
+            handler.write(data)
+
 
 class Video(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;video&#39;], optional=[&#39;start&#39;, &#39;caption&#39;, &#39;position&#39;])
-    
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[&#34;video&#34;],
+            optional=[&#34;start&#34;, &#34;caption&#34;, &#34;position&#34;],
+        )
+
+    def get_id(self):
+        video = self.dictionary[&#34;video&#34;]
+        return super().create_hash(&#34;{}&#34;.format(video))
+
     def to_html(self):
         html = []
-        video = self.dictionary[&#39;video&#39;]
-        url = &#39;https://youtu.be/{}&#39;.format(video)
-        start = &#39;&#39;
-        if &#39;start&#39; in self.dictionary:
-            start = &#39;?start={}&#39;.format(self.dictionary[&#39;start&#39;])
+        video = self.dictionary[&#34;video&#34;]
+        url = &#34;https://youtube-nocookie.com/{}&#34;.format(video)
+        #url = &#34;https://youtu.be/{}&#34;.format(video)
+        start = &#34;&#34;
+        if &#34;start&#34; in self.dictionary:
+            start = &#34;?start={}&#34;.format(self.dictionary[&#34;start&#34;])
             url = url + start
-        if &#39;position&#39; in self.dictionary and self.dictionary[&#39;position&#39;]==&#39;aside&#39;:
-            aside_id = super().create_hash(&#39;{}&#39;.format(video).encode(&#39;utf-8&#39;))
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id))
-            html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img width=&#34;{}&#34; src=&#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;&gt;&lt;/img&gt;&lt;/a&gt;&#39;.format(url, 240, video))
-            if &#39;caption&#39; in self.dictionary:
-                html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
+        if &#34;position&#34; in self.dictionary and self.dictionary[&#34;position&#34;] == &#34;aside&#34;:
+            aside_id = self.get_id()
+            html.append(
+                &#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id)
+            )
+            html.append(
+                &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img width=&#34;{}&#34; src=&#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;&gt;&lt;/img&gt;&lt;/a&gt;&#39;.format(
+                    url, 240, video
+                )
+            )
+            if &#34;caption&#34; in self.dictionary:
+                html_caption = pypandoc.convert_text(
+                    self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+                )
                 html.append(html_caption)
-            html.append(&#39;&lt;/aside&gt;&#39;)
+            html.append(&#34;&lt;/aside&gt;&#34;)
         else:
             html.append(&#39;&lt;div class=&#34;figure&#34;&gt;&#39;)
             width = 560
             height = 315
-            html.append(&#39;&lt;iframe width=&#34;{}&#34; height=&#34;{}&#34; src=&#34;https://www.youtube.com/embed/{}{}&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;&lt;/iframe&gt;&#39;.format(width, height, video, start))
-            if &#39;caption&#39; in self.dictionary:
-                html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;video&#39;]))
-                html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-                html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;video&#39;], html_caption))
-            html.append(&#39;&lt;/div&gt;&#39;)
-        return &#39;\n&#39;.join(html)</code></pre>
+            html.append(
+                &#39;&lt;iframe width=&#34;{}&#34; height=&#34;{}&#34; src=&#34;https://www.youtube-nocookie.com/embed/{}{}&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;&lt;/iframe&gt;&#39;.format(
+                    width, height, video, start
+                )
+            )
+            if &#34;caption&#34; in self.dictionary:
+                html.append(
+                    &#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;video&#34;])
+                )
+                html_caption = pypandoc.convert_text(
+                    self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+                )
+                html.append(
+                    &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                        self.dictionary[&#34;video&#34;], html_caption
+                    )
+                )
+            html.append(&#34;&lt;/div&gt;&#34;)
+        return &#34;\n&#34;.join(html)
+
+    def to_latex(self, builder):
+        s = []
+        url = &#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;.format(
+            self.dictionary[&#34;video&#34;]
+        )
+        video_url = &#34;https://youtu.be/{}&#34;.format(self.dictionary[&#34;video&#34;])
+        video_id = self.get_id()
+        target_path = self.get_dir_cached() / &#34;{}.jpg&#34;.format(video_id)
+        download_preview(url, target_path)
+        # target_path =  Path(&#39;../cached/{}.jpg&#39;.format(video_id))
+        target_path = target_path.relative_to(builder.output_file.parent)
+        s.append(&#34;\n&#34;)
+        s.append(&#34;\\begin{video}[h]&#34;)
+        s.append(&#34;\includegraphics[width=\linewidth]{{{}}}&#34;.format(target_path))
+        if &#34;caption&#34; in self.dictionary:
+            caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+            )
+            s.append(
+                &#34;\caption{&#34;
+                + caption.strip()
+                + &#34; \\textcolor{SteelBlue}{\\faArrowCircleRight}~&#34;
+                + &#34;\\url{{{}}}&#34;.format(video_url)
+                + &#34;}&#34;
+            )
+        else:
+            s.append(&#34;\caption{&#34;)
+            s.append(&#34;\\url{{{}}}&#34;.format(video_url) + &#34;}&#34;)
+        s.append(&#34;\end{video}&#34;)
+        return &#34;\n&#34;.join(s)</code></pre>
 </details>
 </section>
 <section>
@@ -68,6 +141,25 @@ class Video(YAMLChunk):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="supermark.video.download_preview"><code class="name flex">
+<span>def <span class="ident">download_preview</span></span>(<span>url, target_path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def download_preview(url, target_path):
+    if not target_path.exists():
+        data = requests.get(url).content
+        with open(target_path, &#34;wb&#34;) as handler:
+            handler.write(data)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -83,37 +175,98 @@ class Video(YAMLChunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Video(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;video&#39;], optional=[&#39;start&#39;, &#39;caption&#39;, &#39;position&#39;])
-    
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[&#34;video&#34;],
+            optional=[&#34;start&#34;, &#34;caption&#34;, &#34;position&#34;],
+        )
+
+    def get_id(self):
+        video = self.dictionary[&#34;video&#34;]
+        return super().create_hash(&#34;{}&#34;.format(video))
+
     def to_html(self):
         html = []
-        video = self.dictionary[&#39;video&#39;]
-        url = &#39;https://youtu.be/{}&#39;.format(video)
-        start = &#39;&#39;
-        if &#39;start&#39; in self.dictionary:
-            start = &#39;?start={}&#39;.format(self.dictionary[&#39;start&#39;])
+        video = self.dictionary[&#34;video&#34;]
+        url = &#34;https://youtube-nocookie.com/{}&#34;.format(video)
+        #url = &#34;https://youtu.be/{}&#34;.format(video)
+        start = &#34;&#34;
+        if &#34;start&#34; in self.dictionary:
+            start = &#34;?start={}&#34;.format(self.dictionary[&#34;start&#34;])
             url = url + start
-        if &#39;position&#39; in self.dictionary and self.dictionary[&#39;position&#39;]==&#39;aside&#39;:
-            aside_id = super().create_hash(&#39;{}&#39;.format(video).encode(&#39;utf-8&#39;))
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id))
-            html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img width=&#34;{}&#34; src=&#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;&gt;&lt;/img&gt;&lt;/a&gt;&#39;.format(url, 240, video))
-            if &#39;caption&#39; in self.dictionary:
-                html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
+        if &#34;position&#34; in self.dictionary and self.dictionary[&#34;position&#34;] == &#34;aside&#34;:
+            aside_id = self.get_id()
+            html.append(
+                &#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id)
+            )
+            html.append(
+                &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img width=&#34;{}&#34; src=&#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;&gt;&lt;/img&gt;&lt;/a&gt;&#39;.format(
+                    url, 240, video
+                )
+            )
+            if &#34;caption&#34; in self.dictionary:
+                html_caption = pypandoc.convert_text(
+                    self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+                )
                 html.append(html_caption)
-            html.append(&#39;&lt;/aside&gt;&#39;)
+            html.append(&#34;&lt;/aside&gt;&#34;)
         else:
             html.append(&#39;&lt;div class=&#34;figure&#34;&gt;&#39;)
             width = 560
             height = 315
-            html.append(&#39;&lt;iframe width=&#34;{}&#34; height=&#34;{}&#34; src=&#34;https://www.youtube.com/embed/{}{}&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;&lt;/iframe&gt;&#39;.format(width, height, video, start))
-            if &#39;caption&#39; in self.dictionary:
-                html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;video&#39;]))
-                html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-                html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;video&#39;], html_caption))
-            html.append(&#39;&lt;/div&gt;&#39;)
-        return &#39;\n&#39;.join(html)</code></pre>
+            html.append(
+                &#39;&lt;iframe width=&#34;{}&#34; height=&#34;{}&#34; src=&#34;https://www.youtube-nocookie.com/embed/{}{}&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;&lt;/iframe&gt;&#39;.format(
+                    width, height, video, start
+                )
+            )
+            if &#34;caption&#34; in self.dictionary:
+                html.append(
+                    &#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;video&#34;])
+                )
+                html_caption = pypandoc.convert_text(
+                    self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+                )
+                html.append(
+                    &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                        self.dictionary[&#34;video&#34;], html_caption
+                    )
+                )
+            html.append(&#34;&lt;/div&gt;&#34;)
+        return &#34;\n&#34;.join(html)
+
+    def to_latex(self, builder):
+        s = []
+        url = &#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;.format(
+            self.dictionary[&#34;video&#34;]
+        )
+        video_url = &#34;https://youtu.be/{}&#34;.format(self.dictionary[&#34;video&#34;])
+        video_id = self.get_id()
+        target_path = self.get_dir_cached() / &#34;{}.jpg&#34;.format(video_id)
+        download_preview(url, target_path)
+        # target_path =  Path(&#39;../cached/{}.jpg&#39;.format(video_id))
+        target_path = target_path.relative_to(builder.output_file.parent)
+        s.append(&#34;\n&#34;)
+        s.append(&#34;\\begin{video}[h]&#34;)
+        s.append(&#34;\includegraphics[width=\linewidth]{{{}}}&#34;.format(target_path))
+        if &#34;caption&#34; in self.dictionary:
+            caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+            )
+            s.append(
+                &#34;\caption{&#34;
+                + caption.strip()
+                + &#34; \\textcolor{SteelBlue}{\\faArrowCircleRight}~&#34;
+                + &#34;\\url{{{}}}&#34;.format(video_url)
+                + &#34;}&#34;
+            )
+        else:
+            s.append(&#34;\caption{&#34;)
+            s.append(&#34;\\url{{{}}}&#34;.format(video_url) + &#34;}&#34;)
+        s.append(&#34;\end{video}&#34;)
+        return &#34;\n&#34;.join(s)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -122,6 +275,20 @@ class Video(YAMLChunk):
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="supermark.video.Video.get_id"><code class="name flex">
+<span>def <span class="ident">get_id</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_id(self):
+    video = self.dictionary[&#34;video&#34;]
+    return super().create_hash(&#34;{}&#34;.format(video))</code></pre>
+</details>
+</dd>
 <dt id="supermark.video.Video.to_html"><code class="name flex">
 <span>def <span class="ident">to_html</span></span>(<span>self)</span>
 </code></dt>
@@ -133,31 +300,93 @@ class Video(YAMLChunk):
 </summary>
 <pre><code class="python">def to_html(self):
     html = []
-    video = self.dictionary[&#39;video&#39;]
-    url = &#39;https://youtu.be/{}&#39;.format(video)
-    start = &#39;&#39;
-    if &#39;start&#39; in self.dictionary:
-        start = &#39;?start={}&#39;.format(self.dictionary[&#39;start&#39;])
+    video = self.dictionary[&#34;video&#34;]
+    url = &#34;https://youtube-nocookie.com/{}&#34;.format(video)
+    #url = &#34;https://youtu.be/{}&#34;.format(video)
+    start = &#34;&#34;
+    if &#34;start&#34; in self.dictionary:
+        start = &#34;?start={}&#34;.format(self.dictionary[&#34;start&#34;])
         url = url + start
-    if &#39;position&#39; in self.dictionary and self.dictionary[&#39;position&#39;]==&#39;aside&#39;:
-        aside_id = super().create_hash(&#39;{}&#39;.format(video).encode(&#39;utf-8&#39;))
-        html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id))
-        html.append(&#39;&lt;a href=&#34;{}&#34;&gt;&lt;img width=&#34;{}&#34; src=&#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;&gt;&lt;/img&gt;&lt;/a&gt;&#39;.format(url, 240, video))
-        if &#39;caption&#39; in self.dictionary:
-            html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
+    if &#34;position&#34; in self.dictionary and self.dictionary[&#34;position&#34;] == &#34;aside&#34;:
+        aside_id = self.get_id()
+        html.append(
+            &#39;&lt;span name=&#34;{}&#34;&gt;&lt;/span&gt;&lt;aside name=&#34;{}&#34;&gt;&#39;.format(aside_id, aside_id)
+        )
+        html.append(
+            &#39;&lt;a href=&#34;{}&#34;&gt;&lt;img width=&#34;{}&#34; src=&#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;&gt;&lt;/img&gt;&lt;/a&gt;&#39;.format(
+                url, 240, video
+            )
+        )
+        if &#34;caption&#34; in self.dictionary:
+            html_caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+            )
             html.append(html_caption)
-        html.append(&#39;&lt;/aside&gt;&#39;)
+        html.append(&#34;&lt;/aside&gt;&#34;)
     else:
         html.append(&#39;&lt;div class=&#34;figure&#34;&gt;&#39;)
         width = 560
         height = 315
-        html.append(&#39;&lt;iframe width=&#34;{}&#34; height=&#34;{}&#34; src=&#34;https://www.youtube.com/embed/{}{}&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;&lt;/iframe&gt;&#39;.format(width, height, video, start))
-        if &#39;caption&#39; in self.dictionary:
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;video&#39;]))
-            html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-            html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;video&#39;], html_caption))
-        html.append(&#39;&lt;/div&gt;&#39;)
-    return &#39;\n&#39;.join(html)</code></pre>
+        html.append(
+            &#39;&lt;iframe width=&#34;{}&#34; height=&#34;{}&#34; src=&#34;https://www.youtube-nocookie.com/embed/{}{}&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;&lt;/iframe&gt;&#39;.format(
+                width, height, video, start
+            )
+        )
+        if &#34;caption&#34; in self.dictionary:
+            html.append(
+                &#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;video&#34;])
+            )
+            html_caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+            )
+            html.append(
+                &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                    self.dictionary[&#34;video&#34;], html_caption
+                )
+            )
+        html.append(&#34;&lt;/div&gt;&#34;)
+    return &#34;\n&#34;.join(html)</code></pre>
+</details>
+</dd>
+<dt id="supermark.video.Video.to_latex"><code class="name flex">
+<span>def <span class="ident">to_latex</span></span>(<span>self, builder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_latex(self, builder):
+    s = []
+    url = &#34;https://img.youtube.com/vi/{}/sddefault.jpg&#34;.format(
+        self.dictionary[&#34;video&#34;]
+    )
+    video_url = &#34;https://youtu.be/{}&#34;.format(self.dictionary[&#34;video&#34;])
+    video_id = self.get_id()
+    target_path = self.get_dir_cached() / &#34;{}.jpg&#34;.format(video_id)
+    download_preview(url, target_path)
+    # target_path =  Path(&#39;../cached/{}.jpg&#39;.format(video_id))
+    target_path = target_path.relative_to(builder.output_file.parent)
+    s.append(&#34;\n&#34;)
+    s.append(&#34;\\begin{video}[h]&#34;)
+    s.append(&#34;\includegraphics[width=\linewidth]{{{}}}&#34;.format(target_path))
+    if &#34;caption&#34; in self.dictionary:
+        caption = pypandoc.convert_text(
+            self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+        )
+        s.append(
+            &#34;\caption{&#34;
+            + caption.strip()
+            + &#34; \\textcolor{SteelBlue}{\\faArrowCircleRight}~&#34;
+            + &#34;\\url{{{}}}&#34;.format(video_url)
+            + &#34;}&#34;
+        )
+    else:
+        s.append(&#34;\caption{&#34;)
+        s.append(&#34;\\url{{{}}}&#34;.format(video_url) + &#34;}&#34;)
+    s.append(&#34;\end{video}&#34;)
+    return &#34;\n&#34;.join(s)</code></pre>
 </details>
 </dd>
 </dl>
@@ -176,12 +405,19 @@ class Video(YAMLChunk):
 <li><code><a title="supermark" href="index.html">supermark</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="supermark.video.download_preview" href="#supermark.video.download_preview">download_preview</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="supermark.video.Video" href="#supermark.video.Video">Video</a></code></h4>
 <ul class="">
+<li><code><a title="supermark.video.Video.get_id" href="#supermark.video.Video.get_id">get_id</a></code></li>
 <li><code><a title="supermark.video.Video.to_html" href="#supermark.video.Video.to_html">to_html</a></code></li>
+<li><code><a title="supermark.video.Video.to_latex" href="#supermark.video.Video.to_latex">to_latex</a></code></li>
 </ul>
 </li>
 </ul>

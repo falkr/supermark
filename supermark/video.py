@@ -30,7 +30,8 @@ class Video(YAMLChunk):
     def to_html(self):
         html = []
         video = self.dictionary["video"]
-        url = "https://youtu.be/{}".format(video)
+        url = "https://youtube-nocookie.com/{}".format(video)
+        # url = "https://youtu.be/{}".format(video)
         start = ""
         if "start" in self.dictionary:
             start = "?start={}".format(self.dictionary["start"])
@@ -56,7 +57,7 @@ class Video(YAMLChunk):
             width = 560
             height = 315
             html.append(
-                '<iframe width="{}" height="{}" src="https://www.youtube.com/embed/{}{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(
+                '<iframe width="{}" height="{}" src="https://www.youtube-nocookie.com/embed/{}{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(
                     width, height, video, start
                 )
             )

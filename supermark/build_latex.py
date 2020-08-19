@@ -17,7 +17,6 @@ from .lines import Lines
 from .parse import ParserState, _parse
 from .report import Report, print_reports
 from .table import Table
-from .tell import tell
 from .video import Video
 
 
@@ -28,7 +27,8 @@ def write_file(html, target_file_path, report):
             html_file.write(html)
     except UnicodeEncodeError as error:
         report.tell("Encoding error when writing file {}.".format(target_file_path))
-        character = error.object[error.start : error.end]
+        text = error.object
+        character = text[error.start : error.end]
         line = html.count("\n", 0, error.start) + 1
         report.tell(
             "Character {} in line {} cannot be saved with encoding {}.".format(

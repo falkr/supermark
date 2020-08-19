@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.4" />
-<title>supermark.command API documentation</title>
+<title>supermark.report API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,82 +19,44 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>supermark.command</code></h1>
+<h1 class="title">Module <code>supermark.report</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import os
-
-import click
-
-from . import __version__
-from .build_html import build_html
-from .build_latex import build_latex
-
-# @click.version_option(version=__version__)
+<pre><code class="python">from enum import Enum
 
 
-@click.command()
-@click.option(
-    &#34;-a&#34;,
-    &#34;--all&#34;,
-    is_flag=True,
-    default=False,
-    help=&#34;Rebuild all pages, do not regard file timestamps.&#34;,
-)
-@click.option(
-    &#34;-v&#34;,
-    &#34;--verbose&#34;,
-    is_flag=True,
-    default=False,
-    help=&#34;Provide more feedback on what is happening.&#34;,
-)
-@click.option(
-    &#34;-d&#34;,
-    &#34;--draft&#34;,
-    is_flag=True,
-    default=False,
-    help=&#34;Also print draft parts of the documents.&#34;,
-)
-@click.option(
-    &#34;-i&#34;,
-    &#34;--input&#34;,
-    &#34;input&#34;,
-    type=click.Path(exists=True),
-    help=&#34;Input directory containing the source files.&#34;,
-)
-@click.option(
-    &#34;-o&#34;, &#34;--output&#34;, &#34;output&#34;, type=click.Path(exists=True), help=&#34;Output directory.&#34;
-)
-@click.option(
-    &#34;-t&#34;,
-    &#34;--template&#34;,
-    &#34;template&#34;,
-    type=click.File(&#34;rb&#34;),
-    help=&#34;Template file for the transformation.&#34;,
-)
-# @click.option(&#39;-f&#39;, &#39;--format&#39;, &#39;html&#39;, type=click.Choice([&#39;html&#39;, &#39;pdf&#39;], case_sensitive=False))
-def run(all, verbose, draft, input=None, output=None, template=None):
-    format = &#34;html&#34;
-    input_path = input or os.path.join(os.getcwd(), &#34;pages&#34;)
-    output_path = output or os.getcwd()
-    template_path = template or os.path.join(os.getcwd(), &#34;templates/page.html&#34;)
-    if format == &#34;pdf&#34;:
-        build_latex(
-            input_path, output_path,
-        )
-    else:
-        build_html(
-            input_path,
-            output_path,
-            template_path,
-            rebuild_all_pages=all,
-            abort_draft=not draft,
-            verbose=verbose,
-        )</code></pre>
+class Report:
+
+    INFO = 1
+    WARNING = 2
+    ERROR = 3
+
+    def __init__(self, source_path):
+        self.source_path = source_path
+        self.messages = []
+        self.max_level = self.INFO
+
+    def max_level(self):
+        return self.max_level
+
+    def tell(self, message, level=1, chunk=None):
+        self.max_level = max(self.max_level, level)
+        self.messages.append(message)
+
+    def print_(self):
+        for m in self.messages:
+            print(m)
+
+
+def print_reports(reports):
+    for level in [Report.ERROR, Report.WARNING]:
+        for report in reports:
+            if report.max_level == level:
+                report.print_()</code></pre>
 </details>
 </section>
 <section>
@@ -102,8 +64,122 @@ def run(all, verbose, draft, input=None, output=None, template=None):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="supermark.report.print_reports"><code class="name flex">
+<span>def <span class="ident">print_reports</span></span>(<span>reports)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_reports(reports):
+    for level in [Report.ERROR, Report.WARNING]:
+        for report in reports:
+            if report.max_level == level:
+                report.print_()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="supermark.report.Report"><code class="flex name class">
+<span>class <span class="ident">Report</span></span>
+<span>(</span><span>source_path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Report:
+
+    INFO = 1
+    WARNING = 2
+    ERROR = 3
+
+    def __init__(self, source_path):
+        self.source_path = source_path
+        self.messages = []
+        self.max_level = self.INFO
+
+    def max_level(self):
+        return self.max_level
+
+    def tell(self, message, level=1, chunk=None):
+        self.max_level = max(self.max_level, level)
+        self.messages.append(message)
+
+    def print_(self):
+        for m in self.messages:
+            print(m)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="supermark.report.Report.ERROR"><code class="name">var <span class="ident">ERROR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="supermark.report.Report.INFO"><code class="name">var <span class="ident">INFO</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="supermark.report.Report.WARNING"><code class="name">var <span class="ident">WARNING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="supermark.report.Report.max_level"><code class="name flex">
+<span>def <span class="ident">max_level</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_level(self):
+    return self.max_level</code></pre>
+</details>
+</dd>
+<dt id="supermark.report.Report.print_"><code class="name flex">
+<span>def <span class="ident">print_</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_(self):
+    for m in self.messages:
+        print(m)</code></pre>
+</details>
+</dd>
+<dt id="supermark.report.Report.tell"><code class="name flex">
+<span>def <span class="ident">tell</span></span>(<span>self, message, level=1, chunk=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tell(self, message, level=1, chunk=None):
+    self.max_level = max(self.max_level, level)
+    self.messages.append(message)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -115,6 +191,26 @@ def run(all, verbose, draft, input=None, output=None, template=None):
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="supermark" href="index.html">supermark</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="supermark.report.print_reports" href="#supermark.report.print_reports">print_reports</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="supermark.report.Report" href="#supermark.report.Report">Report</a></code></h4>
+<ul class="two-column">
+<li><code><a title="supermark.report.Report.ERROR" href="#supermark.report.Report.ERROR">ERROR</a></code></li>
+<li><code><a title="supermark.report.Report.INFO" href="#supermark.report.Report.INFO">INFO</a></code></li>
+<li><code><a title="supermark.report.Report.WARNING" href="#supermark.report.Report.WARNING">WARNING</a></code></li>
+<li><code><a title="supermark.report.Report.max_level" href="#supermark.report.Report.max_level">max_level</a></code></li>
+<li><code><a title="supermark.report.Report.print_" href="#supermark.report.Report.print_">print_</a></code></li>
+<li><code><a title="supermark.report.Report.tell" href="#supermark.report.Report.tell">tell</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

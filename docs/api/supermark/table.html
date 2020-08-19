@@ -28,36 +28,62 @@
 </summary>
 <pre><code class="python">import os
 import re
+
 import pypandoc
+import wikitextparser as wtp
+
 from .chunks import YAMLChunk
-from .tell import tell
+from .report import Report
+
 
 class Table(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;file&#39;], optional=[&#39;class&#39;, &#39;caption&#39;])
-        
-        file_path = os.path.join(os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#39;file&#39;])
-        print(file_path)
-        self.div_class = None if &#39;class&#39; not in dictionary else dictionary[&#39;class&#39;]
-        if not os.path.exists(file_path):
-            tell(&#39;Table file {} does not exist.&#39;.format(file_path), level=&#39;error&#39;)
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[],
+            optional=[&#34;file&#34;, &#34;class&#34;, &#34;caption&#34;],
+        )
+        self.div_class = None if &#34;class&#34; not in dictionary else dictionary[&#34;class&#34;]
+        if self.has_post_yaml():
+            self.table_raw = self.get_post_yaml()
         else:
-            with open(file_path, &#39;r&#39;) as myfile:
-                self.table_raw = myfile.read()
+            file_path = os.path.join(
+                os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#34;file&#34;]
+            )
+            if not os.path.exists(file_path):
+                raw_chunk.report.tell(
+                    &#34;Table file {} does not exist.&#34;.format(file_path),
+                    level=Report.ERROR,
+                )
+                # TODO somehow mark this chunk and do not try to generate HTML or Latex from it
+            else:
+                with open(file_path, &#34;r&#34;) as myfile:
+                    self.table_raw = myfile.read()
 
     def to_html(self):
         html = []
-        extra_args = [&#39;--from&#39;, &#39;mediawiki&#39;, &#39;--to&#39;, &#39;html&#39;]
-        output = pypandoc.convert_text(self.table_raw, &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
+        extra_args = [&#34;--from&#34;, &#34;mediawiki&#34;, &#34;--to&#34;, &#34;html&#34;]
+        output = pypandoc.convert_text(
+            self.table_raw, &#34;html&#34;, format=&#34;md&#34;, extra_args=extra_args
+        )
         if self.div_class:
-            output = re.sub(&#39;(&lt;table)(&gt;)&#39;, &#39;\\1 class=&#34;{}&#34;\\2&#39;.format(self.div_class), output)
+            output = re.sub(
+                &#34;(&lt;table)(&gt;)&#34;, &#39;\\1 class=&#34;{}&#34;\\2&#39;.format(self.div_class), output
+            )
         html.append(output)
-        if &#39;caption&#39; in self.dictionary:
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;file&#39;]))
-            html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-            html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;file&#39;], html_caption))
-        return &#39;\n&#39;.join(html)
+        if &#34;caption&#34; in self.dictionary:
+            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;file&#34;]))
+            html_caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+            )
+            html.append(
+                &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                    self.dictionary[&#34;file&#34;], html_caption
+                )
+            )
+        return &#34;\n&#34;.join(html)
 
     def get_scss(self):
         return &#34;&#34;&#34;section {
@@ -65,7 +91,42 @@ class Table(YAMLChunk):
                     border-width:1px 0;
                     padding:20px 0;
                     margin:0 0 20px;
-                  }&#34;&#34;&#34;</code></pre>
+                  }&#34;&#34;&#34;
+
+    def to_latex(self, builder):
+        parsed = wtp.parse(self.table_raw)
+        # print(parsed)
+        rows = parsed.tables[0].data()
+        rowspec = &#34;&#34;
+        # print(rows[0])
+        # print(type(rows[0]))
+        for _ in rows[0]:
+            rowspec = rowspec + &#34;L&#34;
+        # https://pypi.org/project/wikitextparser/#tables
+        latex = []
+        latex.append(&#34;\\begin{table*}[t]&#34;)
+        latex.append(&#34;\\begin{tabulary}{\\textwidth}&#34; + &#34;{{{}}}&#34;.format(rowspec))
+        latex.append(&#34;\\toprule&#34;)
+        for row in rows:
+            resolved_row = []
+            for x in row:
+                resolved_row.append(
+                    pypandoc.convert_text(x, &#34;latex&#34;, format=&#34;mediawiki&#34;)
+                )
+            latex.append(&#34;&amp;&#34;.join(resolved_row) + &#34;\\\\&#34;)
+        latex.append(&#34;\\bottomrule&#34;)
+        latex.append(&#34;\\end{tabulary}&#34;)
+        if &#34;caption&#34; in self.dictionary:
+            caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+            )
+            latex.append(&#34;\\caption{{{}}}&#34;.format(caption))
+        if &#34;label&#34; in self.dictionary:
+            latex.append(&#34;\\label{{{}}}&#34;.format(self.dictionary[&#34;label&#34;]))
+        latex.append(&#34;\\end{table*}&#34;)
+        # extra_args = [&#39;--from&#39;, &#39;mediawiki&#39;, &#39;--to&#39;, &#39;latex&#39;]
+        # output = pypandoc.convert_text(self.table_raw, &#39;latex&#39;, format=&#39;md&#39;, extra_args=extra_args)
+        return &#34;\n&#34;.join(latex)</code></pre>
 </details>
 </section>
 <section>
@@ -88,31 +149,53 @@ class Table(YAMLChunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Table(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;file&#39;], optional=[&#39;class&#39;, &#39;caption&#39;])
-        
-        file_path = os.path.join(os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#39;file&#39;])
-        print(file_path)
-        self.div_class = None if &#39;class&#39; not in dictionary else dictionary[&#39;class&#39;]
-        if not os.path.exists(file_path):
-            tell(&#39;Table file {} does not exist.&#39;.format(file_path), level=&#39;error&#39;)
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[],
+            optional=[&#34;file&#34;, &#34;class&#34;, &#34;caption&#34;],
+        )
+        self.div_class = None if &#34;class&#34; not in dictionary else dictionary[&#34;class&#34;]
+        if self.has_post_yaml():
+            self.table_raw = self.get_post_yaml()
         else:
-            with open(file_path, &#39;r&#39;) as myfile:
-                self.table_raw = myfile.read()
+            file_path = os.path.join(
+                os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary[&#34;file&#34;]
+            )
+            if not os.path.exists(file_path):
+                raw_chunk.report.tell(
+                    &#34;Table file {} does not exist.&#34;.format(file_path),
+                    level=Report.ERROR,
+                )
+                # TODO somehow mark this chunk and do not try to generate HTML or Latex from it
+            else:
+                with open(file_path, &#34;r&#34;) as myfile:
+                    self.table_raw = myfile.read()
 
     def to_html(self):
         html = []
-        extra_args = [&#39;--from&#39;, &#39;mediawiki&#39;, &#39;--to&#39;, &#39;html&#39;]
-        output = pypandoc.convert_text(self.table_raw, &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
+        extra_args = [&#34;--from&#34;, &#34;mediawiki&#34;, &#34;--to&#34;, &#34;html&#34;]
+        output = pypandoc.convert_text(
+            self.table_raw, &#34;html&#34;, format=&#34;md&#34;, extra_args=extra_args
+        )
         if self.div_class:
-            output = re.sub(&#39;(&lt;table)(&gt;)&#39;, &#39;\\1 class=&#34;{}&#34;\\2&#39;.format(self.div_class), output)
+            output = re.sub(
+                &#34;(&lt;table)(&gt;)&#34;, &#39;\\1 class=&#34;{}&#34;\\2&#39;.format(self.div_class), output
+            )
         html.append(output)
-        if &#39;caption&#39; in self.dictionary:
-            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;file&#39;]))
-            html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-            html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;file&#39;], html_caption))
-        return &#39;\n&#39;.join(html)
+        if &#34;caption&#34; in self.dictionary:
+            html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;file&#34;]))
+            html_caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+            )
+            html.append(
+                &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                    self.dictionary[&#34;file&#34;], html_caption
+                )
+            )
+        return &#34;\n&#34;.join(html)
 
     def get_scss(self):
         return &#34;&#34;&#34;section {
@@ -120,7 +203,42 @@ class Table(YAMLChunk):
                     border-width:1px 0;
                     padding:20px 0;
                     margin:0 0 20px;
-                  }&#34;&#34;&#34;</code></pre>
+                  }&#34;&#34;&#34;
+
+    def to_latex(self, builder):
+        parsed = wtp.parse(self.table_raw)
+        # print(parsed)
+        rows = parsed.tables[0].data()
+        rowspec = &#34;&#34;
+        # print(rows[0])
+        # print(type(rows[0]))
+        for _ in rows[0]:
+            rowspec = rowspec + &#34;L&#34;
+        # https://pypi.org/project/wikitextparser/#tables
+        latex = []
+        latex.append(&#34;\\begin{table*}[t]&#34;)
+        latex.append(&#34;\\begin{tabulary}{\\textwidth}&#34; + &#34;{{{}}}&#34;.format(rowspec))
+        latex.append(&#34;\\toprule&#34;)
+        for row in rows:
+            resolved_row = []
+            for x in row:
+                resolved_row.append(
+                    pypandoc.convert_text(x, &#34;latex&#34;, format=&#34;mediawiki&#34;)
+                )
+            latex.append(&#34;&amp;&#34;.join(resolved_row) + &#34;\\\\&#34;)
+        latex.append(&#34;\\bottomrule&#34;)
+        latex.append(&#34;\\end{tabulary}&#34;)
+        if &#34;caption&#34; in self.dictionary:
+            caption = pypandoc.convert_text(
+                self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+            )
+            latex.append(&#34;\\caption{{{}}}&#34;.format(caption))
+        if &#34;label&#34; in self.dictionary:
+            latex.append(&#34;\\label{{{}}}&#34;.format(self.dictionary[&#34;label&#34;]))
+        latex.append(&#34;\\end{table*}&#34;)
+        # extra_args = [&#39;--from&#39;, &#39;mediawiki&#39;, &#39;--to&#39;, &#39;latex&#39;]
+        # output = pypandoc.convert_text(self.table_raw, &#39;latex&#39;, format=&#39;md&#39;, extra_args=extra_args)
+        return &#34;\n&#34;.join(latex)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -158,16 +276,71 @@ class Table(YAMLChunk):
 </summary>
 <pre><code class="python">def to_html(self):
     html = []
-    extra_args = [&#39;--from&#39;, &#39;mediawiki&#39;, &#39;--to&#39;, &#39;html&#39;]
-    output = pypandoc.convert_text(self.table_raw, &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
+    extra_args = [&#34;--from&#34;, &#34;mediawiki&#34;, &#34;--to&#34;, &#34;html&#34;]
+    output = pypandoc.convert_text(
+        self.table_raw, &#34;html&#34;, format=&#34;md&#34;, extra_args=extra_args
+    )
     if self.div_class:
-        output = re.sub(&#39;(&lt;table)(&gt;)&#39;, &#39;\\1 class=&#34;{}&#34;\\2&#39;.format(self.div_class), output)
+        output = re.sub(
+            &#34;(&lt;table)(&gt;)&#34;, &#39;\\1 class=&#34;{}&#34;\\2&#39;.format(self.div_class), output
+        )
     html.append(output)
-    if &#39;caption&#39; in self.dictionary:
-        html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#39;file&#39;]))
-        html_caption = pypandoc.convert_text(self.dictionary[&#39;caption&#39;], &#39;html&#39;, format=&#39;md&#39;)
-        html.append(&#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(self.dictionary[&#39;file&#39;], html_caption))
-    return &#39;\n&#39;.join(html)</code></pre>
+    if &#34;caption&#34; in self.dictionary:
+        html.append(&#39;&lt;span name=&#34;{}&#34;&gt;&amp;nbsp;&lt;/span&gt;&#39;.format(self.dictionary[&#34;file&#34;]))
+        html_caption = pypandoc.convert_text(
+            self.dictionary[&#34;caption&#34;], &#34;html&#34;, format=&#34;md&#34;
+        )
+        html.append(
+            &#39;&lt;aside name=&#34;{}&#34;&gt;&lt;p&gt;{}&lt;/p&gt;&lt;/aside&gt;&#39;.format(
+                self.dictionary[&#34;file&#34;], html_caption
+            )
+        )
+    return &#34;\n&#34;.join(html)</code></pre>
+</details>
+</dd>
+<dt id="supermark.table.Table.to_latex"><code class="name flex">
+<span>def <span class="ident">to_latex</span></span>(<span>self, builder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_latex(self, builder):
+    parsed = wtp.parse(self.table_raw)
+    # print(parsed)
+    rows = parsed.tables[0].data()
+    rowspec = &#34;&#34;
+    # print(rows[0])
+    # print(type(rows[0]))
+    for _ in rows[0]:
+        rowspec = rowspec + &#34;L&#34;
+    # https://pypi.org/project/wikitextparser/#tables
+    latex = []
+    latex.append(&#34;\\begin{table*}[t]&#34;)
+    latex.append(&#34;\\begin{tabulary}{\\textwidth}&#34; + &#34;{{{}}}&#34;.format(rowspec))
+    latex.append(&#34;\\toprule&#34;)
+    for row in rows:
+        resolved_row = []
+        for x in row:
+            resolved_row.append(
+                pypandoc.convert_text(x, &#34;latex&#34;, format=&#34;mediawiki&#34;)
+            )
+        latex.append(&#34;&amp;&#34;.join(resolved_row) + &#34;\\\\&#34;)
+    latex.append(&#34;\\bottomrule&#34;)
+    latex.append(&#34;\\end{tabulary}&#34;)
+    if &#34;caption&#34; in self.dictionary:
+        caption = pypandoc.convert_text(
+            self.dictionary[&#34;caption&#34;], &#34;latex&#34;, format=&#34;md&#34;
+        )
+        latex.append(&#34;\\caption{{{}}}&#34;.format(caption))
+    if &#34;label&#34; in self.dictionary:
+        latex.append(&#34;\\label{{{}}}&#34;.format(self.dictionary[&#34;label&#34;]))
+    latex.append(&#34;\\end{table*}&#34;)
+    # extra_args = [&#39;--from&#39;, &#39;mediawiki&#39;, &#39;--to&#39;, &#39;latex&#39;]
+    # output = pypandoc.convert_text(self.table_raw, &#39;latex&#39;, format=&#39;md&#39;, extra_args=extra_args)
+    return &#34;\n&#34;.join(latex)</code></pre>
 </details>
 </dd>
 </dl>
@@ -193,6 +366,7 @@ class Table(YAMLChunk):
 <ul class="">
 <li><code><a title="supermark.table.Table.get_scss" href="#supermark.table.Table.get_scss">get_scss</a></code></li>
 <li><code><a title="supermark.table.Table.to_html" href="#supermark.table.Table.to_html">to_html</a></code></li>
+<li><code><a title="supermark.table.Table.to_latex" href="#supermark.table.Table.to_latex">to_latex</a></code></li>
 </ul>
 </li>
 </ul>

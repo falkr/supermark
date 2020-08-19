@@ -27,28 +27,29 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import os
-import yaml
-import pypandoc
-
 import random
-import string
 import re
+import string
 
+import pypandoc
+import yaml
 
-from .tell import tell
-from .parse import _parse, ParserState
-from .chunks import YAMLDataChunk, MarkdownChunk, HTMLChunk
-from .figure import Figure
 from .button import Button
-from .video import Video
-from .lines import Lines
-from .hint import Hint
+from .chunks import HTMLChunk, MarkdownChunk, YAMLDataChunk
 from .code import Code
+from .figure import Figure
+from .hint import Hint
+from .hint2 import Hint2
+from .lines import Lines
+from .parse import ParserState, _parse
 from .table import Table
+from .video import Video
+from .report import Report
 
 
 def random_id():
-    return &#39;&#39;.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+    return &#34;&#34;.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+
 
 &#34;&#34;&#34;
    Chunk  |- HTML
@@ -63,31 +64,35 @@ def random_id():
           |- Markdown
                 |- Hint     
 &#34;&#34;&#34;
+
+
 def cast(rawchunks):
     chunks = []
     page_variables = {}
     for raw in rawchunks:
         chunk_type = raw.get_type()
-        if chunk_type==ParserState.MARKDOWN:
-            if raw.get_tag() == &#39;hint&#39;:
+        if chunk_type == ParserState.MARKDOWN:
+            if raw.get_tag() == &#34;hint&#34;:
                 chunks.append(Hint(raw, page_variables))
             else:
                 chunks.append(MarkdownChunk(raw, page_variables))
-        elif chunk_type==ParserState.YAML:
-            dictionary = yaml.safe_load(&#39;&#39;.join(raw.lines))
+        elif chunk_type == ParserState.YAML:
+            dictionary = yaml.safe_load(&#34;&#34;.join(raw.lines))
             if isinstance(dictionary, dict):
-                if &#39;type&#39; in dictionary:
-                    yaml_type = dictionary[&#39;type&#39;]
-                    if yaml_type == &#39;youtube&#39;:
+                if &#34;type&#34; in dictionary:
+                    yaml_type = dictionary[&#34;type&#34;]
+                    if yaml_type == &#34;youtube&#34;:
                         chunks.append(Video(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;figure&#39;:
+                    elif yaml_type == &#34;figure&#34;:
                         chunks.append(Figure(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;button&#39;:
+                    elif yaml_type == &#34;button&#34;:
                         chunks.append(Button(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;lines&#39;:
+                    elif yaml_type == &#34;lines&#34;:
                         chunks.append(Lines(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;table&#39;:
+                    elif yaml_type == &#34;table&#34;:
                         chunks.append(Table(raw, dictionary, page_variables))
+                    elif yaml_type == &#34;hint&#34;:
+                        chunks.append(Hint2(raw, dictionary, page_variables))
                     # TODO warn if unknown type
                 else:
                     data_chunk = YAMLDataChunk(raw, dictionary, page_variables)
@@ -97,12 +102,17 @@ def cast(rawchunks):
                         print(e)
                     chunks.append(data_chunk)
             else:
-                tell(&#39;Something is wrong with the YAML section.&#39;, level=&#39;error&#39;, chunk=raw)
-        elif chunk_type==ParserState.HTML:
+                raw.report.tell(
+                    &#34;Something is wrong with the YAML section.&#34;,
+                    level=Report.ERROR,
+                    chunk=raw,
+                )
+        elif chunk_type == ParserState.HTML:
             chunks.append(HTMLChunk(raw, page_variables))
-        elif chunk_type==ParserState.CODE:
+        elif chunk_type == ParserState.CODE:
             chunks.append(Code(raw, page_variables))
     return chunks
+
 
 def arrange_assides(chunks):
     main_chunks = []
@@ -112,113 +122,15 @@ def arrange_assides(chunks):
             if current_main_chunk is not None:
                 current_main_chunk.asides.append(chunk)
             else:
-                tell(&#39;Aside chunk cannot be defined as first element.&#39;, level=&#39;warn&#39;)
+                chunk.raw_chunk.report.tell(
+                    &#34;Aside chunk cannot be defined as first element.&#34;,
+                    level=Report.WARNING,
+                )
                 main_chunks.append(chunk)
         else:
             main_chunks.append(chunk)
             current_main_chunk = chunk
-    return main_chunks
-
-def transform_page_to_html(lines, template, filepath, abort_draft):
-    chunks = _parse(lines, filepath)
-    chunks = cast(chunks)
-    chunks = arrange_assides(chunks)
-
-    content = []
-    content.append(&#39;&lt;div class=&#34;page&#34;&gt;&#39;)
-    if len(chunks)==0:
-        pass
-    else:
-        first_chunk = chunks[0]
-        if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
-            content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
-
-    for chunk in chunks:
-        if &#39;status&#39; in chunk.page_variables and abort_draft and chunk.page_variables[&#39;status&#39;] == &#39;draft&#39;:
-            content.append(&#39;&lt;mark&gt;This site is under construction.&lt;/mark&gt;&#39;)
-            break
-        if isinstance(chunk, YAMLDataChunk):
-            pass
-        elif isinstance(chunk, MarkdownChunk):
-            if chunk.is_section:
-                # open a new section
-                content.append(&#39;    &lt;/section&gt;&#39;)
-                content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
-            content.append(chunk.to_html())
-            for aside in chunk.asides:
-                content.append(aside.to_html())
-        else:
-            content.append(chunk.to_html())
-            for aside in chunk.asides:
-                content.append(aside.to_html())
-
-    content.append(&#39;    &lt;/section&gt;&#39;)
-    content.append(&#39;&lt;/div&gt;&#39;)
-    content = &#39;\n&#39;.join(content)
-    parameters = {&#39;content&#39;: content}
-    html = template.format(**parameters)
-    return html
-
-def _create_target(source_file_path, target_file_path, template_file_path, overwrite):
-    if not os.path.isfile(target_file_path):
-        return True
-    if overwrite:
-        return True
-    if not os.path.isfile(template_file_path):
-        return os.path.getmtime(target_file_path) &lt; os.path.getmtime(source_file_path)
-    else:
-        return os.path.getmtime(target_file_path) &lt; os.path.getmtime(source_file_path) or os.path.getmtime(target_file_path) &lt; os.path.getmtime(template_file_path)
-
-def write_file(html, target_file_path):
-    encoding = &#39;utf-8&#39;
-    try:
-        with open(target_file_path, &#34;w&#34;, encoding=encoding) as html_file:
-            html_file.write(html)
-    except UnicodeEncodeError as error:
-        tell(&#39;Encoding error when writing file {}.&#39;.format(target_file_path))
-        character = error.object[error.start:error.end]
-        line = html.count(&#34;\n&#34;,0,error.start)+1
-        tell(&#39;Character {} in line {} cannot be saved with encoding {}.&#39;.format(character, line, encoding))
-        with open(target_file_path, &#34;w&#34;, encoding=encoding, errors=&#39;ignore&#39;) as html_file:
-            html_file.write(html)
-
-def process_file(source_file_path, target_file_path, template, abort_draft):
-     with open(source_file_path, &#39;r&#39;, encoding=&#39;utf-8&#39;) as file:
-          lines = file.readlines()
-          tell(&#39;{}&#39;.format(source_file_path), &#39;info&#39;)
-          html = transform_page_to_html(lines, template, source_file_path, abort_draft)
-          write_file(html, target_file_path)
-
-def default_html_template():
-    html = []
-    html.append(&#39;&lt;head&gt;&lt;title&gt;&lt;/title&gt;&lt;/head&gt;&#39;)
-    html.append(&#39;&lt;body&gt;&#39;)
-    html.append(&#39;{content}&#39;)
-    html.append(&#39;&lt;/body&gt;&#39;)
-    html.append(&#39;&lt;/html&gt;&#39;)
-    return &#39;\n&#39;.join(html)
-
-def load_html_template(template_path):
-    try:
-        with open(template_path, &#39;r&#39;, encoding=&#39;utf-8&#39;, errors=&#34;surrogateescape&#34;) as templatefile:
-            template = templatefile.read()
-            tell(&#39;Loading template {}.&#39;.format(template_path), &#39;info&#39;)
-            return template
-    except FileNotFoundError:
-        tell(&#39;Template file missing. Expected at {}. Using default template.&#39;.format(template_path), &#39;warn&#39;)
-        return default_html_template()
-
-def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True, verbose=False):
-    #global LOG_VERBOSE
-    LOG_VERBOSE = verbose
-    template = load_html_template(template_file)
-    for filename in os.listdir(input_path):
-        source_file_path = os.path.join(input_path, filename)
-        if os.path.isfile(source_file_path) and filename.endswith(&#39;.md&#39;):
-            target_file_name = os.path.splitext(os.path.basename(filename))[0] + &#39;.html&#39;
-            target_file_path = os.path.join(output_path, target_file_name)
-            if _create_target(source_file_path, target_file_path, template_file, rebuild_all_pages):
-                process_file(source_file_path, target_file_path, template, abort_draft)</code></pre>
+    return main_chunks</code></pre>
 </details>
 </section>
 <section>
@@ -245,34 +157,15 @@ def build(input_path, output_path, template_file, rebuild_all_pages = True, abor
             if current_main_chunk is not None:
                 current_main_chunk.asides.append(chunk)
             else:
-                tell(&#39;Aside chunk cannot be defined as first element.&#39;, level=&#39;warn&#39;)
+                chunk.raw_chunk.report.tell(
+                    &#34;Aside chunk cannot be defined as first element.&#34;,
+                    level=Report.WARNING,
+                )
                 main_chunks.append(chunk)
         else:
             main_chunks.append(chunk)
             current_main_chunk = chunk
     return main_chunks</code></pre>
-</details>
-</dd>
-<dt id="supermark.core.build"><code class="name flex">
-<span>def <span class="ident">build</span></span>(<span>input_path, output_path, template_file, rebuild_all_pages=True, abort_draft=True, verbose=False)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def build(input_path, output_path, template_file, rebuild_all_pages = True, abort_draft = True, verbose=False):
-    #global LOG_VERBOSE
-    LOG_VERBOSE = verbose
-    template = load_html_template(template_file)
-    for filename in os.listdir(input_path):
-        source_file_path = os.path.join(input_path, filename)
-        if os.path.isfile(source_file_path) and filename.endswith(&#39;.md&#39;):
-            target_file_name = os.path.splitext(os.path.basename(filename))[0] + &#39;.html&#39;
-            target_file_path = os.path.join(output_path, target_file_name)
-            if _create_target(source_file_path, target_file_path, template_file, rebuild_all_pages):
-                process_file(source_file_path, target_file_path, template, abort_draft)</code></pre>
 </details>
 </dd>
 <dt id="supermark.core.cast"><code class="name flex">
@@ -289,26 +182,28 @@ def build(input_path, output_path, template_file, rebuild_all_pages = True, abor
     page_variables = {}
     for raw in rawchunks:
         chunk_type = raw.get_type()
-        if chunk_type==ParserState.MARKDOWN:
-            if raw.get_tag() == &#39;hint&#39;:
+        if chunk_type == ParserState.MARKDOWN:
+            if raw.get_tag() == &#34;hint&#34;:
                 chunks.append(Hint(raw, page_variables))
             else:
                 chunks.append(MarkdownChunk(raw, page_variables))
-        elif chunk_type==ParserState.YAML:
-            dictionary = yaml.safe_load(&#39;&#39;.join(raw.lines))
+        elif chunk_type == ParserState.YAML:
+            dictionary = yaml.safe_load(&#34;&#34;.join(raw.lines))
             if isinstance(dictionary, dict):
-                if &#39;type&#39; in dictionary:
-                    yaml_type = dictionary[&#39;type&#39;]
-                    if yaml_type == &#39;youtube&#39;:
+                if &#34;type&#34; in dictionary:
+                    yaml_type = dictionary[&#34;type&#34;]
+                    if yaml_type == &#34;youtube&#34;:
                         chunks.append(Video(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;figure&#39;:
+                    elif yaml_type == &#34;figure&#34;:
                         chunks.append(Figure(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;button&#39;:
+                    elif yaml_type == &#34;button&#34;:
                         chunks.append(Button(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;lines&#39;:
+                    elif yaml_type == &#34;lines&#34;:
                         chunks.append(Lines(raw, dictionary, page_variables))
-                    elif yaml_type == &#39;table&#39;:
+                    elif yaml_type == &#34;table&#34;:
                         chunks.append(Table(raw, dictionary, page_variables))
+                    elif yaml_type == &#34;hint&#34;:
+                        chunks.append(Hint2(raw, dictionary, page_variables))
                     # TODO warn if unknown type
                 else:
                     data_chunk = YAMLDataChunk(raw, dictionary, page_variables)
@@ -318,68 +213,16 @@ def build(input_path, output_path, template_file, rebuild_all_pages = True, abor
                         print(e)
                     chunks.append(data_chunk)
             else:
-                tell(&#39;Something is wrong with the YAML section.&#39;, level=&#39;error&#39;, chunk=raw)
-        elif chunk_type==ParserState.HTML:
+                raw.report.tell(
+                    &#34;Something is wrong with the YAML section.&#34;,
+                    level=Report.ERROR,
+                    chunk=raw,
+                )
+        elif chunk_type == ParserState.HTML:
             chunks.append(HTMLChunk(raw, page_variables))
-        elif chunk_type==ParserState.CODE:
+        elif chunk_type == ParserState.CODE:
             chunks.append(Code(raw, page_variables))
     return chunks</code></pre>
-</details>
-</dd>
-<dt id="supermark.core.default_html_template"><code class="name flex">
-<span>def <span class="ident">default_html_template</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def default_html_template():
-    html = []
-    html.append(&#39;&lt;head&gt;&lt;title&gt;&lt;/title&gt;&lt;/head&gt;&#39;)
-    html.append(&#39;&lt;body&gt;&#39;)
-    html.append(&#39;{content}&#39;)
-    html.append(&#39;&lt;/body&gt;&#39;)
-    html.append(&#39;&lt;/html&gt;&#39;)
-    return &#39;\n&#39;.join(html)</code></pre>
-</details>
-</dd>
-<dt id="supermark.core.load_html_template"><code class="name flex">
-<span>def <span class="ident">load_html_template</span></span>(<span>template_path)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load_html_template(template_path):
-    try:
-        with open(template_path, &#39;r&#39;, encoding=&#39;utf-8&#39;, errors=&#34;surrogateescape&#34;) as templatefile:
-            template = templatefile.read()
-            tell(&#39;Loading template {}.&#39;.format(template_path), &#39;info&#39;)
-            return template
-    except FileNotFoundError:
-        tell(&#39;Template file missing. Expected at {}. Using default template.&#39;.format(template_path), &#39;warn&#39;)
-        return default_html_template()</code></pre>
-</details>
-</dd>
-<dt id="supermark.core.process_file"><code class="name flex">
-<span>def <span class="ident">process_file</span></span>(<span>source_file_path, target_file_path, template, abort_draft)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def process_file(source_file_path, target_file_path, template, abort_draft):
-     with open(source_file_path, &#39;r&#39;, encoding=&#39;utf-8&#39;) as file:
-          lines = file.readlines()
-          tell(&#39;{}&#39;.format(source_file_path), &#39;info&#39;)
-          html = transform_page_to_html(lines, template, source_file_path, abort_draft)
-          write_file(html, target_file_path)</code></pre>
 </details>
 </dd>
 <dt id="supermark.core.random_id"><code class="name flex">
@@ -392,80 +235,7 @@ def build(input_path, output_path, template_file, rebuild_all_pages = True, abor
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def random_id():
-    return &#39;&#39;.join(random.choices(string.ascii_uppercase + string.digits, k=5))</code></pre>
-</details>
-</dd>
-<dt id="supermark.core.transform_page_to_html"><code class="name flex">
-<span>def <span class="ident">transform_page_to_html</span></span>(<span>lines, template, filepath, abort_draft)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def transform_page_to_html(lines, template, filepath, abort_draft):
-    chunks = _parse(lines, filepath)
-    chunks = cast(chunks)
-    chunks = arrange_assides(chunks)
-
-    content = []
-    content.append(&#39;&lt;div class=&#34;page&#34;&gt;&#39;)
-    if len(chunks)==0:
-        pass
-    else:
-        first_chunk = chunks[0]
-        if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
-            content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
-
-    for chunk in chunks:
-        if &#39;status&#39; in chunk.page_variables and abort_draft and chunk.page_variables[&#39;status&#39;] == &#39;draft&#39;:
-            content.append(&#39;&lt;mark&gt;This site is under construction.&lt;/mark&gt;&#39;)
-            break
-        if isinstance(chunk, YAMLDataChunk):
-            pass
-        elif isinstance(chunk, MarkdownChunk):
-            if chunk.is_section:
-                # open a new section
-                content.append(&#39;    &lt;/section&gt;&#39;)
-                content.append(&#39;    &lt;section class=&#34;content&#34;&gt;&#39;)
-            content.append(chunk.to_html())
-            for aside in chunk.asides:
-                content.append(aside.to_html())
-        else:
-            content.append(chunk.to_html())
-            for aside in chunk.asides:
-                content.append(aside.to_html())
-
-    content.append(&#39;    &lt;/section&gt;&#39;)
-    content.append(&#39;&lt;/div&gt;&#39;)
-    content = &#39;\n&#39;.join(content)
-    parameters = {&#39;content&#39;: content}
-    html = template.format(**parameters)
-    return html</code></pre>
-</details>
-</dd>
-<dt id="supermark.core.write_file"><code class="name flex">
-<span>def <span class="ident">write_file</span></span>(<span>html, target_file_path)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def write_file(html, target_file_path):
-    encoding = &#39;utf-8&#39;
-    try:
-        with open(target_file_path, &#34;w&#34;, encoding=encoding) as html_file:
-            html_file.write(html)
-    except UnicodeEncodeError as error:
-        tell(&#39;Encoding error when writing file {}.&#39;.format(target_file_path))
-        character = error.object[error.start:error.end]
-        line = html.count(&#34;\n&#34;,0,error.start)+1
-        tell(&#39;Character {} in line {} cannot be saved with encoding {}.&#39;.format(character, line, encoding))
-        with open(target_file_path, &#34;w&#34;, encoding=encoding, errors=&#39;ignore&#39;) as html_file:
-            html_file.write(html)</code></pre>
+    return &#34;&#34;.join(random.choices(string.ascii_uppercase + string.digits, k=5))</code></pre>
 </details>
 </dd>
 </dl>
@@ -487,14 +257,8 @@ def build(input_path, output_path, template_file, rebuild_all_pages = True, abor
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="supermark.core.arrange_assides" href="#supermark.core.arrange_assides">arrange_assides</a></code></li>
-<li><code><a title="supermark.core.build" href="#supermark.core.build">build</a></code></li>
 <li><code><a title="supermark.core.cast" href="#supermark.core.cast">cast</a></code></li>
-<li><code><a title="supermark.core.default_html_template" href="#supermark.core.default_html_template">default_html_template</a></code></li>
-<li><code><a title="supermark.core.load_html_template" href="#supermark.core.load_html_template">load_html_template</a></code></li>
-<li><code><a title="supermark.core.process_file" href="#supermark.core.process_file">process_file</a></code></li>
 <li><code><a title="supermark.core.random_id" href="#supermark.core.random_id">random_id</a></code></li>
-<li><code><a title="supermark.core.transform_page_to_html" href="#supermark.core.transform_page_to_html">transform_page_to_html</a></code></li>
-<li><code><a title="supermark.core.write_file" href="#supermark.core.write_file">write_file</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.4" />
-<title>supermark.command API documentation</title>
+<title>supermark.hint2 API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>supermark.command</code></h1>
+<h1 class="title">Module <code>supermark.hint2</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -27,74 +27,49 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import os
+import re
 
-import click
+import pypandoc
 
-from . import __version__
-from .build_html import build_html
-from .build_latex import build_latex
-
-# @click.version_option(version=__version__)
+from .chunks import YAMLChunk
+from .report import Report
 
 
-@click.command()
-@click.option(
-    &#34;-a&#34;,
-    &#34;--all&#34;,
-    is_flag=True,
-    default=False,
-    help=&#34;Rebuild all pages, do not regard file timestamps.&#34;,
-)
-@click.option(
-    &#34;-v&#34;,
-    &#34;--verbose&#34;,
-    is_flag=True,
-    default=False,
-    help=&#34;Provide more feedback on what is happening.&#34;,
-)
-@click.option(
-    &#34;-d&#34;,
-    &#34;--draft&#34;,
-    is_flag=True,
-    default=False,
-    help=&#34;Also print draft parts of the documents.&#34;,
-)
-@click.option(
-    &#34;-i&#34;,
-    &#34;--input&#34;,
-    &#34;input&#34;,
-    type=click.Path(exists=True),
-    help=&#34;Input directory containing the source files.&#34;,
-)
-@click.option(
-    &#34;-o&#34;, &#34;--output&#34;, &#34;output&#34;, type=click.Path(exists=True), help=&#34;Output directory.&#34;
-)
-@click.option(
-    &#34;-t&#34;,
-    &#34;--template&#34;,
-    &#34;template&#34;,
-    type=click.File(&#34;rb&#34;),
-    help=&#34;Template file for the transformation.&#34;,
-)
-# @click.option(&#39;-f&#39;, &#39;--format&#39;, &#39;html&#39;, type=click.Choice([&#39;html&#39;, &#39;pdf&#39;], case_sensitive=False))
-def run(all, verbose, draft, input=None, output=None, template=None):
-    format = &#34;html&#34;
-    input_path = input or os.path.join(os.getcwd(), &#34;pages&#34;)
-    output_path = output or os.getcwd()
-    template_path = template or os.path.join(os.getcwd(), &#34;templates/page.html&#34;)
-    if format == &#34;pdf&#34;:
-        build_latex(
-            input_path, output_path,
+class Hint2(YAMLChunk):
+    def __init__(self, raw_chunk, dictionary, page_variables):
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[],
+            optional=[&#34;title&#34;],
         )
-    else:
-        build_html(
-            input_path,
-            output_path,
-            template_path,
-            rebuild_all_pages=all,
-            abort_draft=not draft,
-            verbose=verbose,
-        )</code></pre>
+        self.title = dictionary[&#34;title&#34;] if &#34;title&#34; in dictionary else &#34;&#34;
+        if self.has_post_yaml():
+            self.hint = self.get_post_yaml()
+        else:
+            raw_chunk.report.tell(&#34;Hint should have a post-yaml section with the content.&#34;, Report.WARNING)
+            self.hint = &#34;&#34;
+
+    def to_html(self):
+        html = []
+        html.append(&#39;&lt;button class=&#34;w3collapsible&#34;&gt;{}&lt;/button&gt;&#39;.format(self.title))
+        html.append(&#39;&lt;div class=&#34;w3content&#34;&gt;&#39;)
+        #extra_args = [&#34;--from&#34;, &#34;markdown&#34;, &#34;--to&#34;, &#34;html&#34;]
+        content = pypandoc.convert_text(
+            self.hint, &#34;html&#34;, format=&#34;md&#34;
+        )
+        print(self.hint)
+        print(&#39;------------&#39;)
+        print(content)
+        html.append(content)
+        html.append(&#39;&lt;/div&gt;&#39;)
+        return &#34;\n&#34;.join(html)
+
+    def to_latex(self, builder):
+        latex = []
+        # TODO
+        return &#34;\n&#34;.join(latex)</code></pre>
 </details>
 </section>
 <section>
@@ -104,6 +79,104 @@ def run(all, verbose, draft, input=None, output=None, template=None):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="supermark.hint2.Hint2"><code class="flex name class">
+<span>class <span class="ident">Hint2</span></span>
+<span>(</span><span>raw_chunk, dictionary, page_variables)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for a chunk.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Hint2(YAMLChunk):
+    def __init__(self, raw_chunk, dictionary, page_variables):
+        super().__init__(
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[],
+            optional=[&#34;title&#34;],
+        )
+        self.title = dictionary[&#34;title&#34;] if &#34;title&#34; in dictionary else &#34;&#34;
+        if self.has_post_yaml():
+            self.hint = self.get_post_yaml()
+        else:
+            raw_chunk.report.tell(&#34;Hint should have a post-yaml section with the content.&#34;, Report.WARNING)
+            self.hint = &#34;&#34;
+
+    def to_html(self):
+        html = []
+        html.append(&#39;&lt;button class=&#34;w3collapsible&#34;&gt;{}&lt;/button&gt;&#39;.format(self.title))
+        html.append(&#39;&lt;div class=&#34;w3content&#34;&gt;&#39;)
+        #extra_args = [&#34;--from&#34;, &#34;markdown&#34;, &#34;--to&#34;, &#34;html&#34;]
+        content = pypandoc.convert_text(
+            self.hint, &#34;html&#34;, format=&#34;md&#34;
+        )
+        print(self.hint)
+        print(&#39;------------&#39;)
+        print(content)
+        html.append(content)
+        html.append(&#39;&lt;/div&gt;&#39;)
+        return &#34;\n&#34;.join(html)
+
+    def to_latex(self, builder):
+        latex = []
+        # TODO
+        return &#34;\n&#34;.join(latex)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="supermark.chunks.YAMLChunk" href="chunks.html#supermark.chunks.YAMLChunk">YAMLChunk</a></li>
+<li><a title="supermark.chunks.Chunk" href="chunks.html#supermark.chunks.Chunk">Chunk</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="supermark.hint2.Hint2.to_html"><code class="name flex">
+<span>def <span class="ident">to_html</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_html(self):
+    html = []
+    html.append(&#39;&lt;button class=&#34;w3collapsible&#34;&gt;{}&lt;/button&gt;&#39;.format(self.title))
+    html.append(&#39;&lt;div class=&#34;w3content&#34;&gt;&#39;)
+    #extra_args = [&#34;--from&#34;, &#34;markdown&#34;, &#34;--to&#34;, &#34;html&#34;]
+    content = pypandoc.convert_text(
+        self.hint, &#34;html&#34;, format=&#34;md&#34;
+    )
+    print(self.hint)
+    print(&#39;------------&#39;)
+    print(content)
+    html.append(content)
+    html.append(&#39;&lt;/div&gt;&#39;)
+    return &#34;\n&#34;.join(html)</code></pre>
+</details>
+</dd>
+<dt id="supermark.hint2.Hint2.to_latex"><code class="name flex">
+<span>def <span class="ident">to_latex</span></span>(<span>self, builder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_latex(self, builder):
+    latex = []
+    # TODO
+    return &#34;\n&#34;.join(latex)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -115,6 +188,17 @@ def run(all, verbose, draft, input=None, output=None, template=None):
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="supermark" href="index.html">supermark</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="supermark.hint2.Hint2" href="#supermark.hint2.Hint2">Hint2</a></code></h4>
+<ul class="">
+<li><code><a title="supermark.hint2.Hint2.to_html" href="#supermark.hint2.Hint2.to_html">to_html</a></code></li>
+<li><code><a title="supermark.hint2.Hint2.to_latex" href="#supermark.hint2.Hint2.to_latex">to_latex</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

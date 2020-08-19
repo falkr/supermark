@@ -28,16 +28,22 @@
 </summary>
 <pre><code class="python">from .chunks import YAMLChunk
 
-class Button(YAMLChunk):
 
+class Button(YAMLChunk):
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;url&#39;, &#39;text&#39;])
+        super().__init__(
+            raw_chunk, dictionary, page_variables, required=[&#34;url&#34;, &#34;text&#34;]
+        )
 
     def to_html(self):
-        clazz = &#39;ntnu-button&#39;
+        clazz = &#34;ntnu-button&#34;
         html = []
-        html.append(&#39;&lt;a class=&#34;{}&#34; href=&#34;{}&#34;&gt;{}&lt;/a&gt;&#39;.format(clazz, self.dictionary[&#39;url&#39;], self.dictionary[&#39;text&#39;]))
-        return &#39;\n&#39;.join(html)</code></pre>
+        html.append(
+            &#39;&lt;a class=&#34;{}&#34; href=&#34;{}&#34;&gt;{}&lt;/a&gt;&#39;.format(
+                clazz, self.dictionary[&#34;url&#34;], self.dictionary[&#34;text&#34;]
+            )
+        )
+        return &#34;\n&#34;.join(html)</code></pre>
 </details>
 </section>
 <section>
@@ -60,15 +66,20 @@ class Button(YAMLChunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Button(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;url&#39;, &#39;text&#39;])
+        super().__init__(
+            raw_chunk, dictionary, page_variables, required=[&#34;url&#34;, &#34;text&#34;]
+        )
 
     def to_html(self):
-        clazz = &#39;ntnu-button&#39;
+        clazz = &#34;ntnu-button&#34;
         html = []
-        html.append(&#39;&lt;a class=&#34;{}&#34; href=&#34;{}&#34;&gt;{}&lt;/a&gt;&#39;.format(clazz, self.dictionary[&#39;url&#39;], self.dictionary[&#39;text&#39;]))
-        return &#39;\n&#39;.join(html)</code></pre>
+        html.append(
+            &#39;&lt;a class=&#34;{}&#34; href=&#34;{}&#34;&gt;{}&lt;/a&gt;&#39;.format(
+                clazz, self.dictionary[&#34;url&#34;], self.dictionary[&#34;text&#34;]
+            )
+        )
+        return &#34;\n&#34;.join(html)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -87,10 +98,14 @@ class Button(YAMLChunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_html(self):
-    clazz = &#39;ntnu-button&#39;
+    clazz = &#34;ntnu-button&#34;
     html = []
-    html.append(&#39;&lt;a class=&#34;{}&#34; href=&#34;{}&#34;&gt;{}&lt;/a&gt;&#39;.format(clazz, self.dictionary[&#39;url&#39;], self.dictionary[&#39;text&#39;]))
-    return &#39;\n&#39;.join(html)</code></pre>
+    html.append(
+        &#39;&lt;a class=&#34;{}&#34; href=&#34;{}&#34;&gt;{}&lt;/a&gt;&#39;.format(
+            clazz, self.dictionary[&#34;url&#34;], self.dictionary[&#34;text&#34;]
+        )
+    )
+    return &#34;\n&#34;.join(html)</code></pre>
 </details>
 </dd>
 </dl>

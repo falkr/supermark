@@ -28,16 +28,16 @@
 </summary>
 <pre><code class="python">from .chunks import YAMLChunk
 
-class Lines(YAMLChunk):
 
+class Lines(YAMLChunk):
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;lines&#39;])
+        super().__init__(raw_chunk, dictionary, page_variables, required=[&#34;lines&#34;])
 
     def to_html(self):
         html = []
-        for _ in range(self.dictionary[&#39;lines&#39;]):
+        for _ in range(self.dictionary[&#34;lines&#34;]):
             html.append(&#39;&lt;hr class=&#34;lines&#34;/&gt;&#39;)
-        return &#39;\n&#39;.join(html)</code></pre>
+        return &#34;\n&#34;.join(html)</code></pre>
 </details>
 </section>
 <section>
@@ -60,15 +60,14 @@ class Lines(YAMLChunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Lines(YAMLChunk):
-
     def __init__(self, raw_chunk, dictionary, page_variables):
-        super().__init__(raw_chunk, dictionary, page_variables, required=[&#39;lines&#39;])
+        super().__init__(raw_chunk, dictionary, page_variables, required=[&#34;lines&#34;])
 
     def to_html(self):
         html = []
-        for _ in range(self.dictionary[&#39;lines&#39;]):
+        for _ in range(self.dictionary[&#34;lines&#34;]):
             html.append(&#39;&lt;hr class=&#34;lines&#34;/&gt;&#39;)
-        return &#39;\n&#39;.join(html)</code></pre>
+        return &#34;\n&#34;.join(html)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -88,9 +87,9 @@ class Lines(YAMLChunk):
 </summary>
 <pre><code class="python">def to_html(self):
     html = []
-    for _ in range(self.dictionary[&#39;lines&#39;]):
+    for _ in range(self.dictionary[&#34;lines&#34;]):
         html.append(&#39;&lt;hr class=&#34;lines&#34;/&gt;&#39;)
-    return &#39;\n&#39;.join(html)</code></pre>
+    return &#34;\n&#34;.join(html)</code></pre>
 </details>
 </dd>
 </dl>

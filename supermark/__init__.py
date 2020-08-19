@@ -3,7 +3,7 @@ from .build_latex import build_latex
 from .chunks import Chunk, HTMLChunk, MarkdownChunk, YAMLChunk, YAMLDataChunk
 from .parse import RawChunk
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 __all__ = [
     "RawChunk",

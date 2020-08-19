@@ -26,18 +26,48 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .chunks import Chunk
-import pypandoc
+<pre><code class="python">import pypandoc
+from pygments import highlight
+from pygments.formatters import LatexFormatter
+from pygments.lexers import get_lexer_by_name
+
+from .chunks import Chunk
+
 
 class Code(Chunk):
-
     def __init__(self, raw_chunk, page_variables):
         super().__init__(raw_chunk, page_variables)
 
     def to_html(self):
-        extra_args = [&#39;--highlight-style&#39;, &#39;pygments&#39;]
-        output = pypandoc.convert_text(self.get_content(), &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
-        return output</code></pre>
+        extra_args = [&#34;--highlight-style&#34;, &#34;pygments&#34;]
+        output = pypandoc.convert_text(
+            self.get_content(), &#34;html&#34;, format=&#34;md&#34;, extra_args=extra_args
+        )
+        return output
+
+    def to_latex(self, builder):
+        if self.get_first_line().startswith(&#34;```&#34;):
+            lang = self.get_first_line().replace(&#34;```&#34;, &#34;&#34;).strip()
+            code = &#34;&#34;.join(self.raw_chunk.lines[1:-1])
+        else:
+            lang = None
+            code = self.get_content()
+        lexer = None
+        if lang is not None:
+            try:
+                lexer = get_lexer_by_name(lang, stripall=True)
+            except Exception as e:
+                pass
+        output = []
+        if lexer is not None:
+            formatter = LatexFormatter(linenos=False, verboptions=&#34;breaklines&#34;)
+            result = highlight(code, lexer, formatter)
+            output.append(result)
+        else:
+            output.append(&#34;\\begin{Verbatim}[breaklines]&#34;)
+            output.append(code)
+            output.append(&#34;\end{Verbatim}&#34;)
+        return &#34;\n&#34;.join(output)</code></pre>
 </details>
 </section>
 <section>
@@ -60,14 +90,39 @@ class Code(Chunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Code(Chunk):
-
     def __init__(self, raw_chunk, page_variables):
         super().__init__(raw_chunk, page_variables)
 
     def to_html(self):
-        extra_args = [&#39;--highlight-style&#39;, &#39;pygments&#39;]
-        output = pypandoc.convert_text(self.get_content(), &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
-        return output</code></pre>
+        extra_args = [&#34;--highlight-style&#34;, &#34;pygments&#34;]
+        output = pypandoc.convert_text(
+            self.get_content(), &#34;html&#34;, format=&#34;md&#34;, extra_args=extra_args
+        )
+        return output
+
+    def to_latex(self, builder):
+        if self.get_first_line().startswith(&#34;```&#34;):
+            lang = self.get_first_line().replace(&#34;```&#34;, &#34;&#34;).strip()
+            code = &#34;&#34;.join(self.raw_chunk.lines[1:-1])
+        else:
+            lang = None
+            code = self.get_content()
+        lexer = None
+        if lang is not None:
+            try:
+                lexer = get_lexer_by_name(lang, stripall=True)
+            except Exception as e:
+                pass
+        output = []
+        if lexer is not None:
+            formatter = LatexFormatter(linenos=False, verboptions=&#34;breaklines&#34;)
+            result = highlight(code, lexer, formatter)
+            output.append(result)
+        else:
+            output.append(&#34;\\begin{Verbatim}[breaklines]&#34;)
+            output.append(code)
+            output.append(&#34;\end{Verbatim}&#34;)
+        return &#34;\n&#34;.join(output)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -85,9 +140,45 @@ class Code(Chunk):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_html(self):
-    extra_args = [&#39;--highlight-style&#39;, &#39;pygments&#39;]
-    output = pypandoc.convert_text(self.get_content(), &#39;html&#39;, format=&#39;md&#39;, extra_args=extra_args)
+    extra_args = [&#34;--highlight-style&#34;, &#34;pygments&#34;]
+    output = pypandoc.convert_text(
+        self.get_content(), &#34;html&#34;, format=&#34;md&#34;, extra_args=extra_args
+    )
     return output</code></pre>
+</details>
+</dd>
+<dt id="supermark.code.Code.to_latex"><code class="name flex">
+<span>def <span class="ident">to_latex</span></span>(<span>self, builder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_latex(self, builder):
+    if self.get_first_line().startswith(&#34;```&#34;):
+        lang = self.get_first_line().replace(&#34;```&#34;, &#34;&#34;).strip()
+        code = &#34;&#34;.join(self.raw_chunk.lines[1:-1])
+    else:
+        lang = None
+        code = self.get_content()
+    lexer = None
+    if lang is not None:
+        try:
+            lexer = get_lexer_by_name(lang, stripall=True)
+        except Exception as e:
+            pass
+    output = []
+    if lexer is not None:
+        formatter = LatexFormatter(linenos=False, verboptions=&#34;breaklines&#34;)
+        result = highlight(code, lexer, formatter)
+        output.append(result)
+    else:
+        output.append(&#34;\\begin{Verbatim}[breaklines]&#34;)
+        output.append(code)
+        output.append(&#34;\end{Verbatim}&#34;)
+    return &#34;\n&#34;.join(output)</code></pre>
 </details>
 </dd>
 </dl>
@@ -112,6 +203,7 @@ class Code(Chunk):
 <h4><code><a title="supermark.code.Code" href="#supermark.code.Code">Code</a></code></h4>
 <ul class="">
 <li><code><a title="supermark.code.Code.to_html" href="#supermark.code.Code.to_html">to_html</a></code></li>
+<li><code><a title="supermark.code.Code.to_latex" href="#supermark.code.Code.to_latex">to_latex</a></code></li>
 </ul>
 </li>
 </ul>

@@ -11,6 +11,7 @@ from .chunks import HTMLChunk, MarkdownChunk, YAMLDataChunk
 from .code import Code
 from .figure import Figure
 from .hint import Hint
+from .hint2 import Hint2
 from .lines import Lines
 from .parse import ParserState, _parse
 from .table import Table
@@ -62,6 +63,8 @@ def cast(rawchunks):
                         chunks.append(Lines(raw, dictionary, page_variables))
                     elif yaml_type == "table":
                         chunks.append(Table(raw, dictionary, page_variables))
+                    elif yaml_type == "hint":
+                        chunks.append(Hint2(raw, dictionary, page_variables))
                     # TODO warn if unknown type
                 else:
                     data_chunk = YAMLDataChunk(raw, dictionary, page_variables)

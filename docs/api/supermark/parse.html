@@ -28,44 +28,56 @@
 </summary>
 <pre><code class="python">import re
 from enum import Enum
+from pathlib import Path
+
 
 class ParserState(Enum):
     MARKDOWN = 0
     YAML = 1
     CODE = 2
     HTML = 3
+    AFTER_YAML = 4
+    AFTER_YAML_CONTENT = 5
 
-ENV_PATTERN = re.compile(&#39;[a-zA-Z]*:&#39;)
+
+ENV_PATTERN = re.compile(&#34;[a-zA-Z]*:&#34;)
+
 
 def is_empty(s_line):
     return not s_line
 
-class RawChunk:
 
-    def __init__(self, lines, chunk_type, start_line_number, path):
+class RawChunk:
+    def __init__(self, lines, chunk_type, start_line_number, path, report):
         self.lines = lines
         self.type = chunk_type
         self.start_line_number = start_line_number
         self.path = path
+        self.parent_path = Path(path).parent.parent
+        self.report = report
         # check if we only got empty lines
         def all_empty(lines):
-            if len(lines) == 0: return True
+            if len(lines) == 0:
+                return True
             for line in lines:
-                if line.strip(): return False
+                if line.strip():
+                    return False
             return True
+
         self._is_empty = all_empty(self.lines)
         # remove blank lines from the beginning
-        while (len(self.lines)&gt;0 and is_empty(self.lines[0].strip())):
+        while len(self.lines) &gt; 0 and is_empty(self.lines[0].strip()):
             self.lines.pop(0)
             self.start_line_number = self.start_line_number + 1
         self.tag = None
         if len(self.lines) &gt; 0:
             if has_class_tag(self.lines[0]):
-                self.tag = self.lines[0].strip().split(&#39;:&#39;)[1].lower()
-    
+                self.tag = self.lines[0].strip().split(&#34;:&#34;)[1].lower()
+        self.post_yaml = None
+
     def get_tag(self):
         return self.tag
-    
+
     def is_empty(self):
         return self._is_empty
 
@@ -74,67 +86,114 @@ class RawChunk:
 
     def get_first_line(self):
         if len(self.lines) == 0:
-            return &#39;empty&#39;
+            return &#34;empty&#34;
         return self.lines[0]
 
+
 def yaml_start(s_line):
-    return s_line == &#39;---&#39;
+    return s_line == &#34;---&#34;
+
 
 def yaml_stop(s_line):
-    return s_line == &#39;---&#39;
+    return s_line == &#34;---&#34;
+
 
 def has_class_tag(s_line):
-    return s_line.startswith(&#39;:&#39;) and ENV_PATTERN.match(s_line)
+    return s_line.startswith(&#34;:&#34;) and ENV_PATTERN.match(s_line)
+
 
 def markdown_start(s_line, empty_lines):
-    return has_class_tag(s_line) or s_line.startswith(&#39;# &#39;) or empty_lines &gt;= 2 or s_line.startswith(&#39;Aside:&#39;)
+    return (
+        has_class_tag(s_line)
+        or s_line.startswith(&#34;# &#34;)
+        or empty_lines &gt;= 2
+        or s_line.startswith(&#34;Aside:&#34;)
+    )
+
 
 def html_start(s_line, empty_lines):
-    return s_line.startswith(&#39;&lt;&#39;) and empty_lines &gt;= 2
+    return s_line.startswith(&#34;&lt;&#34;) and empty_lines &gt;= 2
+
 
 def html_stop(empty_lines):
     return empty_lines &gt;= 2
 
+
 def code_start(s_line):
-    return s_line.startswith(&#39;```&#39;)
+    return s_line.startswith(&#34;```&#34;)
+
 
 def code_stop(s_line):
-    return s_line.startswith(&#39;```&#39;)
+    return s_line.startswith(&#34;```&#34;)
 
-def _parse(lines, path):
+
+def _parse(lines, path, report):
     chunks = []
     current_lines = []
     empty_lines = 0
     state = ParserState.MARKDOWN
     start_line_number = 0
+    previous_yaml_chunk = None
 
     for line_number, line in enumerate(lines, start=1):
         s_line = line.strip()
-        if state==ParserState.MARKDOWN:
+        if state == ParserState.MARKDOWN:
             if is_empty(s_line):
                 empty_lines = empty_lines + 1
                 current_lines.append(line)
             elif yaml_start(s_line):
-                chunks.append(RawChunk(current_lines, ParserState.MARKDOWN, start_line_number, path))
+                chunks.append(
+                    RawChunk(
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
+                    )
+                )
                 state = ParserState.YAML
                 current_lines = []
                 start_line_number = line_number
                 empty_lines = 0
             elif code_start(s_line):
-                chunks.append(RawChunk(current_lines, ParserState.MARKDOWN, start_line_number, path))
+                chunks.append(
+                    RawChunk(
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
+                    )
+                )
                 state = ParserState.CODE
                 current_lines = [line]
                 start_line_number = line_number
                 empty_lines = 0
             elif html_start(s_line, empty_lines):
-                chunks.append(RawChunk(current_lines, ParserState.MARKDOWN, start_line_number, path))
+                chunks.append(
+                    RawChunk(
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
+                    )
+                )
                 state = ParserState.HTML
                 current_lines = []
                 current_lines.append(line)
                 start_line_number = line_number
                 empty_lines = 0
             elif markdown_start(s_line, empty_lines):
-                chunks.append(RawChunk(current_lines, ParserState.MARKDOWN, start_line_number, path))
+                chunks.append(
+                    RawChunk(
+                        current_lines,
+                        ParserState.MARKDOWN,
+                        start_line_number,
+                        path,
+                        report,
+                    )
+                )
                 state = ParserState.MARKDOWN
                 current_lines = []
                 current_lines.append(line)
@@ -143,29 +202,63 @@ def _parse(lines, path):
             else:
                 current_lines.append(line)
                 empty_lines = 0
-        elif state==ParserState.YAML:
+        elif state == ParserState.YAML:
             if yaml_stop(s_line):
-                chunks.append(RawChunk(current_lines, ParserState.YAML, start_line_number, path))
-                state = ParserState.MARKDOWN
+                previous_yaml_chunk = RawChunk(
+                    current_lines, ParserState.YAML, start_line_number, path, report
+                )
+                chunks.append(previous_yaml_chunk)
+                state = ParserState.AFTER_YAML
                 current_lines = []
                 start_line_number = line_number + 1
             else:
                 current_lines.append(line)
-        elif state==ParserState.CODE:
+        elif state == ParserState.AFTER_YAML:
+            if is_empty(s_line):
+                empty_lines = empty_lines + 1
+                current_lines.append(line)
+                state = ParserState.MARKDOWN
+                previous_yaml_chunk = None
+            else:
+                current_lines.append(line)
+                state = ParserState.AFTER_YAML_CONTENT
+                empty_lines = 0
+        elif state == ParserState.AFTER_YAML_CONTENT:
+            if is_empty(s_line):
+                empty_lines = empty_lines + 1
+                if empty_lines &gt; 1:
+                    previous_yaml_chunk.post_yaml = current_lines
+                    state = ParserState.MARKDOWN
+                    current_lines = []
+                else:
+                    current_lines.append(line)
+                start_line_number = line_number + 1
+            else:
+                empty_lines = 0
+                current_lines.append(line)
+        elif state == ParserState.CODE:
             if code_stop(s_line):
                 current_lines.append(line)
-                chunks.append(RawChunk(current_lines, ParserState.CODE, start_line_number, path))
+                chunks.append(
+                    RawChunk(
+                        current_lines, ParserState.CODE, start_line_number, path, report
+                    )
+                )
                 state = ParserState.MARKDOWN
                 current_lines = []
                 start_line_number = line_number + 1
             else:
                 current_lines.append(line)
-        elif state==ParserState.HTML:
+        elif state == ParserState.HTML:
             if is_empty(s_line):
                 empty_lines = empty_lines + 1
                 current_lines.append(line)
             elif html_stop(empty_lines):
-                chunks.append(RawChunk(current_lines, ParserState.HTML, start_line_number, path))
+                chunks.append(
+                    RawChunk(
+                        current_lines, ParserState.HTML, start_line_number, path, report
+                    )
+                )
                 state = ParserState.MARKDOWN
                 current_lines = []
                 current_lines.append(line)
@@ -175,7 +268,7 @@ def _parse(lines, path):
                 current_lines.append(line)
                 empty_lines = 0
     # create last chunk
-    chunks.append(RawChunk(current_lines, state, start_line_number, path))
+    chunks.append(RawChunk(current_lines, state, start_line_number, path, report))
     # remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
     return chunks</code></pre>
@@ -198,7 +291,7 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def code_start(s_line):
-    return s_line.startswith(&#39;```&#39;)</code></pre>
+    return s_line.startswith(&#34;```&#34;)</code></pre>
 </details>
 </dd>
 <dt id="supermark.parse.code_stop"><code class="name flex">
@@ -211,7 +304,7 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def code_stop(s_line):
-    return s_line.startswith(&#39;```&#39;)</code></pre>
+    return s_line.startswith(&#34;```&#34;)</code></pre>
 </details>
 </dd>
 <dt id="supermark.parse.has_class_tag"><code class="name flex">
@@ -224,7 +317,7 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def has_class_tag(s_line):
-    return s_line.startswith(&#39;:&#39;) and ENV_PATTERN.match(s_line)</code></pre>
+    return s_line.startswith(&#34;:&#34;) and ENV_PATTERN.match(s_line)</code></pre>
 </details>
 </dd>
 <dt id="supermark.parse.html_start"><code class="name flex">
@@ -237,7 +330,7 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def html_start(s_line, empty_lines):
-    return s_line.startswith(&#39;&lt;&#39;) and empty_lines &gt;= 2</code></pre>
+    return s_line.startswith(&#34;&lt;&#34;) and empty_lines &gt;= 2</code></pre>
 </details>
 </dd>
 <dt id="supermark.parse.html_stop"><code class="name flex">
@@ -276,7 +369,12 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def markdown_start(s_line, empty_lines):
-    return has_class_tag(s_line) or s_line.startswith(&#39;# &#39;) or empty_lines &gt;= 2 or s_line.startswith(&#39;Aside:&#39;)</code></pre>
+    return (
+        has_class_tag(s_line)
+        or s_line.startswith(&#34;# &#34;)
+        or empty_lines &gt;= 2
+        or s_line.startswith(&#34;Aside:&#34;)
+    )</code></pre>
 </details>
 </dd>
 <dt id="supermark.parse.yaml_start"><code class="name flex">
@@ -289,7 +387,7 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def yaml_start(s_line):
-    return s_line == &#39;---&#39;</code></pre>
+    return s_line == &#34;---&#34;</code></pre>
 </details>
 </dd>
 <dt id="supermark.parse.yaml_stop"><code class="name flex">
@@ -302,7 +400,7 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def yaml_stop(s_line):
-    return s_line == &#39;---&#39;</code></pre>
+    return s_line == &#34;---&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -324,7 +422,9 @@ def _parse(lines, path):
     MARKDOWN = 0
     YAML = 1
     CODE = 2
-    HTML = 3</code></pre>
+    HTML = 3
+    AFTER_YAML = 4
+    AFTER_YAML_CONTENT = 5</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -332,6 +432,14 @@ def _parse(lines, path):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="supermark.parse.ParserState.AFTER_YAML"><code class="name">var <span class="ident">AFTER_YAML</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="supermark.parse.ParserState.AFTER_YAML_CONTENT"><code class="name">var <span class="ident">AFTER_YAML_CONTENT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="supermark.parse.ParserState.CODE"><code class="name">var <span class="ident">CODE</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -352,7 +460,7 @@ def _parse(lines, path):
 </dd>
 <dt id="supermark.parse.RawChunk"><code class="flex name class">
 <span>class <span class="ident">RawChunk</span></span>
-<span>(</span><span>lines, chunk_type, start_line_number, path)</span>
+<span>(</span><span>lines, chunk_type, start_line_number, path, report)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -361,31 +469,36 @@ def _parse(lines, path):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RawChunk:
-
-    def __init__(self, lines, chunk_type, start_line_number, path):
+    def __init__(self, lines, chunk_type, start_line_number, path, report):
         self.lines = lines
         self.type = chunk_type
         self.start_line_number = start_line_number
         self.path = path
+        self.parent_path = Path(path).parent.parent
+        self.report = report
         # check if we only got empty lines
         def all_empty(lines):
-            if len(lines) == 0: return True
+            if len(lines) == 0:
+                return True
             for line in lines:
-                if line.strip(): return False
+                if line.strip():
+                    return False
             return True
+
         self._is_empty = all_empty(self.lines)
         # remove blank lines from the beginning
-        while (len(self.lines)&gt;0 and is_empty(self.lines[0].strip())):
+        while len(self.lines) &gt; 0 and is_empty(self.lines[0].strip()):
             self.lines.pop(0)
             self.start_line_number = self.start_line_number + 1
         self.tag = None
         if len(self.lines) &gt; 0:
             if has_class_tag(self.lines[0]):
-                self.tag = self.lines[0].strip().split(&#39;:&#39;)[1].lower()
-    
+                self.tag = self.lines[0].strip().split(&#34;:&#34;)[1].lower()
+        self.post_yaml = None
+
     def get_tag(self):
         return self.tag
-    
+
     def is_empty(self):
         return self._is_empty
 
@@ -394,7 +507,7 @@ def _parse(lines, path):
 
     def get_first_line(self):
         if len(self.lines) == 0:
-            return &#39;empty&#39;
+            return &#34;empty&#34;
         return self.lines[0]</code></pre>
 </details>
 <h3>Methods</h3>
@@ -410,7 +523,7 @@ def _parse(lines, path):
 </summary>
 <pre><code class="python">def get_first_line(self):
     if len(self.lines) == 0:
-        return &#39;empty&#39;
+        return &#34;empty&#34;
     return self.lines[0]</code></pre>
 </details>
 </dd>
@@ -486,7 +599,9 @@ def _parse(lines, path):
 <ul>
 <li>
 <h4><code><a title="supermark.parse.ParserState" href="#supermark.parse.ParserState">ParserState</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="supermark.parse.ParserState.AFTER_YAML" href="#supermark.parse.ParserState.AFTER_YAML">AFTER_YAML</a></code></li>
+<li><code><a title="supermark.parse.ParserState.AFTER_YAML_CONTENT" href="#supermark.parse.ParserState.AFTER_YAML_CONTENT">AFTER_YAML_CONTENT</a></code></li>
 <li><code><a title="supermark.parse.ParserState.CODE" href="#supermark.parse.ParserState.CODE">CODE</a></code></li>
 <li><code><a title="supermark.parse.ParserState.HTML" href="#supermark.parse.ParserState.HTML">HTML</a></code></li>
 <li><code><a title="supermark.parse.ParserState.MARKDOWN" href="#supermark.parse.ParserState.MARKDOWN">MARKDOWN</a></code></li>

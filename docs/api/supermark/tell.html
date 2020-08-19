@@ -26,24 +26,26 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from colorama import init, Fore, Style
+<pre><code class="python">from colorama import Fore, Style, init
+
 init(autoreset=True)
 
 LOG_VERBOSE = True
 
-def tell(message, level=&#39;info&#39;, chunk=None):
+
+def tell(message, level=&#34;info&#34;, chunk=None):
     # Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
     # Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
     # Style: DIM, NORMAL, BRIGHT, RESET_ALL
     if chunk is not None:
-        message = &#39;{} line {}: {}&#39;.format(chunk.path, chunk.start_line_number, message)
-    if level == &#39;info&#39;:
+        message = &#34;{} line {}: {}&#34;.format(chunk.path, chunk.start_line_number, message)
+    if level == &#34;info&#34;:
         if LOG_VERBOSE:
-            print(Fore.GREEN + Style.BRIGHT +  &#39; - &#39; + Style.RESET_ALL + message)
-    elif level == &#39;warn&#39;:
-        print(Fore.YELLOW + Style.BRIGHT +  &#39; - &#39; + Style.RESET_ALL + message)
+            print(Fore.GREEN + Style.BRIGHT + &#34; - &#34; + Style.RESET_ALL + message)
+    elif level == &#34;warn&#34;:
+        print(Fore.YELLOW + Style.BRIGHT + &#34; - &#34; + Style.RESET_ALL + message)
     else:
-        print(Fore.RED + Style.BRIGHT +  &#39; - &#39; + Style.NORMAL + message)</code></pre>
+        print(Fore.RED + Style.BRIGHT + &#34; - &#34; + Style.NORMAL + message)</code></pre>
 </details>
 </section>
 <section>
@@ -62,19 +64,19 @@ def tell(message, level=&#39;info&#39;, chunk=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def tell(message, level=&#39;info&#39;, chunk=None):
+<pre><code class="python">def tell(message, level=&#34;info&#34;, chunk=None):
     # Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
     # Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
     # Style: DIM, NORMAL, BRIGHT, RESET_ALL
     if chunk is not None:
-        message = &#39;{} line {}: {}&#39;.format(chunk.path, chunk.start_line_number, message)
-    if level == &#39;info&#39;:
+        message = &#34;{} line {}: {}&#34;.format(chunk.path, chunk.start_line_number, message)
+    if level == &#34;info&#34;:
         if LOG_VERBOSE:
-            print(Fore.GREEN + Style.BRIGHT +  &#39; - &#39; + Style.RESET_ALL + message)
-    elif level == &#39;warn&#39;:
-        print(Fore.YELLOW + Style.BRIGHT +  &#39; - &#39; + Style.RESET_ALL + message)
+            print(Fore.GREEN + Style.BRIGHT + &#34; - &#34; + Style.RESET_ALL + message)
+    elif level == &#34;warn&#34;:
+        print(Fore.YELLOW + Style.BRIGHT + &#34; - &#34; + Style.RESET_ALL + message)
     else:
-        print(Fore.RED + Style.BRIGHT +  &#39; - &#39; + Style.NORMAL + message)</code></pre>
+        print(Fore.RED + Style.BRIGHT + &#34; - &#34; + Style.NORMAL + message)</code></pre>
 </details>
 </dd>
 </dl>
