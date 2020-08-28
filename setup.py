@@ -38,6 +38,7 @@ setup(
         "requests",
         "cairosvg",
         "pathlib",
+        "tqdm",
     ],
     package_data={"": ["*.tex", "*.pdf"],},
     include_package_data=True,
