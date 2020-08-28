@@ -15,7 +15,7 @@ class Table(YAMLChunk):
             dictionary,
             page_variables,
             required=[],
-            optional=["file", "class", "caption"],
+            optional=["file", "class", "caption", "format"],
         )
         self.div_class = None if "class" not in dictionary else dictionary["class"]
         if self.has_post_yaml():
@@ -34,16 +34,39 @@ class Table(YAMLChunk):
                 with open(file_path, "r") as myfile:
                     self.table_raw = myfile.read()
 
+    def _cellwise_to_html(self, format):
+        output = []
+        parsed = wtp.parse(self.table_raw)
+        rows = parsed.tables[0].data()
+        if self.div_class:
+            output.append('<table class="{}">'.format(self.div_class))
+        else:
+            output.append("<table>")
+        for row in rows:
+            output.append("<tr>")
+            for cell in row:
+                c = cell if format == "html" else pypandoc.convert_text(cell, "html", format=format)
+                output.append(
+                    "<td>" + c + "</td>"
+                )
+            output.append("</tr>")
+        output.append("</table>")
+        return "\n".join(output)
+
     def to_html(self):
         html = []
         extra_args = ["--from", "mediawiki", "--to", "html"]
-        output = pypandoc.convert_text(
-            self.table_raw, "html", format="md", extra_args=extra_args
-        )
-        if self.div_class:
-            output = re.sub(
-                "(<table)(>)", '\\1 class="{}"\\2'.format(self.div_class), output
+        if "format" in self.dictionary:
+            format = self.dictionary["format"]
+            output = self._cellwise_to_html(format)
+        else:
+            output = pypandoc.convert_text(
+                self.table_raw, "html", format="md", extra_args=extra_args
             )
+            if self.div_class:
+                output = re.sub(
+                    "(<table)(>)", '\\1 class="{}"\\2'.format(self.div_class), output
+                )
         html.append(output)
         if "caption" in self.dictionary:
             html.append('<span name="{}">&nbsp;</span>'.format(self.dictionary["file"]))
@@ -67,14 +90,10 @@ class Table(YAMLChunk):
 
     def to_latex(self, builder):
         parsed = wtp.parse(self.table_raw)
-        # print(parsed)
         rows = parsed.tables[0].data()
         rowspec = ""
-        # print(rows[0])
-        # print(type(rows[0]))
         for _ in rows[0]:
             rowspec = rowspec + "L"
-        # https://pypi.org/project/wikitextparser/#tables
         latex = []
         latex.append("\\begin{table*}[t]")
         latex.append("\\begin{tabulary}{\\textwidth}" + "{{{}}}".format(rowspec))
