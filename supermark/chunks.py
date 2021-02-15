@@ -8,14 +8,17 @@ from .report import Report
 
 
 class Chunk:
-    """ Base class for a chunk.
-    """
+    """Base class for a chunk."""
 
     def __init__(self, raw_chunk, page_variables):
         self.raw_chunk = raw_chunk
         self.page_variables = page_variables
         self.aside = False
         self.asides = []
+        self.ok = True
+
+    def is_ok(self):
+        return self.ok
 
     def is_aside(self):
         return self.aside
@@ -41,6 +44,9 @@ class Chunk:
     def to_latex(self, builder):
         print("No conversion to latex: " + self.get_content())
         return None
+
+    def recode(self):
+        raise NotImplemented
 
     @staticmethod
     def create_hash(content):
@@ -83,6 +89,11 @@ class YAMLChunk(Chunk):
     def get_post_yaml(self):
         return "".join(self.raw_chunk.post_yaml)
 
+    def recode(self):
+        if self.has_post_yaml():
+            return yaml.dump(self.dictionary) + "\n" + "".join(self.raw_chunk.post_yaml)
+        return yaml.dump(self.dictionary)
+
 
 class YAMLDataChunk(YAMLChunk):
     def __init__(self, raw_chunk, dictionary, page_variables):
@@ -99,8 +110,10 @@ class MarkdownChunk(Chunk):
         self.is_section = super().get_first_line().startswith("# ")
         if raw_chunk.get_tag() is not None:
             self.class_tag = super().get_first_line().strip().split(":")[1].lower()
-            self.aside = self.class_tag == "aside"
             self.content = self.content[len(self.class_tag) + 2 :].strip()
+            if self.class_tag == "aside":
+                self.aside = True
+                self.class_tag = None
         else:
             self.class_tag = None
             self.aside = False
@@ -165,6 +178,9 @@ class MarkdownChunk(Chunk):
             return self.wrap(self.bold_prefix("Tip") + output)
         return output
 
+    def recode(self):
+        return self.get_content()
+
 
 class HTMLChunk(Chunk):
     def __init__(self, raw_chunk, page_variables):
@@ -192,3 +208,6 @@ class HTMLChunk(Chunk):
                 pypandoc.convert_text(super().get_content(), "mediawiki", format="html")
             )
             return self.html_to_latex()
+
+    def recode(self):
+        return self.get_content()

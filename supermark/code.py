@@ -2,6 +2,7 @@ import pypandoc
 from pygments import highlight
 from pygments.formatters import LatexFormatter
 from pygments.lexers import get_lexer_by_name
+import black
 
 from .chunks import Chunk
 
@@ -40,3 +41,16 @@ class Code(Chunk):
             output.append(code)
             output.append("\end{Verbatim}")
         return "\n".join(output)
+
+    def recode(self):
+        if self.get_first_line().startswith("```"):
+            lang = self.get_first_line().replace("```", "").strip()
+            code = "".join(self.raw_chunk.lines[1:-1])
+            if lang == "python":
+                try:
+                    code = black.format_str(code, mode=black.Mode())
+                except black.InvalidInput as e:
+                    print(e)
+            return "```" + lang + "\n" + code + "```"
+        else:
+            return self.get_content()

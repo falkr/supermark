@@ -10,7 +10,11 @@ from .report import Report
 class Hint2(YAMLChunk):
     def __init__(self, raw_chunk, dictionary, page_variables):
         super().__init__(
-            raw_chunk, dictionary, page_variables, required=[], optional=["title"],
+            raw_chunk,
+            dictionary,
+            page_variables,
+            required=[],
+            optional=["title"],
         )
         self.title = dictionary["title"] if "title" in dictionary else ""
         if self.has_post_yaml():
@@ -34,3 +38,20 @@ class Hint2(YAMLChunk):
         latex = []
         # TODO
         return "\n".join(latex)
+
+    def example_1(self):
+        """An example to show students a hint."""
+        return (
+            "---"
+            "title: Hint about Something"
+            "---"
+            "Within the content you can have lists:"
+            ""
+            "* 10.0.0.0/8"
+            "* 172.16.0.0/12"
+            "* 192.168.0.0/16"
+            ""
+            "And you can continue."
+            ""
+            "**Remember:** Hints should be helpful."
+        )

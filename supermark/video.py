@@ -56,6 +56,7 @@ class Video(YAMLChunk):
             html.append('<div class="figure">')
             width = 560
             height = 315
+            # TODO set the title element of an iframe to improve accessibility scores
             html.append(
                 '<iframe width="{}" height="{}" src="https://www.youtube-nocookie.com/embed/{}{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(
                     width, height, video, start
@@ -87,22 +88,22 @@ class Video(YAMLChunk):
         download_preview(url, target_path)
         # target_path =  Path('../cached/{}.jpg'.format(video_id))
         target_path = target_path.relative_to(builder.output_file.parent)
-        s.append("\n")
-        s.append("\\begin{video}[h]")
-        s.append("\includegraphics[width=\linewidth]{{{}}}".format(target_path))
+        s.append(r"\n")
+        s.append(r"\\begin{video}[h]")
+        s.append(r"\includegraphics[width=\linewidth]{{{}}}".format(target_path))
         if "caption" in self.dictionary:
             caption = pypandoc.convert_text(
                 self.dictionary["caption"], "latex", format="md"
             )
             s.append(
-                "\caption{"
+                r"\caption{"
                 + caption.strip()
-                + " \\textcolor{SteelBlue}{\\faArrowCircleRight}~"
-                + "\\url{{{}}}".format(video_url)
-                + "}"
+                + r" \\textcolor{SteelBlue}{\\faArrowCircleRight}~"
+                + r"\\url{{{}}}".format(video_url)
+                + r"}"
             )
         else:
-            s.append("\caption{")
-            s.append("\\url{{{}}}".format(video_url) + "}")
-        s.append("\end{video}")
-        return "\n".join(s)
+            s.append(r"\caption{")
+            s.append(r"\\url{{{}}}".format(video_url) + "}")
+        s.append(r"\end{video}")
+        return r"\n".join(s)

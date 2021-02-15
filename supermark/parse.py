@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 from pathlib import Path
+import yaml
 
 
 class ParserState(Enum):
@@ -24,7 +25,7 @@ class RawChunk:
         self.lines = lines
         self.type = chunk_type
         self.start_line_number = start_line_number
-        self.path = path
+        self.path = Path(path)
         self.parent_path = Path(path).parent.parent
         self.report = report
         # check if we only got empty lines
@@ -47,6 +48,9 @@ class RawChunk:
                 self.tag = self.lines[0].strip().split(":")[1].lower()
         self.post_yaml = None
 
+    def tell(self, message: str, level: int = 0):
+        self.report.tell(message, level=level, chunk=self)
+
     def get_tag(self):
         return self.tag
 
@@ -60,6 +64,13 @@ class RawChunk:
         if len(self.lines) == 0:
             return "empty"
         return self.lines[0]
+
+    def _get_reference(self):
+        if self.type == ParserState.YAML:
+            self.dictionary = yaml.safe_load("".join(self.lines))
+            if "ref" in self.dictionary:
+                return self.path / self.dictionary["ref"]
+        return None
 
 
 def yaml_start(s_line):
@@ -243,4 +254,19 @@ def _parse(lines, path, report):
     chunks.append(RawChunk(current_lines, state, start_line_number, path, report))
     # remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
+    chunks = expand_reference_chunks(chunks, path, report)
     return chunks
+
+
+def expand_reference_chunks(source_chunks, path, report):
+    # TODO prevent cycles
+    target_chunks = []
+    for source_chunk in source_chunks:
+        path = source_chunk._get_reference()
+        if path is not None:
+            with open(path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+                target_chunks.append(_parse(lines, path, report))
+        else:
+            target_chunks.append(source_chunk)
+    return target_chunks

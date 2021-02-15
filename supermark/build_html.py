@@ -1,29 +1,19 @@
 import os
-import random
-import re
-import string
 from concurrent.futures import ThreadPoolExecutor
 
-import pypandoc
-import yaml
 from tqdm import tqdm
+import blindspin
 
-from .button import Button
-from .chunks import HTMLChunk, MarkdownChunk, YAMLDataChunk
-from .code import Code
-from .core import _parse, arrange_assides, cast
-from .figure import Figure
-from .hint import Hint
-from .lines import Lines
-from .parse import ParserState, _parse
+from .chunks import MarkdownChunk, YAMLDataChunk
+from .core import arrange_assides
+from .parse import _parse
 from .report import Report, print_reports
-from .table import Table
-from .video import Video
+from .plugin import cast
 
 
 def transform_page_to_html(lines, template, filepath, abort_draft, report):
     chunks = _parse(lines, filepath, report)
-    chunks = cast(chunks)
+    chunks = cast(chunks, report)
     chunks = arrange_assides(chunks)
 
     content = []
@@ -45,14 +35,17 @@ def transform_page_to_html(lines, template, filepath, abort_draft, report):
             break
         if isinstance(chunk, YAMLDataChunk):
             pass
+        elif not chunk.is_ok():
+            pass
         elif isinstance(chunk, MarkdownChunk):
             if chunk.is_section:
                 # open a new section
                 content.append("    </section>")
                 content.append('    <section class="content">')
-            content.append(chunk.to_html())
+            # TODO maybe we want to put the anchor element to the top?
             for aside in chunk.asides:
                 content.append(aside.to_html())
+            content.append(chunk.to_html())
         else:
             content.append(chunk.to_html())
             for aside in chunk.asides:
@@ -103,15 +96,42 @@ def write_file(html, target_file_path, report):
             html_file.write(html)
 
 
-def process_file(source_file_path, target_file_path, template, abort_draft):
+def remove_empty_lines_begin_and_end(code):
+    lines = code.splitlines()
+    start = 0
+    for i, line in enumerate(lines):
+        if line.strip():
+            start = i
+            break
+    end = len(lines)
+    for i, line in enumerate(lines[::-1]):
+        if line.strip():
+            end = len(lines) - i
+            break
+    return "\n".join(lines[start:end])
+
+
+def process_file(source_file_path, target_file_path, template, abort_draft, reformat):
     with open(source_file_path, "r", encoding="utf-8") as file:
         report = Report(source_file_path)
         lines = file.readlines()
-        report.tell("{}".format(source_file_path), Report.INFO)
+        # report.tell("{}".format(source_file_path), Report.INFO)
         html = transform_page_to_html(
             lines, template, source_file_path, abort_draft, report
         )
         write_file(html, target_file_path, report)
+
+        if reformat:
+            chunks = _parse(lines, source_file_path, report)
+            chunks = cast(chunks, report)
+            source_code = ""
+            for chunk in chunks:
+                code = chunk.recode()
+                if code is not None:
+                    source_code = source_code + remove_empty_lines_begin_and_end(code)
+                    source_code = source_code + "\n\n"
+            write_file(source_code, source_file_path, report)
+
         return report
 
 
@@ -150,40 +170,60 @@ def build_html(
     rebuild_all_pages=True,
     abort_draft=True,
     verbose=False,
+    reformat=False,
 ):
     reports = []
     report = Report(None)
     template = load_html_template(template_file, report)
     jobs = []
-    for filename in os.listdir(input_path):
-        source_file_path = os.path.join(input_path, filename)
-        if os.path.isfile(source_file_path) and filename.endswith(".md"):
-            target_file_name = os.path.splitext(os.path.basename(filename))[0] + ".html"
-            target_file_path = os.path.join(output_path, target_file_name)
-            if _create_target(
-                source_file_path, target_file_path, template_file, rebuild_all_pages
-            ):
-                jobs.append(
-                    {
-                        "source_file_path": source_file_path,
-                        "target_file_path": target_file_path,
-                        "template": template,
-                        "abort_draft": abort_draft,
-                    }
+    with blindspin.spinner():
+        for filename in os.listdir(input_path):
+            source_file_path = os.path.join(input_path, filename)
+            if os.path.isfile(source_file_path) and filename.endswith(".md"):
+                target_file_name = (
+                    os.path.splitext(os.path.basename(filename))[0] + ".html"
                 )
-    with ThreadPoolExecutor() as e:
-        with tqdm(total=len(jobs)) as progress:
-            futures = []
-            for job in jobs:
-                future = e.submit(
-                    process_file,
-                    job["source_file_path"],
-                    job["target_file_path"],
-                    job["template"],
-                    job["abort_draft"],
-                )
-                future.add_done_callback(lambda p: progress.update())
-                futures.append(future)
-            for future in futures:
-                reports.append(future.result())
-    print_reports(reports)
+                target_file_path = os.path.join(output_path, target_file_name)
+                if _create_target(
+                    source_file_path, target_file_path, template_file, rebuild_all_pages
+                ):
+                    jobs.append(
+                        {
+                            "source_file_path": source_file_path,
+                            "target_file_path": target_file_path,
+                            "template": template,
+                            "abort_draft": abort_draft,
+                        }
+                    )
+    if len(jobs) == 0:
+        print(
+            "No changed files detected. To translate all files, use the --all option."
+        )
+        return
+    if len(jobs) == 1:
+        with blindspin.spinner():
+            process_file(
+                jobs[0]["source_file_path"],
+                jobs[0]["target_file_path"],
+                jobs[0]["template"],
+                jobs[0]["abort_draft"],
+                reformat,
+            )
+    else:
+        with ThreadPoolExecutor() as e:
+            with tqdm(total=len(jobs)) as progress:
+                futures = []
+                for job in jobs:
+                    future = e.submit(
+                        process_file,
+                        job["source_file_path"],
+                        job["target_file_path"],
+                        job["template"],
+                        job["abort_draft"],
+                        reformat,
+                    )
+                    future.add_done_callback(lambda p: progress.update())
+                    futures.append(future)
+                for future in futures:
+                    reports.append(future.result())
+    return print_reports(reports)

@@ -10,7 +10,7 @@ from yaml import SafeLoader, load_all
 from .button import Button
 from .chunks import HTMLChunk, MarkdownChunk, YAMLDataChunk
 from .code import Code
-from .core import _parse, arrange_assides, cast
+from .core import _parse, arrange_assides
 from .figure import Figure
 from .hint import Hint
 from .lines import Lines
@@ -18,6 +18,7 @@ from .parse import ParserState, _parse
 from .report import Report, print_reports
 from .table import Table
 from .video import Video
+from .plugin import cast
 
 
 def write_file(html, target_file_path, report):

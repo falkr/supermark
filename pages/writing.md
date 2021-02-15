@@ -39,6 +39,17 @@ Sections on different levels are written with preceeding `#`, `##`, `###`
 
 YAML elements start and stop with a delimiter `---`.
 
+
+## Referenced Chunks
+
+Use a chunk as a reference to other chunks defined in other files.
+
+```yaml
+---
+ref: file.md
+---
+```
+
 ## Videos
 
 
@@ -62,8 +73,10 @@ start: 80
 ## Tables
 
 Tables can be included directly as HTML, or via the following YAML section that refers to a table stored in a file.
-The tabek in the file must use the [mediawiki syntax for tables](https://www.mediawiki.org/wiki/Help:Tables), with an example shown below.
-The optional class attribute placed a `<div>` element around the table for styling with the given class.
+The table in the file must use the [mediawiki syntax for tables](https://www.mediawiki.org/wiki/Help:Tables), with an example shown below.
+The optional class attribute places a `<div>` element around the table for styling with the given class.
+
+The optional format attribute allows to select the markup within the cells. Examples are html, markdown, wikimedia, latex.
 
 ```yaml
 ---
@@ -110,7 +123,7 @@ Within the content you can have lists:
 * 172.16.0.0/12
 * 192.168.0.0/16
 
-An you can coninue.
+And you can continue.
 
 **Remember:** Hints should be helpful. 
 

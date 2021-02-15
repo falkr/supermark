@@ -4,7 +4,7 @@ import re
 import pypandoc
 import wikitextparser as wtp
 
-from .chunks import YAMLChunk
+from .chunks import Chunk, YAMLChunk
 from .report import Report
 
 
@@ -20,24 +20,38 @@ class Table(YAMLChunk):
         self.div_class = None if "class" not in dictionary else dictionary["class"]
         if self.has_post_yaml():
             self.table_raw = self.get_post_yaml()
-        else:
+        elif "file" in dictionary:
             file_path = os.path.join(
                 os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary["file"]
             )
             if not os.path.exists(file_path):
-                raw_chunk.report.tell(
+                raw_chunk.tell(
                     "Table file {} does not exist.".format(file_path),
                     level=Report.ERROR,
                 )
-                # TODO somehow mark this chunk and do not try to generate HTML or Latex from it
+                self.ok = False
             else:
                 with open(file_path, "r") as myfile:
                     self.table_raw = myfile.read()
+        else:
+            raw_chunk.tell(
+                "Table must either refer to a file or have a post-yaml section.",
+                level=Report.ERROR,
+            )
+            self.ok = False
 
-    def _cellwise_to_html(self, format):
+    def _cellwise_to_html_old(self, format):
         output = []
         parsed = wtp.parse(self.table_raw)
+        print(parsed)
+        print("---")
+
         rows = parsed.tables[0].data()
+        rows = parsed.tables[0].cells()
+        table = parsed.tables[0]
+        print(type(table))
+        print(type(rows))
+        print(rows)
         if self.div_class:
             output.append('<table class="{}">'.format(self.div_class))
         else:
@@ -45,11 +59,69 @@ class Table(YAMLChunk):
         for row in rows:
             output.append("<tr>")
             for cell in row:
-                c = cell if format == "html" else pypandoc.convert_text(cell, "html", format=format)
-                output.append(
-                    "<td>" + c + "</td>"
+                # print(type(cell))
+                # print(cell)
+                print("---")
+                print(cell.attrs)
+                c = (
+                    "cell"
+                    if format == "html"
+                    else pypandoc.convert_text(cell, "html", format=format)
                 )
+                output.append("<td>" + c + "</td>")
             output.append("</tr>")
+
+        output.append("</table>")
+        return "\n".join(output)
+
+    def _cellwise_to_html(self, format):
+        def get_colspan(cell):
+            if "colspan" in cell.attrs:
+                return ' colspan="{}"'.format(cell.attrs["colspan"])
+            return ""
+
+        def get_rowspan(cell):
+            if "rowspan" in cell.attrs:
+                return ' rowspan="{}"'.format(cell.attrs["rowspan"])
+            return ""
+
+        output = []
+        parsed = wtp.parse(self.table_raw)
+        rows = parsed.tables[0].cells(span=False)
+        if self.div_class:
+            output.append('<table class="{}">'.format(self.div_class))
+        else:
+            output.append("<table>")
+        is_head = True
+        for row in rows:
+            output.append("<tr>")
+            for cell in row:
+                c = (
+                    cell.value.strip()
+                    if format == "html"
+                    else pypandoc.convert_text(cell.value, "html", format=format)
+                )
+                if is_head:
+                    output.append(
+                        "<th"
+                        + get_rowspan(cell)
+                        + get_colspan(cell)
+                        + ">"
+                        + c
+                        + "</th>"
+                    )
+                else:
+                    output.append(
+                        "<td"
+                        + get_rowspan(cell)
+                        + get_colspan(cell)
+                        + ">"
+                        + c
+                        + "</td>"
+                    )
+            output.append("</tr>")
+            is_head = False
+
         output.append("</table>")
         return "\n".join(output)
 
@@ -69,14 +141,16 @@ class Table(YAMLChunk):
                 )
         html.append(output)
         if "caption" in self.dictionary:
-            html.append('<span name="{}">&nbsp;</span>'.format(self.dictionary["file"]))
+            if "file" in self.dictionary:
+                table_id = self.dictionary["file"]
+            else:
+                table_id = Chunk.create_hash(self.table_raw)
+            html.append('<span name="{}">&nbsp;</span>'.format(table_id))
             html_caption = pypandoc.convert_text(
                 self.dictionary["caption"], "html", format="md"
             )
             html.append(
-                '<aside name="{}"><p>{}</p></aside>'.format(
-                    self.dictionary["file"], html_caption
-                )
+                '<aside name="{}"><p>{}</p></aside>'.format(table_id, html_caption)
             )
         return "\n".join(html)
 

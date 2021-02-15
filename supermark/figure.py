@@ -20,7 +20,7 @@ class Figure(YAMLChunk):
         if dictionary["source"].startswith("http://") or dictionary[
             "source"
         ].startswith("https://"):
-            raw_chunk.report.tell(
+            raw_chunk.tell(
                 "Refer to remote figure: {}".format(dictionary["source"]),
                 level=Report.WARNING,
             )
@@ -29,7 +29,7 @@ class Figure(YAMLChunk):
                 os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary["source"]
             )
             if not os.path.exists(self.file_path):
-                raw_chunk.report.tell(
+                raw_chunk.tell(
                     "Figure file {} does not exist.".format(self.file_path),
                     level=Report.WARNING,
                 )
@@ -85,7 +85,7 @@ class Figure(YAMLChunk):
         figure_file = self.raw_chunk.parent_path / self.dictionary["source"]
         # print(figure_file.suffix)
         if figure_file.suffix == ".gif":
-            self.raw_chunk.report.tell(
+            self.raw_chunk.tell(
                 "Figure file {} in gif format is not compatible with LaTeX.".format(
                     self.file_path
                 ),

@@ -15,7 +15,7 @@ code:
 dev-install: docs
 	rm -rf ./dist
 	python3 setup.py sdist
-	pip3 install -v -U dist/*.tar.gz
+	python3 -m pip install -v -U dist/*.tar.gz
 
 deploy: docs
 	rm -rf ./dist
@@ -30,7 +30,7 @@ push:
 	git push github master
 
 test:
-	python3 -m pytest tests/test_sites.py
+	python3 -m pytest -s tests/test_sites.py
 
 coverage:
 	coverage run -m pytest tests/test_sites.py
