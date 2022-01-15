@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Set
 from rich import print as pprint
 from rich.panel import Panel
 from rich.tree import Tree
+from rich.console import Console
 
 from colorama import Fore, Back, Style
 import indentation
@@ -167,7 +168,7 @@ class Report:
         else:
             return Panel(":shamrock: Finished.", expand=False, style="dark_sea_green")
 
-    def print(self, verbose: bool = False):
+    def _get_tree(self, verbose: bool) -> Tree:
         panel = self._get_conclusion_panel()
         tree = Tree(panel, guide_style="grey50")
         levels = (
@@ -195,14 +196,20 @@ class Report:
                         )
                         if entry.path is not None:
                             hashes[entry.get_hash()].add(entry.get_styled_location())
+        return tree
+
+    def print(self, verbose: bool = False):
+        tree = self._get_tree(verbose=verbose)
         pprint(tree)
 
     def print_to_file(self, log: Path):
         with open(log, "w") as file:
-            for level in [Report.ERROR, Report.WARNING, Report.INFO]:
-                for entry in self.messages:
-                    if entry.level == level:
-                        file.write(entry.message + "\n")
+            tree = self._get_tree(verbose=True)
+            console = Console(record=True)
+            with console.capture() as capture:
+                console.print(tree)
+            file.write(console.export_text())
+
 
     # @staticmethod
     # def print_reports(verbose: bool = False) -> int:

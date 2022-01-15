@@ -222,6 +222,12 @@ class Core:
             all_css += extension.get_css() + "\n"
         return all_css
 
+    def get_js(self, used_extensions: Set[Extension]) -> str:
+        all_js: str = ""
+        for extension in sorted(list(used_extensions), key=lambda e: e.folder):
+            all_js += extension.get_js() + "\n"
+        return all_js
+
     def info(self):
         tree = Tree("Supermark Extensions")
         for extension_point in self.extension_points.values():

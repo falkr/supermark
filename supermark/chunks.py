@@ -105,6 +105,7 @@ class RawChunk:
         self.path = Path(path)
         self.parent_path = Path(path).parent.parent
         self.report = report
+        self.hash = None
 
         # check if we only got empty lines
         def all_empty(lines: Sequence[str]) -> bool:
@@ -155,6 +156,13 @@ class RawChunk:
             except ScannerError as se:
                 self.report.error(f"Error parsing YAML {se}")
         return None
+
+    def get_hash(self) -> str:
+        if self.hash is None:
+            shake = hashlib.shake_128()
+            shake.update("".join(self.lines).encode("utf-8"))
+            self.hash = shake.hexdigest(3)
+        return self.hash
 
 
 class Chunk:

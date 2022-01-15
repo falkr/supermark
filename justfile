@@ -35,6 +35,6 @@ coverage:
 
 conda:
 	conda env remove -n supermark-dev
-	conda create --yes python=3.9.5 -n supermark-dev
+	conda create --yes python=3.10.0 -n supermark-dev
 	conda activate supermark-dev
-	python3 -m pip install --upgrade pypandoc pyyaml colorama click openpyxl progressbar2 pygments wikitextparser requests cairosvg pathlib tqdm indentation blindspin beepy watchdog pretty_errors rich icecream black blindspin pytest coverage
+	python3 -m pip install --upgrade pypandoc pyyaml colorama click openpyxl progressbar2 pygments wikitextparser requests cairosvg pathlib2 tqdm indentation blindspin beepy watchdog pretty_errors rich icecream black blindspin pytest coverage

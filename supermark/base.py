@@ -31,6 +31,9 @@ class Extension:
     def get_css(self) -> str:
         return self.files_to_string(self._find_files("*.css"))
 
+    def get_js(self) -> str:
+        return self.files_to_string(self._find_files("*.js"))
+
     def get_examples(self):
         return self._find_files("examples/*.md")
 

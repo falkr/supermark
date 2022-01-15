@@ -18,6 +18,8 @@ from .pandoc import print_pandoc_info
 from .report import Report
 from rich import print
 
+import toml
+
 
 def logo(version: str) -> str:
     return (
@@ -83,6 +85,13 @@ def ensure_path(path: Any) -> Optional[Path]:
     help="Observe the source directory and run continuously.",
 )
 @click.option(
+    "-p",
+    "--path",
+    "path",
+    type=click.Path(exists=True, readable=True, path_type=Path),
+    help="Base path pointing to the folder that contains input, template, output path and an optional config file.",
+)
+@click.option(
     "-i",
     "--input",
     "input",
@@ -122,6 +131,7 @@ def build(
     verbose: bool,
     draft: bool,
     continuous: bool,
+    path: Optional[Path] = None,
     input: Optional[Path] = None,
     output: Optional[Path] = None,
     template: Optional[Path] = None,
@@ -132,21 +142,38 @@ def build(
     core = Core(report=report)
     print(logo_2(__version__))
     print_pandoc_info()
+
+    path = ensure_path(path)
     input = ensure_path(input)
     output = ensure_path(output)
-    format = "html"
-    base_path = input or Path.cwd()
-    input_path = base_path / "pages"
-    output_path = output or Path.cwd()
-    template_path = template or (base_path / "templates/page.html")
-    # print(template_path)
+    template = ensure_path(template)
 
-    # if format == "pdf":
-    #     build_latex(
-    #         input_path,
-    #         output_path,
-    #     )
-    # else:
+    base_path = path or Path.cwd()
+    input_path = None
+    output_path = None
+    template_path = None
+
+    # read configuration file
+    config_file = Path("config.toml")
+    if config_file.exists():
+        report.info("Found configuration file.", path=config_file)
+        config = toml.load(config_file)
+        if "input" in config and input is None:
+            input_path = base_path / config["input"]
+        if "output" in config and output is None:
+            output_path = base_path / config["output"]
+        if "template" in config and template is None:
+            template_path = base_path / config["template"]
+
+    if input_path is None:
+        input_path = base_path / "pages"
+    if output_path is None:
+        output_path = output or Path.cwd()
+    if template_path is None:
+        template_path = template or (base_path / "templates/page.html")
+
+    format = "html"
+    
     builder = HTMLBuilder(
         input_path,
         output_path,
@@ -160,9 +187,9 @@ def build(
     builder.set_core(core)
     builder.build()
     if log:
-        report.print_to_file(base_path / ".log")
+        report.print_to_file(base_path / "supermark.log")
     else:
-        report.print()
+        report.print(verbose=verbose)
     if report.has_error():
         # beep(3)  # sad error
         ex = ClickException("Something is wrong.")

@@ -40,6 +40,7 @@ class HTMLBuilder(Builder):
         filepath: Path,
         report: Report,
         css: str,
+        js: str,
     ) -> str:
         content: Sequence[str] = []
         content.append('<div class="page">')
@@ -80,12 +81,12 @@ class HTMLBuilder(Builder):
         content.append("    </section>")
         content.append("</div>")
         content = "\n".join(content)
-        for tag in ["content", "css"]:
+        for tag in ["content", "css", "js"]:
             if "{" + tag + "}" not in template:
                 self.report.warning(
                     "The template does not contain insertion tag {" + tag + "}"
                 )
-        return template.format_map({"content": content, "css": css})
+        return template.format_map({"content": content, "css": css, "js": js})
 
     def _create_target(
         self,
@@ -117,11 +118,16 @@ class HTMLBuilder(Builder):
         if not chunks:
             # TODO warn that the page is empty, and therefore nothing is written
             return
-        css = self.core.get_css(self.extensions_used)
         html = self._transform_page_to_html(
-            chunks, template, source_file_path, self.report, css
+            chunks,
+            template,
+            source_file_path,
+            self.report,
+            self.core.get_css(self.extensions_used),
+            self.core.get_js(self.extensions_used),
         )
         write_file(html, target_file_path, self.report)
+        self.report.info("Translated", path=target_file_path)
 
     def _default_html_template(self) -> str:
         html: Sequence[str] = []
@@ -186,7 +192,7 @@ class HTMLBuilder(Builder):
             )
             return
         if len(jobs) == 1:
-            print("1")
+            self.report.info("Using single thread.")
             with Progress(transient=True) as progress:
                 progress.add_task("[orange]Building 1 page", start=False)
                 self._process_file(
@@ -196,7 +202,7 @@ class HTMLBuilder(Builder):
                 )
         else:
             with ThreadPoolExecutor() as e:
-                print("2")
+                self.report.info("Using threadpool.")
                 with Progress(
                     "[progress.description]{task.description}",
                     BarColumn(),
