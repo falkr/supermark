@@ -32,14 +32,54 @@ table.coursetable td.e1 {
   background-color: #cfdaf1;
 }
 
+table.coursetable td.e1e {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffffff00,
+    #ffffff00 10px,
+    #ffffff88 10px,
+    #ffffff88 20px
+  ), #cfdaf1;
+}
+
 table.coursetable td.e2 {
   background-color: #ebf0c4;
+}
+
+table.coursetable td.e2e {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffffff00,
+    #ffffff00 10px,
+    #ffffff88 10px,
+    #ffffff88 20px
+  ), #ebf0c4;
 }
 
 table.coursetable td.e3 {
   background-color: #fdd9b5;
 }
 
+table.coursetable td.e3e {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffffff00,
+    #ffffff00 10px,
+    #ffffff88 10px,
+    #ffffff88 20px
+  ), #fdd9b5;
+}
+
 table.coursetable td.e4 {
   background-color: #e3bcda;
+}
+
+table.coursetable td.e4e {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffffff00,
+    #ffffff00 10px,
+    #ffffff88 10px,
+    #ffffff88 20px
+  ), #e3bcda;
 }
