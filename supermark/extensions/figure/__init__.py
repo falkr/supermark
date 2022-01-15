@@ -1,9 +1,6 @@
 import os
 from typing import Any, Dict, Optional, Sequence
 
-import cairosvg
-
-
 from ... import YAMLChunk, YamlExtension, RawChunk, Builder
 
 
@@ -105,6 +102,7 @@ class Figure(YAMLChunk):
             # file = Path(file)
             target_path = self.get_dir_cached() / "{}.pdf".format(figure_file.stem)
             if not target_path.exists():
+                import cairosvg
                 # file = self.raw_chunk.parent_path / self.dictionary['source']
                 cairosvg.svg2pdf(url=str(figure_file), write_to=str(target_path))
             # s.append('\\includegraphics[width=\\linewidth]{{{}}}%'.format(target_path))
