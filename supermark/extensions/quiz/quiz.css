@@ -1,10 +1,8 @@
-.quiz {
-  border-radius: .8rem;
-  }
-.quiz li {
+ol.quiz li {
   padding-left:3rem;
+  cursor: pointer;
   }
-.quiz li::before {
+ol.quiz li::before {
   font-family: bootstrap-icons !important;
   padding-top:0.3rem;
   padding-right: 1rem;
@@ -12,44 +10,50 @@
   font-size: 1rem;
   vertical-align: top;
   }
-.quiz li.unselected::before {
+ol.quiz li.unselected::before {
   content: "\f28a";
   }
-.quiz li.selected::before {
+ol.quiz li.unselected:hover::before {
+  content: "\f287";
+  }
+ol.quiz li.selected::before {
   content: "\f287";
   color: #666666;
   }
-.quiz li.unselected-true::before {
+ol.quiz li.unselected-true::before {
   content: "\f26b";
   color: #5CA551;
   }
-.quiz li.selected-true::before {
+ol.quiz li.selected-true::before {
   content: "\f26a";
   color: #5CA551;
   }
-.quiz li.unselected-false::before {
+ol.quiz li.unselected-false::before {
   content: "\f5e7";
   }
-.quiz li.selected-false::before {
+ol.quiz li.selected-false::before {
   content: "\f5e6";
   color: #FF3B30;
   }
-.selected-false {
+ol.quiz li.selected-false {
   color:#666666;
   background-color: #FFD6D3;
   border-top: none;
   border-bottom: none;
   }
-.selected-true {
+ol.quiz li.selected-true {
   background-color:#DBF6CF;
   border-top: none;
   border-bottom: none;
   }
-.unselected-false {
+ol.quiz li.unselected-false {
   color:lightgray;
   }
-.unselected-true {
+ol.quiz li.unselected-true {
   background-color:#DBF6CF;
   border-top: none;
   border-bottom: none;
   }
+div.card-footer a {
+  cursor: pointer;
+}

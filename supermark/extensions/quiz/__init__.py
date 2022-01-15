@@ -90,14 +90,14 @@ class Quiz(YAMLChunk):
 
     def to_html(self, builder: Builder):
         html: Sequence[str] = []
-        html.append(f'<div class="card mb-5 shadow-sm quiz" id="{self.quiz_id}">')
+        html.append(f'<div class="card mb-5 shadow-sm" id="{self.quiz_id}">')
         html.append('  <div class="card-body">')
         html.append(f'    <h5 class="card-title">{self.title}</h5>')
         html.append(
-            f'    <p class="card-text">{builder.convert(self.question, target_format="html")}</p>'
+            f'    <div class="card-text">{builder.convert(self.question, target_format="html")}</div>'
         )
         html.append("</div>")
-        html.append('<ol class="list-group list-group-flush">')
+        html.append('<ol class="list-group list-group-flush quiz">')
         for i, alternative in enumerate(self.alternatives):
             html.append(
                 f'<li class="list-group-item unselected" onclick="quiz_select(\'{self.quiz_id}\', {i})">{alternative.text}</li>'
@@ -109,7 +109,7 @@ class Quiz(YAMLChunk):
         html.append("</div>")
         html.append('<div class="visually-hidden" data="confirm">')
         html.append(
-            f'  <i>Sure? Then <a class="disabled" href="#" onclick="quiz_confirm(\'{self.quiz_id}\', {self.correct_alternative})">confirm</a>.</i>'
+            f'  <i>Sure? Then <a class="disabled" onclick="quiz_confirm(\'{self.quiz_id}\', {self.correct_alternative})">confirm</a>.</i>'
         )
         html.append("</div>")
         for i, alternative in enumerate(self.alternatives):
@@ -118,4 +118,4 @@ class Quiz(YAMLChunk):
             )
         html.append("</div>")
         html.append("</div>")
-        return r"".join(html)
+        return "\n".join(html)
