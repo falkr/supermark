@@ -1,18 +1,32 @@
-from .build_html import build_html
-from .build_latex import build_latex
-from .chunks import Chunk, HTMLChunk, MarkdownChunk, YAMLChunk, YAMLDataChunk
-from .parse import RawChunk
+from .build_html import HTMLBuilder
+from .chunks import (
+    Builder,
+    Chunk,
+    HTMLChunk,
+    MarkdownChunk,
+    RawChunk,
+    YAMLChunk,
+    YAMLDataChunk,
+)
+from .core import Core
+from .extend import Extension, ParagraphExtension, TableClassExtension, YamlExtension
+from .report import Report
 
-__version__ = "0.2.3"
+__version__ = "0.3.8"
 
 __all__ = [
+    "Core",
+    "Report",
     "RawChunk",
     "Chunk",
     "YAMLChunk",
     "YAMLDataChunk",
     "MarkdownChunk",
     "HTMLChunk",
-    "build_html",
-    "build_latex",
-    "build_latex_yaml",
+    "Builder",
+    "YamlExtension",
+    "TableClassExtension",
+    "ParagraphExtension",
+    "Extension",
+    "HTMLBuilder",
 ]

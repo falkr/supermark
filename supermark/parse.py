@@ -1,6 +1,11 @@
-import re
 from enum import Enum
 from pathlib import Path
+from typing import List, Sequence, TYPE_CHECKING
+from .chunks import RawChunk, RawChunkType
+from .utils import has_class_tag
+
+if TYPE_CHECKING:
+    from .report import Report
 
 
 class ParserState(Enum):
@@ -12,69 +17,19 @@ class ParserState(Enum):
     AFTER_YAML_CONTENT = 5
 
 
-ENV_PATTERN = re.compile("[a-zA-Z]*:")
-
-
-def is_empty(s_line):
+def is_empty(s_line: str) -> bool:
     return not s_line
 
 
-class RawChunk:
-    def __init__(self, lines, chunk_type, start_line_number, path, report):
-        self.lines = lines
-        self.type = chunk_type
-        self.start_line_number = start_line_number
-        self.path = path
-        self.parent_path = Path(path).parent.parent
-        self.report = report
-        # check if we only got empty lines
-        def all_empty(lines):
-            if len(lines) == 0:
-                return True
-            for line in lines:
-                if line.strip():
-                    return False
-            return True
-
-        self._is_empty = all_empty(self.lines)
-        # remove blank lines from the beginning
-        while len(self.lines) > 0 and is_empty(self.lines[0].strip()):
-            self.lines.pop(0)
-            self.start_line_number = self.start_line_number + 1
-        self.tag = None
-        if len(self.lines) > 0:
-            if has_class_tag(self.lines[0]):
-                self.tag = self.lines[0].strip().split(":")[1].lower()
-        self.post_yaml = None
-
-    def get_tag(self):
-        return self.tag
-
-    def is_empty(self):
-        return self._is_empty
-
-    def get_type(self):
-        return self.type
-
-    def get_first_line(self):
-        if len(self.lines) == 0:
-            return "empty"
-        return self.lines[0]
-
-
-def yaml_start(s_line):
+def yaml_start(s_line: str) -> bool:
     return s_line == "---"
 
 
-def yaml_stop(s_line):
-    return s_line == "---"
+def yaml_stop(s_line: str) -> bool:
+    return s_line == "---" or s_line == "..."
 
 
-def has_class_tag(s_line):
-    return s_line.startswith(":") and ENV_PATTERN.match(s_line)
-
-
-def markdown_start(s_line, empty_lines):
+def markdown_start(s_line: str, empty_lines: int) -> bool:
     return (
         has_class_tag(s_line)
         or s_line.startswith("# ")
@@ -83,32 +38,32 @@ def markdown_start(s_line, empty_lines):
     )
 
 
-def html_start(s_line, empty_lines):
+def html_start(s_line: str, empty_lines: int) -> bool:
     return s_line.startswith("<") and empty_lines >= 2
 
 
-def html_stop(empty_lines):
+def html_stop(empty_lines: int) -> bool:
     return empty_lines >= 2
 
 
-def code_start(s_line):
+def code_start(s_line: str) -> bool:
     return s_line.startswith("```")
 
 
-def code_stop(s_line):
+def code_stop(s_line: str) -> bool:
     return s_line.startswith("```")
 
 
-def _parse(lines, path, report):
-    chunks = []
-    current_lines = []
+def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
+    chunks: Sequence[RawChunk] = []
+    current_lines: Sequence[str] = []
     empty_lines = 0
     state = ParserState.MARKDOWN
     start_line_number = 0
     previous_yaml_chunk = None
 
     for line_number, line in enumerate(lines, start=1):
-        s_line = line.strip()
+        s_line: str = line.strip()
         if state == ParserState.MARKDOWN:
             if is_empty(s_line):
                 empty_lines = empty_lines + 1
@@ -117,7 +72,7 @@ def _parse(lines, path, report):
                 chunks.append(
                     RawChunk(
                         current_lines,
-                        ParserState.MARKDOWN,
+                        RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
                         report,
@@ -131,7 +86,7 @@ def _parse(lines, path, report):
                 chunks.append(
                     RawChunk(
                         current_lines,
-                        ParserState.MARKDOWN,
+                        RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
                         report,
@@ -145,7 +100,7 @@ def _parse(lines, path, report):
                 chunks.append(
                     RawChunk(
                         current_lines,
-                        ParserState.MARKDOWN,
+                        RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
                         report,
@@ -160,7 +115,7 @@ def _parse(lines, path, report):
                 chunks.append(
                     RawChunk(
                         current_lines,
-                        ParserState.MARKDOWN,
+                        RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
                         report,
@@ -175,10 +130,18 @@ def _parse(lines, path, report):
                 current_lines.append(line)
                 empty_lines = 0
         elif state == ParserState.YAML:
-            if yaml_stop(s_line):
+            if is_empty(s_line):
+                empty_lines = empty_lines + 1
+                current_lines.append(line)
+            if (empty_lines > 1) or yaml_stop(s_line):
                 previous_yaml_chunk = RawChunk(
-                    current_lines, ParserState.YAML, start_line_number, path, report
+                    current_lines,
+                    RawChunkType.YAML,
+                    start_line_number,
+                    path,
+                    report,
                 )
+                empty_lines = 0
                 chunks.append(previous_yaml_chunk)
                 state = ParserState.AFTER_YAML
                 current_lines = []
@@ -213,7 +176,11 @@ def _parse(lines, path, report):
                 current_lines.append(line)
                 chunks.append(
                     RawChunk(
-                        current_lines, ParserState.CODE, start_line_number, path, report
+                        current_lines,
+                        RawChunkType.CODE,
+                        start_line_number,
+                        path,
+                        report,
                     )
                 )
                 state = ParserState.MARKDOWN
@@ -228,7 +195,11 @@ def _parse(lines, path, report):
             elif html_stop(empty_lines):
                 chunks.append(
                     RawChunk(
-                        current_lines, ParserState.HTML, start_line_number, path, report
+                        current_lines,
+                        RawChunkType.HTML,
+                        start_line_number,
+                        path,
+                        report,
                     )
                 )
                 state = ParserState.MARKDOWN
@@ -240,7 +211,51 @@ def _parse(lines, path, report):
                 current_lines.append(line)
                 empty_lines = 0
     # create last chunk
-    chunks.append(RawChunk(current_lines, state, start_line_number, path, report))
-    # remove chunks that turn out to be empty
+    if state == ParserState.AFTER_YAML_CONTENT:
+        previous_yaml_chunk.post_yaml = current_lines
+    else:
+        def parser_state_to_chunk_type(state: ParserState) -> RawChunkType:
+            if state == ParserState.MARKDOWN:
+                return RawChunkType.MARKDOWN
+            elif (
+                (state == ParserState.YAML)
+                or (state == ParserState.AFTER_YAML)
+            ):
+                return RawChunkType.YAML
+            elif state == ParserState.HTML:
+                return RawChunkType.HTML
+            elif state == ParserState.CODE:
+                return RawChunkType.CODE
+            else:
+                assert False
+
+        chunks.append(
+            RawChunk(
+                current_lines,
+                parser_state_to_chunk_type(state),
+                start_line_number,
+                path,
+                report,
+            )
+        )
+
+    # TODO remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
+    chunks = expand_reference_chunks(chunks, path, report)
     return chunks
+
+
+def expand_reference_chunks(
+    source_chunks: Sequence[RawChunk], path: Path, report: "Report"
+) -> Sequence[RawChunk]:
+    # TODO prevent cycles
+    target_chunks: Sequence[RawChunk] = []
+    for source_chunk in source_chunks:
+        path = source_chunk._get_reference()
+        if path is not None:
+            with open(path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+                target_chunks.append(parse(lines, path, report))
+        else:
+            target_chunks.append(source_chunk)
+    return target_chunks

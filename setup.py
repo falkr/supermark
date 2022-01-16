@@ -1,16 +1,9 @@
-import codecs
-import os.path
 from distutils.core import setup
+from pathlib import Path
 
 
-def read(rel_path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    with codecs.open(os.path.join(here, rel_path), "r") as fp:
-        return fp.read()
-
-
-def get_version(rel_path):
-    for line in read(rel_path).splitlines():
+def get_version(path: str) -> str:
+    for line in Path(path).read_text().splitlines():
         if line.startswith("__version__"):
             delim = '"' if '"' in line else "'"
             return line.split(delim)[1]
@@ -22,14 +15,46 @@ package_name = "supermark"
 
 setup(
     name=package_name,
-    packages=[package_name],
+    packages=[
+        package_name,
+        "supermark.extensions",
+        "supermark.extensions.abstract",
+        "supermark.extensions.boxes",
+        "supermark.extensions.button",
+        "supermark.extensions.check",
+        "supermark.extensions.checklistbox",
+        "supermark.extensions.code",
+        "supermark.extensions.coursetable",
+        "supermark.extensions.definition",
+        "supermark.extensions.delivery",
+        "supermark.extensions.double",
+        "supermark.extensions.figure",
+        "supermark.extensions.goals",
+        "supermark.extensions.guideline",
+        "supermark.extensions.hints",
+        "supermark.extensions.lines",
+        "supermark.extensions.qna",
+        "supermark.extensions.quiz",
+        "supermark.extensions.rat",
+        "supermark.extensions.report",
+        "supermark.extensions.rubrics",
+        "supermark.extensions.steplist",
+        "supermark.extensions.steps",
+        "supermark.extensions.table",
+        "supermark.extensions.task",
+        "supermark.extensions.tips",
+        "supermark.extensions.tipsbox",
+        "supermark.extensions.tree",
+        "supermark.extensions.video",
+        "supermark.extensions.warning",
+        "supermark.extensions.weekplan",
+    ],
     version=get_version("{}/__init__.py".format(package_name)),
     description="Pandoc-based transformation tool for documents containing different markup languages.",
     # long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
     install_requires=[
         "pypandoc",
         "pyyaml",
-        "colorama",
         "click",
         "openpyxl",
         "progressbar2",
@@ -37,10 +62,23 @@ setup(
         "wikitextparser",
         "requests",
         "cairosvg",
-        "pathlib",
+        "pathlib2",
         "tqdm",
+        "indentation",
+        "blindspin",
+        # "beepy",
+        "watchdog",
+        "pretty_errors",
+        "rich",
+        "icecream",
+        "black",
+        "blindspin",
+        "toml",
+        " markdown-it-py",
     ],
-    package_data={"": ["*.tex", "*.pdf"],},
+    package_data={
+        "": ["*.tex", "*.pdf", "*.css", "*.md", "*.js"],
+    },
     include_package_data=True,
     author="Frank Alexander Kraemer",
     author_email="kraemer.frank@gmail.com",
@@ -51,13 +89,10 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Education",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
-    entry_points={"console_scripts": ["supermark=supermark.command:run"]},
+    entry_points={"console_scripts": ["supermark=supermark.command:supermark"]},
 )
