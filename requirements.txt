@@ -1,0 +1,17 @@
+pypandoc
+pyyaml
+colorama
+click
+openpyxl
+progressbar2
+pygments
+wikitextparser
+requests
+cairosvg
+pathlib
+tqdm
+indentation
+blindspin
+beepy
+watchdog
+pretty_errors

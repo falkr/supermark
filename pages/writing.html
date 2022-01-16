@@ -1,0 +1,232 @@
+<html lang="en-US"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Supermark</title>
+<meta property="og:title" content="TTM4115">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Design of Communicating Systems">
+<meta property="og:description" content="Design of Communicating Systems">
+
+
+<!--<link rel="stylesheet" type="text/css" href="style.css" />-->
+<link href="https://fonts.googleapis.com/css?family=Merriweather:400,400italic,700,700italic|Source+Code+Pro|Source+Sans+Pro:200,300,400,600,400italic,600italic|Rock+Salt" rel="stylesheet" type="text/css">
+
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+
+<link rel="stylesheet" type="text/css" href="assets/style.css" />
+
+<!--<script src="jquery-1.10.1.min.js"></script>-->
+<script src="assets/script-aside.js"></script>
+</head>
+<body id="top">
+
+<nav class="navbar navbar-expand-md navbar-dark " style="background-color:#666666"#2B65EC"> <!-- fixed-top -->
+        <ul class="nav nav-pills">
+<li class="nav-item"><a class="nav-link" href="index.html" style="font-weight: bold")>Supermark</a></li>
+
+<li class="nav-item"><a class="nav-link" href="installation.html">Installation</a></li>
+<li class="nav-item"><a class="nav-link" href="usage.html">Usage</a></li>
+<li class="nav-item"><a class="nav-link" href="writing.html">Writing</a></li>
+<li class="nav-item"><a class="nav-link" href="development.html">Development</a></li>
+<!--
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Teknostart</a>
+    <div class="dropdown-menu">
+      <a class="dropdown-item" href="day1.html">Dag 1: Raspberry Pi</a>
+      <a class="dropdown-item" href="day2.html">Dag 2: Linux</a>
+      <a class="dropdown-item" href="day3.html">Dag 3: IP og HTML</a>
+      <a class="dropdown-item" href="day4.html">Dag 4: Webserver 1</a>
+      <a class="dropdown-item" href="day5.html">Dag 5: Webserver 2</a>
+    </div>
+  </li>-->
+</ul>
+
+<div class="navbar-nav flex-row ml-md-auto d-none d-md-flex"></div>
+    </nav>
+
+
+<div class="page">
+    </section>
+    <section class="content">
+<h1 id="writing-supermark-documents">Writing Supermark Documents</h1>
+
+    </section>
+    <section class="content">
+<h1 id="chunks">Chunks</h1>
+
+    </section>
+    <section class="content">
+<h1 id="markdown-chunks">Markdown Chunks</h1>
+<p>The Markdown chunks of the document should follow <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc’s Markdown syntax</a>.</p>
+<h2 id="sections">Sections</h2>
+<p>Sections on different levels are written with preceeding <code>#</code>, <code>##</code>, <code>###</code></p>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu"># Section Level 1</span></span></code></pre></div>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu">## Section Level 2</span></span></code></pre></div>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu">### Section Level 3</span></span></code></pre></div>
+
+<h2 id="text-markup">Text Markup</h2>
+<p><strong>bold</strong> text <strong>bold</strong> text. <em>emphasized</em> text, <em>emphasized text</em></p>
+
+<h2 id="lists">Lists</h2>
+
+    </section>
+    <section class="content">
+<h1 id="yaml-elements">YAML Elements</h1>
+<p>YAML elements start and stop with a delimiter <code>---</code>.</p>
+
+<h2 id="referenced-chunks">Referenced Chunks</h2>
+<p>Use a chunk as a reference to other chunks defined in other files.</p>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="pp">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="fu">ref</span><span class="kw">:</span><span class="at"> file.md</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="pp">---</span></span></code></pre></div>
+
+<h2 id="videos">Videos</h2>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="pp">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> youtube</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="fu">video</span><span class="kw">:</span><span class="at"> wupToqz1e2g</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="fu">position</span><span class="kw">:</span><span class="at"> aside</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="fu">caption</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;The Pale Blue Dot.&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a><span class="fu">start</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="pp">---</span></span></code></pre></div>
+
+<h2 id="tables">Tables</h2>
+<p>Tables can be included directly as HTML, or via the following YAML section that refers to a table stored in a file. The table in the file must use the <a href="https://www.mediawiki.org/wiki/Help:Tables">mediawiki syntax for tables</a>, with an example shown below. The optional class attribute places a <code>&lt;div&gt;</code> element around the table for styling with the given class.</p>
+<p>The optional format attribute allows to select the markup within the cells. Examples are html, markdown, wikimedia, latex.</p>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="pp">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> table</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="fu">file</span><span class="kw">:</span><span class="at"> tables/table.mw</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="fu">class</span><span class="kw">:</span><span class="at"> rubric</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="fu">caption</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Table with a caption.&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a><span class="pp">---</span></span></code></pre></div>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode mediawiki"><code class="sourceCode mediawiki"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="dv">{|</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="dv">|</span>Orange</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="dv">|</span>Apple</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="dv">|-</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="dv">|</span>Bread</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a><span class="dv">|</span>Pie</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="dv">|-</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a><span class="dv">|</span>Butter</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true"></a><span class="dv">|</span>Ice cream </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true"></a><span class="dv">|}</span></span></code></pre></div>
+
+<h2 id="figures">Figures</h2>
+<h2 id="buttons">Buttons</h2>
+<h2 id="hints">Hints</h2>
+<p>Hints are boxes with information that is only visible when the reader clicks on the header. The top of the hint is specified with a YAML section. The content of the hint is provided as post-YAML section, directly following the YAML header. It ends after two consecutive empty lines.</p>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="pp">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> hint</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> Hint about Something</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="pp">---</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="fu">Within the content you can have lists</span><span class="kw">:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="at">* 10.0.0.0/8</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a><span class="at">* 172.16.0.0/12</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true"></a><span class="at">* 192.168.0.0/16</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true"></a><span class="at">An you can coninue.</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true"></a><span class="ot">**Remember:**</span><span class="at"> Hints should be helpful. </span></span></code></pre></div>
+
+    </section>
+    <section class="content">
+<h1 id="html-blocks">HTML Blocks</h1>
+
+    </section>
+    <section class="content">
+<h1 id="code-blocks">Code Blocks</h1>
+<p>Supermark uses Pandoc’s functions to highlight code. Place the code between the following delimiters:</p>
+
+<div>
+<pre>
+```bash
+pandoc --list-highlight-languages
+```
+</pre>
+</div>
+
+
+
+<p><code>abc</code>, <code>asn1</code>, <code>asp</code>, <code>ats</code>, <code>awk</code>, <code>actionscript</code>, <code>ada</code>, <code>agda</code>, <code>alertindent</code>, <code>apache</code>, <code>bash</code>, <code>bibtex</code>, <code>boo</code>, <code>c</code>, <code>cs</code>, <code>cpp</code>, <code>cmake</code>, <code>css</code>, <code>changelog</code>, <code>clojure</code>, <code>coffee</code>, <code>coldfusion</code>, <code>commonlisp</code>, <code>curry</code>, <code>d</code>, <code>dtd</code>, <code>diff</code>, <code>djangotemplate</code>, <code>dockerfile</code>, <code>doxygen</code>, <code>doxygenlua</code>, <code>eiffel</code>, <code>elixir</code>, <code>email</code>, <code>erlang</code>, <code>fsharp</code>, <code>fortran</code>, <code>gcc</code>, <code>glsl</code>, <code>gnuassembler</code>, <code>m4</code>, <code>go</code>, <code>html</code>, <code>hamlet</code>, <code>haskell</code>, <code>haxe</code>, <code>ini</code>, <code>isocpp</code>, <code>idris</code>, <code>fasm</code>, <code>nasm</code>, <code>json</code>, <code>jsp</code>, <code>java</code>, <code>javascript</code>, <code>javadoc</code>, <code>julia</code>, <code>kotlin</code>, <code>llvm</code>, <code>latex</code>, <code>lex</code>, <code>lilypond</code>, <code>literatecurry</code>, <code>literatehaskell</code>, <code>lua</code>, <code>mips</code>, <code>makefile</code>, <code>markdown</code>, <code>mathematica</code>, <code>matlab</code>, <code>maxima</code>, <code>mediawiki</code>, <code>metafont</code>, <code>modelines</code>, <code>modula2</code>, <code>modula3</code>, <code>monobasic</code>, <code>ocaml</code>, <code>objectivec</code>, <code>objectivecpp</code>, <code>octave</code>, <code>opencl</code>, <code>php</code>, <code>povray</code>, <code>pascal</code>, <code>perl</code>, <code>pike</code>, <code>postscript</code>, <code>powershell</code>, <code>prolog</code>, <code>pure</code>, <code>purebasic</code>, <code>python</code>, <code>r</code>, <code>relaxng</code>, <code>relaxngcompact</code>, <code>roff</code>, <code>ruby</code>, <code>rhtml</code>, <code>rust</code>, <code>sgml</code>, <code>sql</code>, <code>sqlmysql</code>, <code>sqlpostgresql</code>, <code>scala</code>, <code>scheme</code>, <code>tcl</code>, <code>tcsh</code>, <code>texinfo</code>, <code>mandoc</code>, <code>vhdl</code>, <code>verilog</code>, <code>xml</code>, <code>xul</code>, <code>yaml</code>, <code>yacc</code>, <code>zsh</code>, <code>dot</code>, <code>noweb</code>, <code>rest</code>, <code>sci</code>, <code>sed</code>, <code>xorg</code>, <code>xslt</code>,</p>
+<p>For an updated list, type:</p>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="ex">pandoc</span> --list-highlight-languages</span></code></pre></div>
+
+    </section>
+    <section class="content">
+<h1 id="file-encoding">File Encoding</h1>
+<ul>
+<li>UTF-8</li>
+</ul>
+
+    </section>
+    <section class="content">
+<h1 id="special">Special</h1>
+<h3 id="learning-goals">Learning Goals</h3>
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a>:goals:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="ss">- </span>Learning Goal 1</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="ss">- </span>Learning Goal 2</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a></span></code></pre></div>
+
+<p>End the goal environment with two empty lines.</p>
+
+<div class="goals"><ul>
+<li>Learning Goal 1</li>
+<li>Learning Goal 2</li>
+</ul>
+</div>
+<h2 id="tips">Tips</h2>
+
+<div class="tip"><p>A tip is shown in a highlighted box.</p>
+</div>
+<pre><code>:tip: A tip is shown in a highlighted box.</code></pre>
+
+<h2 id="warnings">Warnings</h2>
+
+<div class="warning"><p>Use warnings to prevent harm or damage. Draw attention.</p>
+</div>
+<pre><code>:warning: Use warnings to prevent harm or damage. Draw attention.</code></pre>
+
+<h2 id="solution-hints">Solution Hints</h2>
+
+<div class="hint"><p>This is a hint that is only visible after clicking a button.</p>
+</div>
+<div class="hint"><p>This is another hint that is only visible after clicking a button.</p>
+</div>
+    </section>
+    <section class="content">
+<h1 id="numbered-lists">Numbered Lists</h1>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non imperdiet mauris. Sed rutrum massa at leo fringilla consequat. Duis eget leo vel augue placerat venenatis nec id lectus. Maecenas aliquam ac lectus sit amet dictum. Mauris odio tortor, tincidunt sed pulvinar in, varius in massa. Curabitur fermentum turpis felis, a egestas diam consectetur et. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam lacinia lobortis accumsan. Quisque bibendum molestie metus, eu pharetra ante cursus eget. Fusce lobortis velit et massa sollicitudin, a bibendum elit commodo. Sed at pretium enim. Nunc viverra feugiat eros, sodales molestie dui lobortis eget. Donec sollicitudin dui commodo, imperdiet nibh eget, faucibus ex.</p>
+
+<div class="steps"><ol type="1">
+<li>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non imperdiet mauris. Sed rutrum massa at leo fringilla consequat. Duis eget leo vel augue placerat venenatis nec id lectus. Maecenas aliquam ac lectus sit amet dictum. Mauris odio tortor, tincidunt sed pulvinar in, varius in massa. Curabitur fermentum turpis felis, a egestas diam consectetur et. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam lacinia lobortis accumsan. Quisque bibendum molestie metus, eu pharetra ante cursus eget. Fusce lobortis velit et massa sollicitudin, a bibendum elit commodo. Sed at pretium enim. Nunc viverra feugiat eros, sodales molestie dui lobortis eget. Donec sollicitudin dui commodo, imperdiet nibh eget, faucibus ex.</li>
+<li>Fusce nisi odio, tincidunt sed dui sit amet, porta volutpat mauris. Nam quis leo at sem fermentum efficitur a non magna. Nullam rutrum sem sed massa efficitur posuere. Nullam leo diam, congue in imperdiet non, aliquet sed est. Quisque et nunc in elit hendrerit feugiat. Nulla euismod iaculis dolor et molestie. Sed ut lectus sagittis, ultrices nulla sagittis, sodales enim. Quisque in tortor nec dui accumsan consectetur. Quisque laoreet auctor congue. Etiam malesuada enim eget risus posuere, ut porta est faucibus. Cras rhoncus sem in aliquet suscipit. Etiam cursus pellentesque mauris, ut sagittis tellus consectetur nec.</li>
+<li>Mauris feugiat, nisi tempor tincidunt eleifend, ante nisi dictum lectus, nec ultricies magna eros ultrices nisl. Morbi laoreet nibh mi, a maximus augue tristique vitae. Aenean at nisl sit amet nisl eleifend feugiat eget quis lacus. Maecenas ac dignissim libero, vel tristique ante. Donec sollicitudin dapibus turpis vitae consequat. Integer dapibus felis a urna vehicula vehicula. Donec eleifend sed nulla non efficitur. Curabitur ut ligula aliquet, pharetra quam at, auctor augue. Aliquam vel commodo ante. Ut blandit lectus sapien, eget imperdiet diam placerat vel. Vestibulum laoreet velit eu ultrices tincidunt. Curabitur in tristique massa.</li>
+<li>Cras ultrices mauris risus, vel maximus quam volutpat quis. Nulla facilisi. Nullam suscipit euismod auctor. Etiam sollicitudin diam commodo, elementum nisl quis, commodo quam. Proin a nulla tempor, pretium enim et, euismod eros. Sed rhoncus sagittis lectus, sit amet semper tortor tempus eu. Aenean lorem nisl, luctus sit amet ultricies sed, sodales quis ligula. Mauris eleifend sem lacinia ligula cursus egestas. Phasellus ut ex tortor. Aliquam congue imperdiet nibh eu rhoncus. Ut sed sollicitudin turpis, non gravida nulla.</li>
+<li>Phasellus rutrum sollicitudin vestibulum. Proin pretium turpis non pellentesque rutrum. Fusce vitae congue metus, at dignissim enim. Sed quis varius metus. Curabitur mattis turpis non nisi imperdiet, nec mattis arcu varius. Maecenas et auctor nisi, ut volutpat diam. Nulla facilisi. Pellentesque semper iaculis lectus, et rutrum metus euismod et. Integer nisl eros, fermentum quis vulputate et, tristique in dolor. Nam rhoncus posuere sem, non volutpat lectus sagittis hendrerit. Quisque eget ornare urna. In feugiat eleifend accumsan. Donec in sapien consequat, dictum massa at, sollicitudin mauris.</li>
+</ol>
+</div>
+    </section>
+</div>
+
+
+<footer></footer>
+</body>
+</html>
