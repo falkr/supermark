@@ -201,7 +201,8 @@ def build(
 
 @supermark.command(help="Show info about a project and installation.")
 def info():
-    core = Core()
+    report = Report()
+    core = Core(report=report)
     core.info()
 
 

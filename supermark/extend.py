@@ -47,10 +47,10 @@ class YamlExtensionPoint(ChunkExtensionPoint):
         self.extensions: Dict[str, YamlExtension] = {}
 
     def register(self, extension: YamlExtension):
-        for type in (
+        for ttype in (
             [extension.type] if isinstance(extension.type, str) else extension.type
         ):
-            self.extensions[type] = extension
+            self.extensions[ttype] = extension
 
     def cast_yaml(
         self,
