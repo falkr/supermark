@@ -30,10 +30,10 @@ class Quiz(YAMLChunk):
             raw_chunk,
             dictionary,
             page_variables,
-            required=["correct", "false-1", "false-2", "false-3"],
+            required=["correct", "false-1"],
             optional=[
                 "question",
-                "title",
+                "title", "false-2", "false-3",
                 "result-correct",
                 "result-false",
                 "result-false-1",
@@ -41,9 +41,20 @@ class Quiz(YAMLChunk):
                 "result-false-3",
             ],
         )
+        # we check how many alternatives there are
+        if "false-3" in dictionary:
+            if "false-2" not in dictionary:
+                self.raw_chunk.report.error("Attribute false-2 is missing.")
+                self.is_ok = False
+            self.n_alternatives = 4
+        elif "false-2" in dictionary:
+            self.n_alternatives = 3
+        else:
+            self.n_alternatives = 2
+
         self.quiz_id = self.raw_chunk.get_hash()
         random.seed(self.quiz_id)
-        self.correct_alternative = random.choice([0, 1, 2, 3])
+        self.correct_alternative = random.choice(list(range(self.n_alternatives)))
 
         if "title" in dictionary:
             self.title = dictionary["title"]
@@ -61,7 +72,7 @@ class Quiz(YAMLChunk):
             )
 
         self.alternatives: Sequence[Alternative] = []
-        for i in [1, 2, 3]:
+        for i in list(range(1,self.n_alternatives)):
             self.alternatives.append(
                 Alternative(
                     False,

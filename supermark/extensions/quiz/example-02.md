@@ -12,7 +12,7 @@ false-3: Yet another fake anser.
 result-correct: Correct. You selected the correct answer.
 result-false-1: False. You selected a fake answer.
 result-false-2: False. You selected another fake answer.
-result-false-2: False. You selected yet another fake answer.
+result-false-3: False. You selected yet another fake answer.
 ---
 This should be a fun question?
 
@@ -29,7 +29,7 @@ false-3: Yet another fake anser.
 result-correct: Correct. You selected the correct answer.
 result-false-1: False. You selected a fake answer.
 result-false-2: False. You selected another fake answer.
-result-false-2: False. You selected yet another fake answer.
+result-false-3: False. You selected yet another fake answer.
 ---
 
 
@@ -43,7 +43,7 @@ false-3: Yet another fake anser.
 result-correct: Correct. You selected the correct answer.
 result-false-1: False. You selected a fake answer.
 result-false-2: False. You selected another fake answer.
-result-false-2: False. You selected yet another fake answer.
+result-false-3: False. You selected yet another fake answer.
 ---
 
 
@@ -54,4 +54,21 @@ correct: Yes!
 false-1: No.
 false-2: Oh No.
 false-3: Another No.
+---
+
+
+---
+type: quiz
+question: Yes or No?
+correct: Yes!
+false-1: No.
+false-2: Oh No.
+---
+
+
+---
+type: quiz
+question: Yes or No?
+correct: Yes!
+false-1: No.
 ---

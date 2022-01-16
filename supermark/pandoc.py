@@ -1,7 +1,10 @@
 import pypandoc
 from packaging import version
 from rich import print
+from markdown_it import MarkdownIt
 
+
+md = MarkdownIt()
 
 def print_pandoc_info():
     installed_pandoc_version = pypandoc.get_pandoc_version()
@@ -15,6 +18,11 @@ def print_pandoc_info():
 
 
 def convert(source: str, target_format: str, source_format: str = "md") -> str:
+
+    if source_format == "md" and target_format == "html":
+        print("u")
+        return md.render(source)
+
     if source_format == "mediawiki":
         extra_args = ["--from", "mediawiki", "--to", "html"]
     else:

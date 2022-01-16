@@ -73,7 +73,8 @@ setup(
         "icecream",
         "black",
         "blindspin",
-        "toml"
+        "toml",
+        " markdown-it-py",
     ],
     package_data={
         "": ["*.tex", "*.pdf", "*.css", "*.md", "*.js"],

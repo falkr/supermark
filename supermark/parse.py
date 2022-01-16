@@ -168,7 +168,6 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                 else:
                     current_lines.append(line)
                 start_line_number = line_number + 1
-            # TODO also handle that file is ending, and the post-yaml is the last content in the file
             else:
                 empty_lines = 0
                 current_lines.append(line)
@@ -212,32 +211,34 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                 current_lines.append(line)
                 empty_lines = 0
     # create last chunk
+    if state == ParserState.AFTER_YAML_CONTENT:
+        previous_yaml_chunk.post_yaml = current_lines
+    else:
+        def parser_state_to_chunk_type(state: ParserState) -> RawChunkType:
+            if state == ParserState.MARKDOWN:
+                return RawChunkType.MARKDOWN
+            elif (
+                (state == ParserState.YAML)
+                or (state == ParserState.AFTER_YAML)
+            ):
+                return RawChunkType.YAML
+            elif state == ParserState.HTML:
+                return RawChunkType.HTML
+            elif state == ParserState.CODE:
+                return RawChunkType.CODE
+            else:
+                assert False
 
-    def parser_state_to_chunk_type(state: ParserState) -> RawChunkType:
-        if state == ParserState.MARKDOWN:
-            return RawChunkType.MARKDOWN
-        elif (
-            (state == ParserState.YAML)
-            or (state == ParserState.AFTER_YAML)
-            or (state == ParserState.AFTER_YAML_CONTENT)
-        ):
-            return RawChunkType.YAML
-        elif state == ParserState.HTML:
-            return RawChunkType.HTML
-        elif state == ParserState.CODE:
-            return RawChunkType.CODE
-        else:
-            assert False
-
-    chunks.append(
-        RawChunk(
-            current_lines,
-            parser_state_to_chunk_type(state),
-            start_line_number,
-            path,
-            report,
+        chunks.append(
+            RawChunk(
+                current_lines,
+                parser_state_to_chunk_type(state),
+                start_line_number,
+                path,
+                report,
+            )
         )
-    )
+
     # TODO remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
     chunks = expand_reference_chunks(chunks, path, report)
