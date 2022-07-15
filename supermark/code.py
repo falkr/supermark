@@ -1,6 +1,5 @@
 from typing import Any, Dict, List
 
-import black
 from pygments import highlight
 from pygments.formatters import LatexFormatter
 from pygments.lexers import get_lexer_by_name
@@ -42,6 +41,9 @@ class Code(Chunk):
         return "\n".join(output)
 
     def recode(self) -> str:
+        # import was failing on Github actions, therefore here
+        import black
+
         if self.get_first_line().startswith("```"):
             lang = self.get_first_line().replace("```", "").strip()
             code = "".join(self.raw_chunk.lines[1:-1])

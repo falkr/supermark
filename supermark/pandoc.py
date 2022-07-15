@@ -6,6 +6,7 @@ from markdown_it import MarkdownIt
 
 md = MarkdownIt()
 
+
 def print_pandoc_info():
     installed_pandoc_version = pypandoc.get_pandoc_version()
     print("Installed Pandoc version: {}".format(installed_pandoc_version))
@@ -20,7 +21,6 @@ def print_pandoc_info():
 def convert(source: str, target_format: str, source_format: str = "md") -> str:
 
     if source_format == "md" and target_format == "html":
-        print("u")
         return md.render(source)
 
     if source_format == "mediawiki":

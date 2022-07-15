@@ -103,3 +103,4 @@ venv.bak/
 # mypy
 .mypy_cache/
 coverage_html
+.DS_Store
