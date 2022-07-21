@@ -23,7 +23,7 @@ jobs:
         run: |
           supermark build --all --log
       - name: Push
-        uses: actions-x/commit@v2
+        uses: actions-x/commit@v6
 """
 
 

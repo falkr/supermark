@@ -1,5 +1,7 @@
 from pathlib import Path
-from typing import Any, Optional
+
+# from collections import namedtuple
+from typing import Any, List, Optional
 
 import click
 
@@ -17,6 +19,7 @@ from .pandoc import print_pandoc_info
 # from .build_latex import build_latex
 from .report import Report
 from rich import print
+from rich.pretty import pprint
 
 import toml
 
@@ -42,6 +45,17 @@ def supermark():
     ...
 
 
+# PathSetup = namedtuple('input', 'output', "template")
+
+
+class PathSetup:
+    def __init__(self, base: Path, input: Path, output: Path, template: Path) -> None:
+        self.base = base
+        self.input = input
+        self.output = output
+        self.template = template
+
+
 def ensure_path(path: Any) -> Optional[Path]:
     if path is None:
         return None
@@ -53,6 +67,39 @@ def ensure_path(path: Any) -> Optional[Path]:
         return Path(path)
     else:
         raise ValueError()
+
+
+def setup_paths(
+    path: Optional[Path],
+    input: Optional[Path],
+    output: Optional[Path],
+    template: Optional[Path],
+    report: Report,
+) -> PathSetup:
+    base_path = path or Path.cwd()
+    input_path = None
+    output_path = None
+    template_path = None
+
+    # read configuration file
+    config_file = Path("config.toml")
+    if config_file.exists():
+        report.info("Found configuration file.", path=config_file)
+        config = toml.load(config_file)
+        if "input" in config and input is None:
+            input_path = base_path / config["input"]
+        if "output" in config and output is None:
+            output_path = base_path / config["output"]
+        if "template" in config and template is None:
+            template_path = base_path / config["template"]
+
+    if input_path is None:
+        input_path = base_path / "pages"
+    if output_path is None:
+        output_path = output or Path.cwd()
+    if template_path is None:
+        template_path = template or (base_path / "templates/page.html")
+    return PathSetup(base_path, input_path, output_path, template_path)
 
 
 @supermark.command(help="Build a project, site or document.")
@@ -143,41 +190,13 @@ def build(
     print(logo_2(__version__))
     print_pandoc_info()
 
-    path = ensure_path(path)
-    input = ensure_path(input)
-    output = ensure_path(output)
-    template = ensure_path(template)
-
-    base_path = path or Path.cwd()
-    input_path = None
-    output_path = None
-    template_path = None
-
-    # read configuration file
-    config_file = Path("config.toml")
-    if config_file.exists():
-        report.info("Found configuration file.", path=config_file)
-        config = toml.load(config_file)
-        if "input" in config and input is None:
-            input_path = base_path / config["input"]
-        if "output" in config and output is None:
-            output_path = base_path / config["output"]
-        if "template" in config and template is None:
-            template_path = base_path / config["template"]
-
-    if input_path is None:
-        input_path = base_path / "pages"
-    if output_path is None:
-        output_path = output or Path.cwd()
-    if template_path is None:
-        template_path = template or (base_path / "templates/page.html")
-
+    path_setup = setup_paths(path, input, output, template, report)
     format = "html"
-    
+
     builder = HTMLBuilder(
-        input_path,
-        output_path,
-        template_path,
+        path_setup.input,
+        path_setup.output,
+        path_setup.template,
         report,
         rebuild_all_pages=all,
         abort_draft=not draft,
@@ -229,3 +248,54 @@ def setup(
     base_path = path or Path.cwd()
     if githubaction:
         setup_github_action(base_path)
+
+
+@supermark.command(help="Show info about a project and installation.")
+def info():
+    report = Report()
+    core = Core(report=report)
+    core.info()
+
+
+@supermark.command(help="Perform some cleanup tasks.")
+@click.option(
+    "-h",
+    "--html",
+    "html",
+    is_flag=True,
+    default=False,
+    help="Remove *.html files that do not have corresponding source files.",
+)
+def clean(
+    html: bool = False,
+):
+    report = Report()
+    # core = Core(report=report)
+
+    path_setup = setup_paths(None, None, None, None, report)
+
+    if html:
+        html_files: List[Path] = []
+        files = list(path_setup.input.glob("*.md"))
+        for source_file_path in files:
+            html_files.append(path_setup.output / (source_file_path.stem + ".html"))
+        files = list(path_setup.output.glob("*.html"))
+        html_files_to_delete: List[Path] = []
+        for output_file_path in files:
+            if output_file_path not in html_files:
+                html_files_to_delete.append(output_file_path)
+        if len(html_files_to_delete) > 0:
+            pprint(
+                f"This would delete the following files from folder {path_setup.output}"
+            )
+            pprint(
+                [
+                    file.relative_to(path_setup.output).name
+                    for file in html_files_to_delete
+                ]
+            )
+            if click.confirm("Do you want to delete these files?"):
+                for html_file in html_files_to_delete:
+                    html_file.unlink(missing_ok=True)
+        else:
+            pprint("No files found to delete.")
