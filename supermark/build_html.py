@@ -1,6 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 from pathlib import Path
-from typing import Any, Dict, Sequence, Set
+from typing import Any, Dict, List, Sequence, Set
 
 from rich.progress import Progress, BarColumn
 

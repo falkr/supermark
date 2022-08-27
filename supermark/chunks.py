@@ -1,5 +1,7 @@
 from abc import abstractmethod
+import regex as re
 import hashlib
+from optparse import Option
 
 from yaml.scanner import ScannerError
 from .base import Extension
@@ -256,6 +258,9 @@ class Chunk:
     def get_escaped_source(self) -> str:
         ...
 
+    def get_urls(self) -> Optional[Sequence[str]]:
+        return None
+
 
 class YAMLChunk(Chunk):
     def __init__(
@@ -428,6 +433,17 @@ class MarkdownChunk(Chunk):
 
     def get_escaped_source(self) -> str:
         return "```markdown\n" + self.recode() + "\n```"
+
+    def get_urls(self) -> Optional[Sequence[str]]:
+        # TODO only create once
+        pattern = re.compile(r"\[([^][]+)\](\(((?:[^()]+|(?2))+)\))")
+        result: Optional[Sequence[str]] = None
+        for match in pattern.finditer(self.get_content()):
+            if result is None:
+                result = []
+                _, _, url = match.groups()
+                result.append(url)
+        return result
 
 
 class HTMLChunk(Chunk):

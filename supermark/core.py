@@ -1,8 +1,12 @@
 import inspect
+import requests
 from importlib import import_module
 from pathlib import Path
+from collections import defaultdict
+from rich.progress import Progress, BarColumn
+from concurrent.futures import ThreadPoolExecutor
 
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, DefaultDict, Dict, List, Optional, Sequence, Set, Tuple
 
 import rich
 from rich.tree import Tree
@@ -33,8 +37,63 @@ from .report import Report
 from .utils import remove_empty_lines_begin_and_end, write_file
 
 
+class URLChecker:
+    def __init__(self) -> None:
+        self.urls: DefaultDict[str, Set[Chunk]] = defaultdict(set)
+
+    def look_at_chunk(self, chunk: Chunk):
+        chunk_urls = chunk.get_urls()
+        if chunk_urls is not None:
+            for url in chunk_urls:
+                self.urls[url] |= {chunk}
+
+    def _check_url(self, url: str, chunks: Set[Chunk]) -> None:
+        try:
+            response = requests.get(url)
+            if response.status_code != 200:
+                for chunk in chunks:
+                    chunk.warning(
+                        f"{url} is not reachable, status_code: {response.status_code}"
+                    )
+        except requests.exceptions.MissingSchema:
+            ...  # a relative link
+        except requests.exceptions.RequestException as e:
+            for chunk in chunks:
+                chunk.warning(f"{url} is not reachable. {type(e)}")
+
+    def check_all_urls(self) -> None:
+        for url, chunks in self.urls.items():
+            self._check_url(url, chunks)
+
+    def check(self) -> None:
+        with ThreadPoolExecutor() as e:
+            with Progress(
+                "[progress.description]{task.description}",
+                BarColumn(),
+                "[progress.percentage]{task.percentage:>3.0f}%",
+                transient=True,
+            ) as progress:
+                task = progress.add_task(
+                    f"[orange]Checking {len(self.urls)} URLs",
+                    total=len(self.urls),
+                )
+                futures = []
+                for url, chunks in self.urls.items():
+                    future = e.submit(
+                        self._check_url,
+                        url,
+                        chunks,
+                    )
+                    future.add_done_callback(
+                        lambda p: progress.update(task, advance=1.0)
+                    )
+                    futures.append(future)
+                for future in futures:
+                    future.result()
+
+
 class Core:
-    def __init__(self, report: Report) -> None:
+    def __init__(self, report: Report, collect_urls: bool = False) -> None:
         self.report = report
         self.extension_points: Dict[str, ExtensionPoint] = {}
         self.yaml_extension_point: YamlExtensionPoint = self._register(
@@ -47,6 +106,9 @@ class Core:
             TableClassExtensionPoint()
         )
         self._load_extensions()
+        self.collect_urls = collect_urls
+        if collect_urls:
+            self.url_checker = URLChecker()
 
     def _load_extensions(self):
         for file in (Path(__file__).parent / "extensions").glob("*"):
@@ -106,6 +168,8 @@ class Core:
                 chunks.append(chunk)
                 if used_extensions is not None:
                     chunk.add_used_extension(used_extensions, self)
+                if self.collect_urls:
+                    self.url_checker.look_at_chunk(chunk)
         return chunks
 
     def _cast_chunk(

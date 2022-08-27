@@ -173,6 +173,13 @@ def setup_paths(
     default=False,
     help="Write messages to a log file instead of standard output.",
 )
+@click.option(
+    "-u",
+    "--urls",
+    is_flag=True,
+    default=False,
+    help="Check URLs for reachability.",
+)
 def build(
     all: bool,
     verbose: bool,
@@ -184,9 +191,10 @@ def build(
     template: Optional[Path] = None,
     reformat: bool = False,
     log: bool = False,
+    urls: bool = False,
 ):
     report = Report()
-    core = Core(report=report)
+    core = Core(report=report, collect_urls=urls)
     print(logo_2(__version__))
     print_pandoc_info()
 
@@ -205,6 +213,10 @@ def build(
     )
     builder.set_core(core)
     builder.build()
+
+    if urls:
+        core.url_checker.check()
+
     if log:
         report.print_to_file(base_path / "supermark.log")
     else:
