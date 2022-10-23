@@ -218,7 +218,7 @@ def build(
         core.url_checker.check()
 
     if log:
-        report.print_to_file(base_path / "supermark.log")
+        report.print_to_file(path_setup.base / "supermark.log")
     else:
         report.print(verbose=verbose)
     if report.has_error():
