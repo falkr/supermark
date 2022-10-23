@@ -59,7 +59,7 @@ class Builder:
             self._count_chunks(chunks)
         return chunks
 
-    def set_core(self, core: "Core"):
+    def set_core(self, core: "Core") -> None:
         self.core = core
 
     def _count_chunks(self, chunks: Sequence["Chunk"]):
@@ -261,6 +261,18 @@ class Chunk:
     def get_urls(self) -> Optional[Sequence[str]]:
         return None
 
+    @abstractmethod
+    def is_groupable(self) -> bool:
+        ...
+
+    @abstractmethod
+    def is_group(self) -> bool:
+        ...
+
+    @abstractmethod
+    def get_group(self) -> Any:
+        ...
+
 
 class YAMLChunk(Chunk):
     def __init__(
@@ -332,6 +344,16 @@ class YAMLChunk(Chunk):
         # if hasattr(self, "type"):
         return "yaml" + "/" + self.dictionary["type"]
         # return "yaml"
+
+
+class YAMLGroupChunk(YAMLChunk):
+    def __init__(
+        self,
+        raw_chunk: Optional[RawChunk] = None,
+        dictionary: Optional[Dict[str, Any]] = None,
+        page_variables: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(raw_chunk, dictionary, page_variables, optional=["status"])
 
 
 class YAMLDataChunk(YAMLChunk):

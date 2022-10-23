@@ -242,6 +242,36 @@ class Core:
                 current_main_chunk = chunk
         return main_chunks
 
+    def group_chunks(self, chunks: Sequence[Chunk]) -> Sequence[Chunk]:
+        new_chunks: Sequence[Chunk] = []
+        current_group: Optional[Chunk] = None
+        for chunk in chunks:
+            if current_group is not None:
+                if chunk.is_groupable() and current_group.accepts(chunk):
+                    current_group.add_chunk(chunk)
+                else:
+                    current_group.finish()
+                    new_chunks.append(current_group)
+                    if chunk.is_group():
+                        current_group = chunk
+                    else:
+                        new_chunks.append(chunk)
+                        current_group = None
+            else:
+                if chunk.is_groupable():
+                    current_group = chunk.get_group()
+                    current_group.add_chunk(chunk)
+                elif chunk.is_group():
+                    current_group = chunk
+                else:
+                    new_chunks.append(chunk)
+
+        if current_group is not None:
+            current_group.finish()
+            new_chunks.append(current_group)
+
+        return new_chunks
+
     def parse_lines(
         self,
         lines: List[str],
@@ -251,7 +281,8 @@ class Core:
     ):
         chunks = parse(lines, source_file_path, report)
         chunks = self.cast(chunks, report, used_extensions=used_extensions)
-        return self.arrange_assides(chunks)
+        # TODO not sure if we first arrange asides and then group or vice versa
+        return self.group_chunks(self.arrange_assides(chunks))
 
     def parse_file(
         self,
