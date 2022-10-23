@@ -60,6 +60,8 @@ class YamlExtensionPoint(ChunkExtensionPoint):
         page_variables: Dict[str, Any],
         used_extensions: Optional[Set[Extension]] = None,
     ) -> Optional[YAMLChunk]:
+        if "/" in type:
+            type = type.split("/")[0]
         if type in self.extensions:
             extension = self.extensions[type]
             if used_extensions is not None:
