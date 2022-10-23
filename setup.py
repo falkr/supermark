@@ -21,6 +21,7 @@ setup(
         "supermark.extensions.abstract",
         "supermark.extensions.boxes",
         "supermark.extensions.button",
+        "supermark.extensions.card",
         "supermark.extensions.check",
         "supermark.extensions.checklistbox",
         "supermark.extensions.code",
