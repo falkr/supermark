@@ -10,6 +10,14 @@ from .report import Report
 from .utils import write_file, add_notnone
 
 
+def reverse_path(parent_path: Path, child_path: Path) -> str:
+    levels = len(child_path.relative_to(parent_path).parent.parts)
+    s = ""
+    for _ in range(levels):
+        s = "../" + s
+    return s
+
+
 class HTMLBuilder(Builder):
     def __init__(
         self,
@@ -37,7 +45,7 @@ class HTMLBuilder(Builder):
         self,
         chunks: Sequence[Chunk],
         template: str,
-        filepath: Path,
+        source_file_path: Path,
         report: Report,
         css: str,
         js: str,
@@ -81,12 +89,25 @@ class HTMLBuilder(Builder):
         content.append("    </section>")
         content.append("</div>")
         content = "\n".join(content)
-        for tag in ["content", "css", "js"]:
+        for tag in ["content", "css", "js", "rel_path"]:
             if "{" + tag + "}" not in template:
                 self.report.warning(
                     "The template does not contain insertion tag {" + tag + "}"
                 )
-        return template.format_map({"content": content, "css": css, "js": js})
+        # Can throw KeyError, if the template contains keys like { css } and not {css}
+
+        try:
+            return template.format_map(
+                {
+                    "content": content,
+                    "css": css,
+                    "js": js,
+                    "rel_path": reverse_path(self.input_path, source_file_path),
+                }
+            )
+        except KeyError as e:
+            report.error(f"The template contains an unknown key {str(e)}")
+            return ""
 
     def _create_target(
         self,
@@ -159,11 +180,17 @@ class HTMLBuilder(Builder):
     ) -> None:
         template = self._load_html_template(self.template_file, self.report)
         jobs: Sequence[Dict[str, Any]] = []
-        files = list(self.input_path.glob("*.md"))
+        files = list(
+            self.input_path.glob(
+                "**/*.md",
+            )
+        )
         self.output_path.mkdir(exist_ok=True, parents=True)
         for source_file_path in files:
-            target_file_path: Path = self.output_path / (
-                source_file_path.stem + ".html"
+            target_file_path: Path = (
+                self.output_path
+                / source_file_path.relative_to(self.input_path).parent
+                / (source_file_path.stem + ".html")
             )
             if self._create_target(
                 source_file_path,
@@ -171,6 +198,7 @@ class HTMLBuilder(Builder):
                 self.template_file,
                 self.rebuild_all_pages,
             ):
+                target_file_path.parent.mkdir(exist_ok=True, parents=True)
                 jobs.append(
                     {
                         "source_file_path": source_file_path,
