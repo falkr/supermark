@@ -12,7 +12,7 @@ from .core import Core
 from .extend import Extension, ParagraphExtension, TableClassExtension, YamlExtension
 from .report import Report
 
-__version__ = "0.3.16"
+__version__ = "0.3.17"
 
 __all__ = [
     "Core",

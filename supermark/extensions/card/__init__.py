@@ -149,6 +149,17 @@ class Card(YAMLChunk):
         html.append("    </div>")
         html.append("    </div>")
 
+    def _create_post_yaml_card(
+        self, post_yaml: str, title: Optional[str], html: List[str], builder: Builder
+    ):
+        html.append('<div class="card"">')
+        html.append('<div class="card-body">')
+        if title is not None and len(title) > 0:
+            html.append(f'<h6 class="card-title">{title}</h6>')
+        html.append(builder.convert(post_yaml, "html"))
+        html.append("</div>")
+        html.append("</div>")
+
     def to_html(self, builder: Builder):
         html: Sequence[str] = []
 
@@ -170,5 +181,7 @@ class Card(YAMLChunk):
             self._create_card_arrow(title, link, html)
         elif type == "card/text":
             self._create_card_text(title, text, link, html, link_title)
+        elif type == "card" and self.get_post_yaml() is not None:
+            self._create_post_yaml_card(self.get_post_yaml(), title, html, builder)
 
         return "\n".join(html)
