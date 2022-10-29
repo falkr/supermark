@@ -1,7 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor, Future
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Set
-
+from typing import Any, Dict, List, Sequence, Set, Optional
+import yaml
+from yaml.scanner import ScannerError
 from rich.progress import Progress, BarColumn
 
 
@@ -16,6 +17,84 @@ def reverse_path(parent_path: Path, child_path: Path) -> str:
     for _ in range(levels):
         s = "../" + s
     return s
+
+
+class Page:
+    def __init__(self, d: Dict[str, str], children: Optional[List["Page"]] = None):
+        self.page = d["page"]
+        self.title = d["title"] if "title" in d else d["page"]
+        # TODO handle that these are not set
+        self.children = children
+        self.parent = None
+        if self.children:
+            for child in self.children:
+                child.parent = self
+
+    def __str__(self):
+        return self.title
+
+
+class Breadcrumbs:
+    def __init__(self, report: Report):
+        self.pages: Dict[str, Page] = {}
+        self.report = report
+
+    def load(self, path: Path):
+        with open(path) as f:
+            try:
+                temp: Any = yaml.safe_load(f)
+                self.roots = self.parse_breadcrumbs(temp)
+            except ScannerError as e:
+                self.report.warning(str(e), path)
+
+    def parse_breadcrumbs(self, l: List[Any]) -> List[Any]:
+        tchildren = []
+        for i in range(len(l)):
+            item = l[i]
+            if isinstance(item, dict):
+                if i < len(l) - 1 and isinstance(l[i + 1], list):
+                    children = self.parse_breadcrumbs(l[i + 1])
+                else:
+                    children = None
+                page = Page(item, children=children)
+                tchildren.append(page)
+                self.pages[page.page] = page
+        return tchildren
+
+    def has_breadcrumbs(self, page: str) -> bool:
+        return page in self.pages
+
+    def get_trail(self, page: str) -> List[Page]:
+        trail: List[Page] = []
+        while page in self.pages:
+            p = self.pages[page]
+            trail.append(p)
+            if p.parent:
+                page = p.parent.page
+            else:
+                break
+        trail.reverse()
+        return trail
+
+    def get_html(self, page_name: str) -> str:
+        html: List[str] = []
+        divider = "url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;)"
+        html.append(
+            f'<nav style="--bs-breadcrumb-divider: {divider};" aria-label="breadcrumb">'
+        )
+        html.append('<ol class="breadcrumb">')
+        for page in self.get_trail(page_name):
+            if page.page == page_name:
+                html.append(
+                    f'<li class="breadcrumb-item active" aria-current="page">{page.title}</li>'
+                )
+            else:
+                html.append(
+                    f'<li class="breadcrumb-item"><a href="{page.page.replace(".md", ".html")}">{page.title}</a></li>'
+                )
+        html.append("</ol>")
+        html.append("</nav>")
+        return "\n".join(html)
 
 
 class HTMLBuilder(Builder):
@@ -40,6 +119,12 @@ class HTMLBuilder(Builder):
             verbose,
             reformat,
         )
+        breadcrumbs_path = input_path / Path("breadcrumbs.yaml")
+        self.breadcrumbs = Breadcrumbs(self.report)
+        self.report.info(f"Looking for breadcrumbs file in {breadcrumbs_path}")
+        if breadcrumbs_path.exists():
+            self.report.info(f"Breadcrumbs exist in {breadcrumbs_path}")
+            self.breadcrumbs.load(breadcrumbs_path)
 
     def _transform_page_to_html(
         self,
@@ -58,6 +143,10 @@ class HTMLBuilder(Builder):
             first_chunk = chunks[0]
             if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
                 content.append('    <section class="content">')
+
+        page_path = str(source_file_path.relative_to(self.input_path))
+        if self.breadcrumbs.has_breadcrumbs(page_path):
+            content.append(self.breadcrumbs.get_html(page_path))
 
         for chunk in chunks:
             if (
