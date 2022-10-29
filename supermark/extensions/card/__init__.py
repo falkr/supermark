@@ -132,7 +132,7 @@ class Card(YAMLChunk):
         text: str,
         link: str,
         html: List[str],
-        link_title: str | None = None,
+        link_title: Optional[str] = None,
     ):
         html.append('    <div class="card shadow-sm">')
         html.append('    <div class="card-body">')
