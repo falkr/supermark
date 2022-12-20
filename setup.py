@@ -17,6 +17,7 @@ setup(
     name=package_name,
     packages=[
         package_name,
+        "supermark.data",
         "supermark.extensions",
         "supermark.extensions.abstract",
         "supermark.extensions.boxes",
@@ -34,6 +35,8 @@ setup(
         "supermark.extensions.guideline",
         "supermark.extensions.hints",
         "supermark.extensions.lines",
+        "supermark.extensions.link",
+        "supermark.extensions.nav",
         "supermark.extensions.qna",
         "supermark.extensions.quiz",
         "supermark.extensions.quote",
@@ -80,7 +83,7 @@ setup(
         "markdown-it-py",
     ],
     package_data={
-        "": ["*.tex", "*.pdf", "*.css", "*.md", "*.js"],
+        "": ["*.tex", "*.pdf", "*.css", "*.md", "*.js", "*.svg"],
     },
     include_package_data=True,
     author="Frank Alexander Kraemer",

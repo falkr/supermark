@@ -57,203 +57,22 @@
 <div class="page">
     </section>
     <section class="content">
-<h1 id="writing-supermark-documents">Writing Supermark Documents</h1>
-
     </section>
     <section class="content">
-<h1 id="chunks">Chunks</h1>
-
     </section>
     <section class="content">
-<h1 id="markdown-chunks">Markdown Chunks</h1>
-<p>The Markdown chunks of the document should follow <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc’s Markdown syntax</a>.</p>
-<h2 id="sections">Sections</h2>
-<p>Sections on different levels are written with preceeding <code>#</code>, <code>##</code>, <code>###</code></p>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" title="1"><span class="fu"># Section Level 1</span></a></code></pre></div>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">## Section Level 2</span></a></code></pre></div>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">### Section Level 3</span></a></code></pre></div>
-
-<h2 id="text-markup">Text Markup</h2>
-<p><strong>bold</strong> text <strong>bold</strong> text. <em>emphasized</em> text, <em>emphasized text</em></p>
-
-<h2 id="lists">Lists</h2>
-
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu"># Section Level 1</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu">## Section Level 2</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu">### Section Level 3</span></span></code></pre></div>
     </section>
     <section class="content">
-<h1 id="yaml-elements">YAML Elements</h1>
-<p>YAML elements start and stop with a delimiter <code>---</code>.</p>
-<h2 id="videos">Videos</h2>
-
-<div class="figure">
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/wupToqz1e2g?start=80" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-<span name="wupToqz1e2g">&nbsp;</span>
-<aside name="wupToqz1e2g"><p><p>The Pale Blue Dot.</p>
-</p></aside>
-</div>
-<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="ot">---</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="fu">type:</span><span class="at"> youtube</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="fu">video:</span><span class="at"> wupToqz1e2g</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="fu">position:</span><span class="at"> aside</span></a>
-<a class="sourceLine" id="cb1-5" title="5"><span class="fu">caption:</span><span class="at"> </span><span class="st">&quot;The Pale Blue Dot.&quot;</span></a>
-<a class="sourceLine" id="cb1-6" title="6"><span class="fu">start:</span><span class="at"> </span><span class="dv">80</span></a>
-<a class="sourceLine" id="cb1-7" title="7"><span class="ot">---</span></a></code></pre></div>
-
-<h2 id="tables">Tables</h2>
-<p>Tables can be included directly as HTML, or via the following YAML section that refers to a table stored in a file. The tabek in the file must use the <a href="https://www.mediawiki.org/wiki/Help:Tables">mediawiki syntax for tables</a>, with an example shown below. The optional class attribute placed a <code>&lt;div&gt;</code> element around the table for styling with the given class.</p>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="ot">---</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="fu">type:</span><span class="at"> table</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="fu">file:</span><span class="at"> tables/table.mw</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="fu">class:</span><span class="at"> rubric</span></a>
-<a class="sourceLine" id="cb1-5" title="5"><span class="fu">caption:</span><span class="at"> </span><span class="st">&quot;Table with a caption.&quot;</span></a>
-<a class="sourceLine" id="cb1-6" title="6"><span class="ot">---</span></a></code></pre></div>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode mediawiki"><code class="sourceCode mediawiki"><a class="sourceLine" id="cb1-1" title="1"><span class="dv">{|</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="dv">|</span>Orange</a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="dv">|</span>Apple</a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="dv">|-</span></a>
-<a class="sourceLine" id="cb1-5" title="5"><span class="dv">|</span>Bread</a>
-<a class="sourceLine" id="cb1-6" title="6"><span class="dv">|</span>Pie</a>
-<a class="sourceLine" id="cb1-7" title="7"><span class="dv">|-</span></a>
-<a class="sourceLine" id="cb1-8" title="8"><span class="dv">|</span>Butter</a>
-<a class="sourceLine" id="cb1-9" title="9"><span class="dv">|</span>Ice cream </a>
-<a class="sourceLine" id="cb1-10" title="10"><span class="dv">|}</span></a></code></pre></div>
-
-<h2 id="figures">Figures</h2>
-<h2 id="buttons">Buttons</h2>
-<h2 id="hints">Hints</h2>
-<p>Hints are boxes with information that is only visible when the reader clicks on the header. The top of the hint is specified with a YAML section. The content of the hint is provided as post-YAML section, directly following the YAML header. It ends after two consecutive empty lines.</p>
-
-<button class="w3collapsible">Hint about Something</button>
-<div class="w3content">
-<p>Within the content you can have lists:</p>
-<ul>
-<li>10.0.0.0/8</li>
-<li>172.16.0.0/12</li>
-<li>192.168.0.0/16</li>
-</ul>
-<p>An you can coninue.</p>
-<p><strong>Remember:</strong> Hints should be helpful.</p>
-
-</div>
-<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="ot">---</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="fu">type:</span><span class="at"> hint</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="fu">title:</span><span class="at"> Hint about Something</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="ot">---</span></a>
-<a class="sourceLine" id="cb1-5" title="5"><span class="fu">Within the content you can have lists:</span></a>
-<a class="sourceLine" id="cb1-6" title="6"></a>
-<a class="sourceLine" id="cb1-7" title="7">* 10.0.0.0/8</a>
-<a class="sourceLine" id="cb1-8" title="8">* 172.16.0.0/12</a>
-<a class="sourceLine" id="cb1-9" title="9">* 192.168.0.0/16</a>
-<a class="sourceLine" id="cb1-10" title="10"></a>
-<a class="sourceLine" id="cb1-11" title="11">An you can coninue.</a>
-<a class="sourceLine" id="cb1-12" title="12"></a>
-<a class="sourceLine" id="cb1-13" title="13"><span class="dt">**Remember:**</span> Hints should be helpful. </a></code></pre></div>
-
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="pp">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="fu">ref</span><span class="kw">:</span><span class="at"> file.md</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="pp">---</span></span></code></pre></div>
     </section>
     <section class="content">
-<h1 id="html-blocks">HTML Blocks</h1>
-
     </section>
     <section class="content">
-<h1 id="code-blocks">Code Blocks</h1>
-<p>Supermark uses Pandoc’s functions to highlight code. Place the code between the following delimiters:</p>
-
-<div>
-<pre>
-```bash
-pandoc --list-highlight-languages
-```
-</pre>
-</div>
-
-
-
-<p><code>abc</code>, <code>asn1</code>, <code>asp</code>, <code>ats</code>, <code>awk</code>, <code>actionscript</code>, <code>ada</code>, <code>agda</code>, <code>alertindent</code>, <code>apache</code>, <code>bash</code>, <code>bibtex</code>, <code>boo</code>, <code>c</code>, <code>cs</code>, <code>cpp</code>, <code>cmake</code>, <code>css</code>, <code>changelog</code>, <code>clojure</code>, <code>coffee</code>, <code>coldfusion</code>, <code>commonlisp</code>, <code>curry</code>, <code>d</code>, <code>dtd</code>, <code>diff</code>, <code>djangotemplate</code>, <code>dockerfile</code>, <code>doxygen</code>, <code>doxygenlua</code>, <code>eiffel</code>, <code>elixir</code>, <code>email</code>, <code>erlang</code>, <code>fsharp</code>, <code>fortran</code>, <code>gcc</code>, <code>glsl</code>, <code>gnuassembler</code>, <code>m4</code>, <code>go</code>, <code>html</code>, <code>hamlet</code>, <code>haskell</code>, <code>haxe</code>, <code>ini</code>, <code>isocpp</code>, <code>idris</code>, <code>fasm</code>, <code>nasm</code>, <code>json</code>, <code>jsp</code>, <code>java</code>, <code>javascript</code>, <code>javadoc</code>, <code>julia</code>, <code>kotlin</code>, <code>llvm</code>, <code>latex</code>, <code>lex</code>, <code>lilypond</code>, <code>literatecurry</code>, <code>literatehaskell</code>, <code>lua</code>, <code>mips</code>, <code>makefile</code>, <code>markdown</code>, <code>mathematica</code>, <code>matlab</code>, <code>maxima</code>, <code>mediawiki</code>, <code>metafont</code>, <code>modelines</code>, <code>modula2</code>, <code>modula3</code>, <code>monobasic</code>, <code>ocaml</code>, <code>objectivec</code>, <code>objectivecpp</code>, <code>octave</code>, <code>opencl</code>, <code>php</code>, <code>povray</code>, <code>pascal</code>, <code>perl</code>, <code>pike</code>, <code>postscript</code>, <code>powershell</code>, <code>prolog</code>, <code>pure</code>, <code>purebasic</code>, <code>python</code>, <code>r</code>, <code>relaxng</code>, <code>relaxngcompact</code>, <code>roff</code>, <code>ruby</code>, <code>rhtml</code>, <code>rust</code>, <code>sgml</code>, <code>sql</code>, <code>sqlmysql</code>, <code>sqlpostgresql</code>, <code>scala</code>, <code>scheme</code>, <code>tcl</code>, <code>tcsh</code>, <code>texinfo</code>, <code>mandoc</code>, <code>vhdl</code>, <code>verilog</code>, <code>xml</code>, <code>xul</code>, <code>yaml</code>, <code>yacc</code>, <code>zsh</code>, <code>dot</code>, <code>noweb</code>, <code>rest</code>, <code>sci</code>, <code>sed</code>, <code>xorg</code>, <code>xslt</code>,</p>
-<p>For an updated list, type:</p>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="ex">pandoc</span> --list-highlight-languages</a></code></pre></div>
-
-    </section>
-    <section class="content">
-<h1 id="file-encoding">File Encoding</h1>
-<ul>
-<li>UTF-8</li>
-</ul>
-
-    </section>
-    <section class="content">
-<h1 id="special">Special</h1>
-<h3 id="learning-goals">Learning Goals</h3>
-
-<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" title="1">:goals:</a>
-<a class="sourceLine" id="cb1-2" title="2">- <span class="fl">Learning Goal 1</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="fl">- Learning Goal 2</span></a>
-<a class="sourceLine" id="cb1-4" title="4"></a></code></pre></div>
-
-<p>End the goal environment with two empty lines.</p>
-
-<div class="goals"><ul>
-<li>Learning Goal 1</li>
-<li>Learning Goal 2</li>
-</ul>
-</div>
-<h2 id="tips">Tips</h2>
-
-<div class="tip"><p>A tip is shown in a highlighted box.</p>
-</div>
-<pre><code>:tip: A tip is shown in a highlighted box.</code></pre>
-
-<h2 id="warnings">Warnings</h2>
-
-<div class="warning"><p>Use warnings to prevent harm or damage. Draw attention.</p>
-</div>
-<pre><code>:warning: Use warnings to prevent harm or damage. Draw attention.</code></pre>
-
-<h2 id="solution-hints">Solution Hints</h2>
-
-</section>
-<section class="content">
-<div class="hint_title">Hint
-<button type="button" class="btn btn-dark btn-sm" style="float: right" onclick="document.getElementById('a1ceb1').style.cssText = ''">Show</button>
-</div>
-<div class="hint" style="-webkit-filter: blur(5px);" id="a1ceb1"><p>This is a hint that is only visible after clicking a button.</p>
-
-</div>
-</section>
-<section class="content">
-</section>
-<section class="content">
-<div class="hint_title">Hint
-<button type="button" class="btn btn-dark btn-sm" style="float: right" onclick="document.getElementById('155555').style.cssText = ''">Show</button>
-</div>
-<div class="hint" style="-webkit-filter: blur(5px);" id="155555"><p>This is another hint that is only visible after clicking a button.</p>
-
-</div>
-</section>
-<section class="content">
-    </section>
-    <section class="content">
-<h1 id="numbered-lists">Numbered Lists</h1>
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non imperdiet mauris. Sed rutrum massa at leo fringilla consequat. Duis eget leo vel augue placerat venenatis nec id lectus. Maecenas aliquam ac lectus sit amet dictum. Mauris odio tortor, tincidunt sed pulvinar in, varius in massa. Curabitur fermentum turpis felis, a egestas diam consectetur et. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam lacinia lobortis accumsan. Quisque bibendum molestie metus, eu pharetra ante cursus eget. Fusce lobortis velit et massa sollicitudin, a bibendum elit commodo. Sed at pretium enim. Nunc viverra feugiat eros, sodales molestie dui lobortis eget. Donec sollicitudin dui commodo, imperdiet nibh eget, faucibus ex.</p>
-
-<div class="steps"><ol type="1">
-<li>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non imperdiet mauris. Sed rutrum massa at leo fringilla consequat. Duis eget leo vel augue placerat venenatis nec id lectus. Maecenas aliquam ac lectus sit amet dictum. Mauris odio tortor, tincidunt sed pulvinar in, varius in massa. Curabitur fermentum turpis felis, a egestas diam consectetur et. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam lacinia lobortis accumsan. Quisque bibendum molestie metus, eu pharetra ante cursus eget. Fusce lobortis velit et massa sollicitudin, a bibendum elit commodo. Sed at pretium enim. Nunc viverra feugiat eros, sodales molestie dui lobortis eget. Donec sollicitudin dui commodo, imperdiet nibh eget, faucibus ex.</li>
-<li>Fusce nisi odio, tincidunt sed dui sit amet, porta volutpat mauris. Nam quis leo at sem fermentum efficitur a non magna. Nullam rutrum sem sed massa efficitur posuere. Nullam leo diam, congue in imperdiet non, aliquet sed est. Quisque et nunc in elit hendrerit feugiat. Nulla euismod iaculis dolor et molestie. Sed ut lectus sagittis, ultrices nulla sagittis, sodales enim. Quisque in tortor nec dui accumsan consectetur. Quisque laoreet auctor congue. Etiam malesuada enim eget risus posuere, ut porta est faucibus. Cras rhoncus sem in aliquet suscipit. Etiam cursus pellentesque mauris, ut sagittis tellus consectetur nec.</li>
-<li>Mauris feugiat, nisi tempor tincidunt eleifend, ante nisi dictum lectus, nec ultricies magna eros ultrices nisl. Morbi laoreet nibh mi, a maximus augue tristique vitae. Aenean at nisl sit amet nisl eleifend feugiat eget quis lacus. Maecenas ac dignissim libero, vel tristique ante. Donec sollicitudin dapibus turpis vitae consequat. Integer dapibus felis a urna vehicula vehicula. Donec eleifend sed nulla non efficitur. Curabitur ut ligula aliquet, pharetra quam at, auctor augue. Aliquam vel commodo ante. Ut blandit lectus sapien, eget imperdiet diam placerat vel. Vestibulum laoreet velit eu ultrices tincidunt. Curabitur in tristique massa.</li>
-<li>Cras ultrices mauris risus, vel maximus quam volutpat quis. Nulla facilisi. Nullam suscipit euismod auctor. Etiam sollicitudin diam commodo, elementum nisl quis, commodo quam. Proin a nulla tempor, pretium enim et, euismod eros. Sed rhoncus sagittis lectus, sit amet semper tortor tempus eu. Aenean lorem nisl, luctus sit amet ultricies sed, sodales quis ligula. Mauris eleifend sem lacinia ligula cursus egestas. Phasellus ut ex tortor. Aliquam congue imperdiet nibh eu rhoncus. Ut sed sollicitudin turpis, non gravida nulla.</li>
-<li>Phasellus rutrum sollicitudin vestibulum. Proin pretium turpis non pellentesque rutrum. Fusce vitae congue metus, at dignissim enim. Sed quis varius metus. Curabitur mattis turpis non nisi imperdiet, nec mattis arcu varius. Maecenas et auctor nisi, ut volutpat diam. Nulla facilisi. Pellentesque semper iaculis lectus, et rutrum metus euismod et. Integer nisl eros, fermentum quis vulputate et, tristique in dolor. Nam rhoncus posuere sem, non volutpat lectus sagittis hendrerit. Quisque eget ornare urna. In feugiat eleifend accumsan. Donec in sapien consequat, dictum massa at, sollicitudin mauris.</li>
-</ol>
-</div>
-<div class="steps"><ol type="1">
-<li>This is the first step</li>
-<li>This is the second step.</li>
-<li>This is the third step.</li>
-</ol>
-</div>
     </section>
 </div>
 

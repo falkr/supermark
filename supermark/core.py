@@ -179,6 +179,10 @@ class Core:
         report: Report,
         used_extensions: Optional[Set[Extension]] = None,
     ) -> Optional[Chunk]:
+
+        if isinstance(raw, list):
+            print(raw)
+
         chunk_type = raw.get_type()
         if chunk_type == RawChunkType.MARKDOWN:
             tag = raw.get_tag()

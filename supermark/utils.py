@@ -57,3 +57,28 @@ def random_id():
 def add_notnone(content: Optional[str], collector: List[str]):
     if content is not None:
         collector.append(content)
+
+
+def reverse_path(parent_path: Path, child_path: Path) -> str:
+    levels = len(child_path.relative_to(parent_path).parent.parts)
+    s = ""
+    for _ in range(levels):
+        s = "../" + s
+    return s
+
+
+def get_common_base(path1: Path, path2: Path) -> Path:
+    common = []
+    for p1, p2 in zip(path1.parts, path2.parts):
+        if p1 == "/":
+            ...
+        elif p1 == p2:
+            common.append(p1)
+        else:
+            break
+    return Path("/" + "/".join(common))
+
+
+def get_relative_path(path1: Path, path2: Path) -> Path:
+    base_path = get_common_base(path1, path2)
+    return reverse_path(base_path, path1) / path2.relative_to(base_path)

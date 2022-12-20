@@ -1,3 +1,4 @@
+from pathlib import Path
 from ... import YAMLChunk, YamlExtension, Builder, RawChunk
 from typing import Dict, Any, List
 
@@ -18,7 +19,7 @@ class Lines(YAMLChunk):
         # print("--------     init lines extension")
         super().__init__(raw_chunk, dictionary, page_variables, required=["lines"])
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         html: List[str] = []
         for _ in range(self.dictionary["lines"]):
             html.append('<hr class="lines"/>')

@@ -214,13 +214,11 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
     if state == ParserState.AFTER_YAML_CONTENT:
         previous_yaml_chunk.post_yaml = current_lines
     else:
+
         def parser_state_to_chunk_type(state: ParserState) -> RawChunkType:
             if state == ParserState.MARKDOWN:
                 return RawChunkType.MARKDOWN
-            elif (
-                (state == ParserState.YAML)
-                or (state == ParserState.AFTER_YAML)
-            ):
+            elif (state == ParserState.YAML) or (state == ParserState.AFTER_YAML):
                 return RawChunkType.YAML
             elif state == ParserState.HTML:
                 return RawChunkType.HTML
@@ -255,7 +253,10 @@ def expand_reference_chunks(
         if path is not None:
             with open(path, "r", encoding="utf-8") as file:
                 lines = file.readlines()
-                target_chunks.append(parse(lines, path, report))
+                chunks = parse(lines, path, report)
+                # TODO add all ele,emt sof chink but simpler
+                for c in chunks:
+                    target_chunks.append(c)
         else:
             target_chunks.append(source_chunk)
     return target_chunks

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, Sequence
 from ... import YamlExtension, YAMLChunk, RawChunk, Builder
 
@@ -35,7 +36,7 @@ class QnA(YAMLChunk):
             self.ok = False
             self.error("A QnA requires ans answer as post-yaml section.")
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         element_id = "id" + self.raw_chunk.get_hash()
         return TEMPLATE.format_map(
             {

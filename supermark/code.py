@@ -1,4 +1,5 @@
 from typing import Any, Dict, List
+from pathlib import Path
 
 from pygments import highlight
 from pygments.formatters import LatexFormatter
@@ -20,7 +21,7 @@ class Code(Chunk):
     def get_chunk_type(self) -> str:
         return "code" if self.lang is None else f"code/{self.lang}"
 
-    def to_html(self, builder: Builder) -> str:
+    def to_html(self, builder: Builder, target_file_path: Path) -> str:
         return builder.convert_code(self.get_content(), target_format="html")
 
     def to_latex(self, builder: Builder) -> str:

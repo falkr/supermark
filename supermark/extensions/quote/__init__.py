@@ -1,5 +1,5 @@
-import os
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Sequence
+from pathlib import Path
 
 from ... import YAMLChunk, YamlExtension, RawChunk, Builder
 
@@ -24,7 +24,7 @@ class Quote(YAMLChunk):
             optional=["link", "title"],
         )
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []
 
         link = self.dictionary["link"] if "link" in self.dictionary else None

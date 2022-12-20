@@ -1,9 +1,6 @@
 from pathlib import Path
 from typing import Any, Dict, Sequence
 import random
-
-import requests
-
 from ... import YAMLChunk, YamlExtension, RawChunk, Builder
 
 
@@ -33,7 +30,9 @@ class Quiz(YAMLChunk):
             required=["correct", "false-1"],
             optional=[
                 "question",
-                "title", "false-2", "false-3",
+                "title",
+                "false-2",
+                "false-3",
                 "result-correct",
                 "result-false",
                 "result-false-1",
@@ -72,7 +71,7 @@ class Quiz(YAMLChunk):
             )
 
         self.alternatives: Sequence[Alternative] = []
-        for i in list(range(1,self.n_alternatives)):
+        for i in list(range(1, self.n_alternatives)):
             self.alternatives.append(
                 Alternative(
                     False,
@@ -99,7 +98,7 @@ class Quiz(YAMLChunk):
         video = self.dictionary["video"]
         return super().create_hash("{}".format(video))
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []
         html.append(f'<div class="card mb-5 shadow-sm" id="{self.quiz_id}">')
         html.append('  <div class="card-body">')

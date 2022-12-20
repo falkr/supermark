@@ -1,4 +1,5 @@
 from typing import Any, Dict, Sequence
+from pathlib import Path
 from ... import YamlExtension, YAMLChunk, RawChunk, Builder
 
 
@@ -18,7 +19,7 @@ class Button(YAMLChunk):
             raw_chunk, dictionary, page_variables, required=["url", "text"]
         )
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         clazz = "ntnu-button"
         html: Sequence[str] = []
         html.append(

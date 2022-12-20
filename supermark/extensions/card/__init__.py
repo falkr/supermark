@@ -1,3 +1,4 @@
+from pathlib import Path
 from ... import YamlExtension, YAMLChunk, RawChunk, Builder, Chunk
 from typing import Dict, Any, List, Sequence, Optional
 
@@ -40,7 +41,7 @@ class CardGroup(YAMLChunk):
     def finish(self):
         ...
 
-    def to_html(self, builder: Builder) -> Optional[str]:
+    def to_html(self, builder: Builder, target_file_path: Path) -> Optional[str]:
         html: Sequence[str] = []
         columns = self.dictionary["columns"] if "columns" in self.dictionary else 2
 
@@ -50,7 +51,7 @@ class CardGroup(YAMLChunk):
 
         html.append(f'<div class="row row-cols-1 row-cols-md-{columns} g-4 mb-5">')
         for chunk in self.chunks:
-            c = chunk.to_html(builder=builder)
+            c = chunk.to_html(builder=builder, target_file_path=target_file_path)
             if c:
                 html.append('<div class="col">')
                 html.append(c)
@@ -94,7 +95,7 @@ class Card(YAMLChunk):
         self, name: str, email: str, detail: str, img: str, html: List[str]
     ):
         html.append(
-            '<div class="card mb-3 border-0 person-card" style="max-width: 540px;">'
+            '<div class="card mb-3 border-0 person-card h-100" style="max-width: 540px;">'
         )
         html.append('    <div class="row g-0">')
         html.append('        <div class="col-md-2">')
@@ -117,7 +118,7 @@ class Card(YAMLChunk):
         html.append("</div>")
 
     def _create_card_arrow(self, title: str, href: str, html: List[str]):
-        html.append('<div class="card text-end shadow-sm">')
+        html.append('<div class="card text-end shadow-sm h-100">')
         html.append('<div class="card-body">')
         html.append(f'    <h5 class="card-title">{title}</h5>')
         html.append(f'    <a href="{href}" class="stretched-link">')
@@ -134,7 +135,7 @@ class Card(YAMLChunk):
         html: List[str],
         link_title: Optional[str] = None,
     ):
-        html.append('    <div class="card shadow-sm">')
+        html.append('    <div class="card shadow-sm h-100">')
         html.append('    <div class="card-body">')
         html.append(f'        <h5 class="card-title">{title}</h5>')
         html.append(f'        <p class="card-text">{text}</p>')
@@ -152,7 +153,7 @@ class Card(YAMLChunk):
     def _create_post_yaml_card(
         self, post_yaml: str, title: Optional[str], html: List[str], builder: Builder
     ):
-        html.append('<div class="card"">')
+        html.append('<div class="card h-100"">')
         html.append('<div class="card-body">')
         if title is not None and len(title) > 0:
             html.append(f'<h6 class="card-title">{title}</h6>')
@@ -160,7 +161,7 @@ class Card(YAMLChunk):
         html.append("</div>")
         html.append("</div>")
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []
 
         link = self.dictionary["link"] if "link" in self.dictionary else ""

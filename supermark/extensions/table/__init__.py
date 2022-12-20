@@ -1,5 +1,5 @@
 import os
-import re
+from pathlib import Path
 from ...extend import TableClassExtension, Extension
 from typing import Any, Dict, List, Optional, Sequence, Set
 
@@ -46,10 +46,13 @@ class Table(YAMLChunk):
         if self.has_post_yaml():
             self.table_raw = self.get_post_yaml()
         elif "file" in dictionary:
-            file_path = os.path.join(
-                os.path.dirname(os.path.dirname(raw_chunk.path)), dictionary["file"]
-            )
-            if not os.path.exists(file_path):
+            file_path = (raw_chunk.path.parent / dictionary["file"]).resolve()
+            if not file_path.exists():
+                # TODO this is the old way, should now be relative to chunk as above
+                file_path = (
+                    raw_chunk.path.parent.parent / dictionary["file"]
+                ).resolve()
+            if not file_path.exists():
                 self.error("Table file {} does not exist.".format(file_path))
                 self.ok = False
             else:
@@ -139,7 +142,7 @@ class Table(YAMLChunk):
         output.append("</table>")
         return "\n".join(output)
 
-    def to_html(self, builder: Builder) -> str:
+    def to_html(self, builder: Builder, target_file_path: Path) -> str:
         empty_cell = (
             ""
             if self.table_extension is None
@@ -152,7 +155,7 @@ class Table(YAMLChunk):
         else:
             source_format = "md"
         output = self._cellwise_to_html(source_format, empty_cell, builder)
-        html.append(output)
+        # html.append(output)
         if "caption" in self.dictionary:
             if "file" in self.dictionary:
                 table_id = self.dictionary["file"]
@@ -165,6 +168,7 @@ class Table(YAMLChunk):
                     builder.convert(self.dictionary["caption"], target_format="html"),
                 )
             )
+        html.append(output)
         return "\n".join(html)
 
     def get_scss(self):

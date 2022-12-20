@@ -1,100 +1,16 @@
 from concurrent.futures import ThreadPoolExecutor, Future
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Set, Optional
-import yaml
-from yaml.scanner import ScannerError
 from rich.progress import Progress, BarColumn
+import yaml
 
 
 from .chunks import Builder, Chunk, MarkdownChunk, YAMLDataChunk
 from .report import Report
-from .utils import write_file, add_notnone
+from .utils import write_file, add_notnone, reverse_path, get_relative_path
+from .pagemap import PageMapper, Folder
 
-
-def reverse_path(parent_path: Path, child_path: Path) -> str:
-    levels = len(child_path.relative_to(parent_path).parent.parts)
-    s = ""
-    for _ in range(levels):
-        s = "../" + s
-    return s
-
-
-class Page:
-    def __init__(self, d: Dict[str, str], children: Optional[List["Page"]] = None):
-        self.page = d["page"]
-        self.title = d["title"] if "title" in d else d["page"]
-        # TODO handle that these are not set
-        self.children = children
-        self.parent = None
-        if self.children:
-            for child in self.children:
-                child.parent = self
-
-    def __str__(self):
-        return self.title
-
-
-class Breadcrumbs:
-    def __init__(self, report: Report):
-        self.pages: Dict[str, Page] = {}
-        self.report = report
-
-    def load(self, path: Path):
-        with open(path) as f:
-            try:
-                temp: Any = yaml.safe_load(f)
-                self.roots = self.parse_breadcrumbs(temp)
-            except ScannerError as e:
-                self.report.warning(str(e), path)
-
-    def parse_breadcrumbs(self, l: List[Any]) -> List[Any]:
-        tchildren = []
-        for i in range(len(l)):
-            item = l[i]
-            if isinstance(item, dict):
-                if i < len(l) - 1 and isinstance(l[i + 1], list):
-                    children = self.parse_breadcrumbs(l[i + 1])
-                else:
-                    children = None
-                page = Page(item, children=children)
-                tchildren.append(page)
-                self.pages[page.page] = page
-        return tchildren
-
-    def has_breadcrumbs(self, page: str) -> bool:
-        return page in self.pages
-
-    def get_trail(self, page: str) -> List[Page]:
-        trail: List[Page] = []
-        while page in self.pages:
-            p = self.pages[page]
-            trail.append(p)
-            if p.parent:
-                page = p.parent.page
-            else:
-                break
-        trail.reverse()
-        return trail
-
-    def get_html(self, page_name: str) -> str:
-        html: List[str] = []
-        divider = "url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;)"
-        html.append(
-            f'<nav style="--bs-breadcrumb-divider: {divider};" aria-label="breadcrumb">'
-        )
-        html.append('<ol class="breadcrumb">')
-        for page in self.get_trail(page_name):
-            if page.page == page_name:
-                html.append(
-                    f'<li class="breadcrumb-item active" aria-current="page">{page.title}</li>'
-                )
-            else:
-                html.append(
-                    f'<li class="breadcrumb-item"><a href="{page.page.replace(".md", ".html")}">{page.title}</a></li>'
-                )
-        html.append("</ol>")
-        html.append("</nav>")
-        return "\n".join(html)
+from .breadcrumbs import Breadcrumbs, Page2
 
 
 class HTMLBuilder(Builder):
@@ -102,6 +18,7 @@ class HTMLBuilder(Builder):
         self,
         input_path: Path,
         output_path: Path,
+        base_path: Path,
         template_file: Path,
         report: Report,
         rebuild_all_pages: bool = True,
@@ -112,6 +29,7 @@ class HTMLBuilder(Builder):
         super().__init__(
             input_path,
             output_path,
+            base_path,
             template_file,
             report,
             rebuild_all_pages,
@@ -120,17 +38,17 @@ class HTMLBuilder(Builder):
             reformat,
         )
         breadcrumbs_path = input_path / Path("breadcrumbs.yaml")
-        self.breadcrumbs = Breadcrumbs(self.report)
         self.report.info(f"Looking for breadcrumbs file in {breadcrumbs_path}")
         if breadcrumbs_path.exists():
+            self.breadcrumbs = Breadcrumbs(self.report, breadcrumbs_path)
             self.report.info(f"Breadcrumbs exist in {breadcrumbs_path}")
-            self.breadcrumbs.load(breadcrumbs_path)
 
     def _transform_page_to_html(
         self,
         chunks: Sequence[Chunk],
         template: str,
         source_file_path: Path,
+        target_file_path: Path,
         report: Report,
         css: str,
         js: str,
@@ -144,9 +62,8 @@ class HTMLBuilder(Builder):
             if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
                 content.append('    <section class="content">')
 
-        page_path = str(source_file_path.relative_to(self.input_path))
-        if self.breadcrumbs.has_breadcrumbs(page_path):
-            content.append(self.breadcrumbs.get_html(page_path))
+        if self.breadcrumbs.has_breadcrumbs(source_file_path):
+            content.append(self.breadcrumbs.get_html(source_file_path, self))
 
         for chunk in chunks:
             if (
@@ -168,12 +85,13 @@ class HTMLBuilder(Builder):
                     content.append('    <section class="content">')
                 # TODO maybe we want to put the anchor element to the top?
                 for aside in chunk.asides:
-                    add_notnone(aside.to_html(self), content)
-                add_notnone(chunk.to_html(self), content)
+                    add_notnone(aside.to_html(self, target_file_path), content)
+                add_notnone(chunk.to_html(self, target_file_path), content)
             else:
-                add_notnone(chunk.to_html(self), content)
+                # add_notnone(chunk.to_html(self, target_file_path), content)
                 for aside in chunk.asides:
-                    add_notnone(aside.to_html(self), content)
+                    add_notnone(aside.to_html(self, target_file_path), content)
+                add_notnone(chunk.to_html(self, target_file_path), content)
 
         content.append("    </section>")
         content.append("</div>")
@@ -183,8 +101,6 @@ class HTMLBuilder(Builder):
                 self.report.warning(
                     "The template does not contain insertion tag {" + tag + "}"
                 )
-        # Can throw KeyError, if the template contains keys like { css } and not {css}
-
         try:
             return template.format_map(
                 {
@@ -192,6 +108,7 @@ class HTMLBuilder(Builder):
                     "css": css,
                     "js": js,
                     "rel_path": reverse_path(self.input_path, source_file_path),
+                    "page_source": source_file_path.relative_to(self.input_path),
                 }
             )
         except KeyError as e:
@@ -232,6 +149,7 @@ class HTMLBuilder(Builder):
             chunks,
             template,
             source_file_path,
+            target_file_path,
             self.report,
             self.core.get_css(self.extensions_used),
             self.core.get_js(self.extensions_used),
@@ -264,6 +182,13 @@ class HTMLBuilder(Builder):
             )
             return self._default_html_template()
 
+    def get_target_file(self, source_file_path: Path) -> Path:
+        return (
+            self.output_path
+            / source_file_path.relative_to(self.input_path).parent
+            / (source_file_path.stem + ".html")
+        )
+
     def build(
         self,
     ) -> None:
@@ -276,11 +201,7 @@ class HTMLBuilder(Builder):
         )
         self.output_path.mkdir(exist_ok=True, parents=True)
         for source_file_path in files:
-            target_file_path: Path = (
-                self.output_path
-                / source_file_path.relative_to(self.input_path).parent
-                / (source_file_path.stem + ".html")
-            )
+            target_file_path = self.get_target_file(source_file_path)
             if self._create_target(
                 source_file_path,
                 target_file_path,
@@ -344,6 +265,101 @@ class HTMLBuilder(Builder):
                         futures.append(future)
                     for future in futures:
                         future.result()
+
+        # build the page map
+        pm = PageMapper(self.input_path, self.core, self.report)
+        target_file_path = self.output_path / "pagemap.html"
+        html: List[str] = []
+        indent = ""
+        if pm.root.index_path is not None:
+            target = get_relative_path(
+                target_file_path, self.get_target_file(pm.root.index_path)
+            )
+            html.append(indent + f'<a href="{target}">{pm.root.title}</a>')
+        else:
+            html.append(indent + f'<a href="#">{pm.root.title}</a>')
+        self._get_html_folder(pm.root, target_file_path, html)
+        write_file("\n".join(html), target_file_path, self.report)
+
+        # build the breadcrumbs
+        # print(yaml.dump(pm.root.get_list(self.input_path)))
+
+        # for folder in pm.get_all_folders_with_index_paths():
+        #    self._write_links(folder)
+
+    def _write_links(self, folder: Folder):
+        print(folder.index_path)
+        # print(folder.page_groups.keys())
+        if "preparation" in folder.page_groups:
+            pg = folder.page_groups["preparation"]
+            print("## Preparation")
+            print("")
+            print(
+                "Go through the following preparation material before we meet in class:"
+            )
+            print("")
+            print("")
+            for page in pg.pages.values():
+                print("---")
+                print("type: link")
+                print(f"title: '{page.get_title()}'")
+                print("icon: journal-bookmark-fill")
+                print(f"link: {page.path.name.replace('.md', '.html')}")
+                print("---")
+                print("")
+                print("")
+
+        if "teamwork" in folder.page_groups:
+            pg = folder.page_groups["teamwork"]
+            print("## Teamwork")
+            print("")
+            print("Go through the following activities with your team:")
+            print("")
+            print("")
+            for page in pg.pages.values():
+                print("---")
+                print("type: link")
+                print(f"title: '{page.get_title()}'")
+                print("icon: people-fill")
+                print(f"link: {page.path.name.replace('.md', '.html')}")
+                print("---")
+                print("")
+                print("")
+
+    def _get_html_folder(
+        self, folder: Folder, target_file_path: Path, html: List[str], indent: str = ""
+    ):
+        if folder.title is not None:
+            if folder.index_path is not None:
+                target = get_relative_path(
+                    target_file_path, self.get_target_file(folder.index_path)
+                )
+                html.append(indent + f'<a href="{target}">{folder.title}</a>')
+            else:
+                html.append(indent + f'<a href="#">{folder.title}</a>')
+        html.append(indent + "<ul>")
+        for group in folder.page_groups.values():
+            html.append(indent + f"<li>{group.page_group_id.capitalize()}<ul>")
+            for page in group.pages.values():
+                target = get_relative_path(
+                    target_file_path, self.get_target_file(page.path)
+                )
+                html.append(
+                    indent + f'<li><a href="{target}">{page.get_title()}</a></li>'
+                )
+            html.append(indent + "</ul></li>")
+        for page in folder.pages.values():
+            target = get_relative_path(
+                target_file_path, self.get_target_file(page.path)
+            )
+            html.append(indent + f'<li><a href="{target}">{page.get_title()}</a></li>')
+
+        for f in folder.folders:
+            if f.contains_pages():
+                html.append(indent + "<li>")
+                self._get_html_folder(f, target_file_path, html, indent + "    ")
+                html.append(indent + "</li>")
+        html.append(indent + "</ul>")
 
 
 # from watchdog.events import FileSystemEventHandler

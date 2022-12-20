@@ -37,7 +37,7 @@ class Video(YAMLChunk):
         video = self.dictionary["video"]
         return super().create_hash("{}".format(video))
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []
         video = self.dictionary["video"]
         url = "https://youtube-nocookie.com/{}".format(video)

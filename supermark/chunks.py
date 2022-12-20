@@ -24,6 +24,7 @@ class Builder:
         self,
         input_path: Path,
         output_path: Path,
+        base_path: Path,
         template_file: Path,
         report: Report,
         rebuild_all_pages: bool = True,
@@ -33,6 +34,7 @@ class Builder:
     ) -> None:
         self.input_path = input_path
         self.output_path = output_path
+        self.base_path = base_path
         self.template_file = template_file
         self.report = report
         self.rebuild_all_pages = rebuild_all_pages
@@ -148,13 +150,13 @@ class RawChunk:
             return "empty"
         return self.lines[0]
 
-    def _get_reference(self):
+    def _get_reference(self) -> Optional[Path]:
         # TODO check if this is called too often
         if self.type == RawChunkType.YAML:
             try:
                 self.dictionary = yaml.safe_load("".join(self.lines))
                 if "ref" in self.dictionary:
-                    return self.path / self.dictionary["ref"]
+                    return (self.path.parent / self.dictionary["ref"]).resolve()
             except ScannerError as se:
                 self.report.error(f"Error parsing YAML {se}")
         return None
@@ -224,11 +226,11 @@ class Chunk:
     def error(self, message: str):
         self.raw_chunk.tell(message, level=Chunk.ERROR)
 
-    def to_latex(self, builder: Builder) -> Optional[str]:
+    def to_latex(self, builder: Builder, target_file_path: Path) -> Optional[str]:
         print("No conversion to latex: " + self.get_content())
         return None
 
-    def to_html(self, builder: Builder) -> Optional[str]:
+    def to_html(self, builder: Builder, target_file_path: Path) -> Optional[str]:
         print("No conversion to html: " + self.get_content())
         return None
 
@@ -365,7 +367,7 @@ class YAMLDataChunk(YAMLChunk):
     ):
         super().__init__(raw_chunk, dictionary, page_variables, optional=["status"])
 
-    def to_latex(self, builder: Builder) -> Optional[str]:
+    def to_latex(self, builder: Builder, target_file_path: Path) -> Optional[str]:
         return None
 
     def get_chunk_type(self) -> str:
@@ -395,7 +397,7 @@ class MarkdownChunk(Chunk):
     def get_content(self) -> str:
         return self.content
 
-    def to_html(self, builder: Builder) -> str:
+    def to_html(self, builder: Builder, target_file_path: Path) -> str:
         if self.aside:
             aside_id = Chunk.create_hash(self.content)
             output: Sequence[str] = []
@@ -467,15 +469,22 @@ class MarkdownChunk(Chunk):
                 result.append(url)
         return result
 
+    def find_anchors(self) -> Sequence[str]:
+        anchors: List[str] = []
+        for line in self.raw_chunk.lines:
+            if line.startswith("# "):
+                anchors.append(line[2:])
+        return anchors
+
 
 class HTMLChunk(Chunk):
     def __init__(self, raw_chunk: RawChunk, page_variables: Dict[str, Any]):
         super().__init__(raw_chunk, page_variables)
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         return super().get_content()
 
-    def to_latex(self, builder: Builder) -> Optional[str]:
+    def to_latex(self, builder: Builder, target_file_path: Path) -> Optional[str]:
         if super().get_content().startswith("<!--"):
             return None
         else:

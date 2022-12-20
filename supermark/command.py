@@ -13,6 +13,7 @@ from . import __version__
 from .build_html import HTMLBuilder
 from .core import Core
 from .setup import setup_github_action
+from .pagemap import PageMapper
 
 from .pandoc import print_pandoc_info
 
@@ -204,6 +205,7 @@ def build(
     builder = HTMLBuilder(
         path_setup.input,
         path_setup.output,
+        path_setup.base,
         path_setup.template,
         report,
         rebuild_all_pages=all,
@@ -235,6 +237,25 @@ def info():
     report = Report()
     core = Core(report=report)
     core.info()
+
+
+@supermark.command(help="Map the pages in a project.")
+@click.option(
+    "-i",
+    "--input",
+    "input",
+    type=click.Path(exists=True, readable=True, path_type=Path),
+    help="Input directory containing the source files.",
+)
+def map(
+    input: Optional[Path] = None,
+):
+    report = Report()
+    core = Core(report=report)
+    path_setup = setup_paths(None, input, None, None, report)
+
+    pm = PageMapper(path_setup.input, core, report)
+    print(pm.get_html())
 
 
 @supermark.command(help="Setup a project.")

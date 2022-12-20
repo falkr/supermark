@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List
 from ... import YAMLChunk, YamlExtension, RawChunk, Builder, ParagraphExtension
 
@@ -35,7 +36,7 @@ class Hint(YAMLChunk):
             )
             self.hint = ""
 
-    def to_html(self, builder: Builder):
+    def to_html(self, builder: Builder, target_file_path: Path):
         html: List[str] = []
         html.append('<button class="w3collapsible">{}</button>'.format(self.title))
         html.append('<div class="w3content">')
