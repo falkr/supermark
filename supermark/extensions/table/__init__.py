@@ -1,12 +1,11 @@
-import os
 from pathlib import Path
-from ...extend import TableClassExtension, Extension
 from typing import Any, Dict, List, Optional, Sequence, Set
 
 import wikitextparser as wtp
 from wikitextparser._table import Cell
 
-from ... import Chunk, YAMLChunk, YamlExtension, RawChunk, Builder
+from ... import Builder, Chunk, RawChunk, YAMLChunk, YamlExtension
+from ...extend import Extension, TableClassExtension
 
 
 class TableExtension(YamlExtension):
@@ -53,10 +52,10 @@ class Table(YAMLChunk):
                     raw_chunk.path.parent.parent / dictionary["file"]
                 ).resolve()
             if not file_path.exists():
-                self.error("Table file {} does not exist.".format(file_path))
+                self.error(f"Table file {file_path} does not exist.")
                 self.ok = False
             else:
-                with open(file_path, "r") as myfile:
+                with open(file_path) as myfile:
                     self.table_raw = myfile.read()
         else:
             self.error("Table must either refer to a file or have a post-yaml section.")
@@ -108,7 +107,7 @@ class Table(YAMLChunk):
         parsed = wtp.parse(self.table_raw)
         rows = parsed.tables[0].cells(span=False)
         if self.div_class:
-            output.append('<table class="{} table table-sm">'.format(self.div_class))
+            output.append(f'<table class="{self.div_class} table table-sm">')
         else:
             output.append('<table class="table table-sm">')
         for row in rows:
@@ -161,7 +160,7 @@ class Table(YAMLChunk):
                 table_id = self.dictionary["file"]
             else:
                 table_id = Chunk.create_hash(self.table_raw)
-            html.append('<span name="{}">&nbsp;</span>'.format(table_id))
+            html.append(f'<span name="{table_id}">&nbsp;</span>')
             html.append(
                 '<aside name="{}"><p>{}</p></aside>'.format(
                     table_id,
@@ -187,7 +186,7 @@ class Table(YAMLChunk):
             rowspec = rowspec + "L"
         latex: Sequence[str] = []
         latex.append("\\begin{table*}[t]")
-        latex.append("\\begin{tabulary}{\\textwidth}" + "{{{}}}".format(rowspec))
+        latex.append("\\begin{tabulary}{\\textwidth}" + f"{{{rowspec}}}")
         latex.append("\\toprule")
 
         source_format = (

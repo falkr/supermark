@@ -1,6 +1,7 @@
-from typing import Any, Dict, Sequence
 from pathlib import Path
-from ... import YamlExtension, YAMLChunk, RawChunk, Builder, get_icon
+from typing import Any, Dict, Sequence
+
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_icon
 
 
 class LinkExtension(YamlExtension):

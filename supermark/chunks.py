@@ -1,18 +1,21 @@
-from abc import abstractmethod
-import regex as re
 import hashlib
-from optparse import Option
-
-from yaml.scanner import ScannerError
-from .base import Extension
-from typing import Any, Dict, Optional, Sequence, List, Set
-from pathlib import Path
+from abc import abstractmethod
 from enum import Enum
+from pathlib import Path
+from shutil import copyfile
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Set
 
-from .pandoc import convert, convert_code
+if TYPE_CHECKING:
+    from .core import Core
+
+import regex as re
 import yaml
-from .utils import has_class_tag
+from yaml.scanner import ScannerError
+
+from .base import Extension
+from .pandoc import convert, convert_code
 from .report import Report
+from .utils import has_class_tag
 
 
 def is_empty(s_line: str) -> bool:
@@ -62,7 +65,7 @@ class Builder:
         return chunks
 
     def set_core(self, core: "Core") -> None:
-        self.core = core
+        self.core: "Core" = core
 
     def _count_chunks(self, chunks: Sequence["Chunk"]):
         for chunk in chunks:
@@ -71,7 +74,7 @@ class Builder:
                 count = self.chunk_counts[chunk.get_chunk_type()]
             self.chunk_counts[chunk.get_chunk_type()] = count + 1
 
-    def get_chunk_counts(self) -> Dict[type, int]:
+    def get_chunk_counts(self) -> Dict[str, int]:
         return self.chunk_counts
 
     def get_extensions_used(self) -> Set[Extension]:
@@ -80,10 +83,17 @@ class Builder:
     def convert(
         self, source: str, target_format: str, source_format: str = "md"
     ) -> str:
-        return convert(source, target_format, source_format=source_format)
+        return convert(source, target_format, self.core, source_format=source_format)
 
     def convert_code(self, source: str, target_format: str) -> str:
         return convert_code(source, target_format)
+
+    def copy_resource(self, chunk: "RawChunk", resource_path: Path):
+        if resource_path.exists():
+            rel_path = resource_path.relative_to(self.input_path)
+            target = self.output_path / rel_path
+            target.parent.mkdir(exist_ok=True)
+            copyfile(resource_path, target)
 
 
 class RawChunkType(Enum):
@@ -150,12 +160,12 @@ class RawChunk:
             return "empty"
         return self.lines[0]
 
-    def _get_reference(self) -> Optional[Path]:
+    def get_reference(self) -> Optional[Path]:
         # TODO check if this is called too often
         if self.type == RawChunkType.YAML:
             try:
                 self.dictionary = yaml.safe_load("".join(self.lines))
-                if "ref" in self.dictionary:
+                if self.dictionary is not None and "ref" in self.dictionary:
                     return (self.path.parent / self.dictionary["ref"]).resolve()
             except ScannerError as se:
                 self.report.error(f"Error parsing YAML {se}")
@@ -287,22 +297,26 @@ class YAMLChunk(Chunk):
     ):
         super().__init__(raw_chunk, page_variables)
         self.dictionary = dictionary
-        t = self.dictionary["type"] if "type" in self.dictionary else "-"
-        required = required or []
-        optional = optional or []
-        for key in required:
+        self.t = self.dictionary["type"] if "type" in self.dictionary else "-"
+        self.required = required or []
+        self.optional = optional or []
+        for key in self.required:
             if key not in self.dictionary:
                 self.tell(
                     "YAML section of type {} misses required parameter '{}' class {}.".format(
-                        t, key, self.__class__
+                        self.t, key, self.__class__
                     ),
                     level=self.ERROR,
                 )
         for key in self.dictionary.keys():
-            if (key not in required) and (key not in optional) and (key != "type"):
+            if (
+                (key not in self.required)
+                and (key not in self.optional)
+                and (key != "type")
+            ):
                 self.tell(
                     "YAML section of type {} has unknown parameter '{}' class {}.".format(
-                        t, key, self.__class__
+                        self.t, key, self.__class__
                     ),
                     level=self.WARNING,
                 )
@@ -354,8 +368,12 @@ class YAMLGroupChunk(YAMLChunk):
         raw_chunk: Optional[RawChunk] = None,
         dictionary: Optional[Dict[str, Any]] = None,
         page_variables: Optional[Dict[str, Any]] = None,
+        required: Optional[Sequence[str]] = None,
+        optional: Optional[Sequence[str]] = None,
     ):
-        super().__init__(raw_chunk, dictionary, page_variables, optional=["status"])
+        super().__init__(
+            raw_chunk, dictionary, page_variables, required=required, optional=optional
+        )
 
 
 class YAMLDataChunk(YAMLChunk):
@@ -401,9 +419,7 @@ class MarkdownChunk(Chunk):
         if self.aside:
             aside_id = Chunk.create_hash(self.content)
             output: Sequence[str] = []
-            output.append(
-                '<span name="{}"></span><aside name="{}">'.format(aside_id, aside_id)
-            )
+            output.append(f'<span name="{aside_id}"></span><aside name="{aside_id}">')
             output.append(
                 builder.convert(
                     self.get_content(), target_format="html", source_format="md"

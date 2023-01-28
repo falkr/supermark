@@ -3,7 +3,7 @@ from typing import Any, Dict, Sequence
 
 import requests
 
-from ... import YAMLChunk, YamlExtension, RawChunk, Builder
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
 
 def download_preview(url: str, target_path: Path):
@@ -35,12 +35,12 @@ class Video(YAMLChunk):
 
     def get_id(self):
         video = self.dictionary["video"]
-        return super().create_hash("{}".format(video))
+        return super().create_hash(f"{video}")
 
     def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []
         video = self.dictionary["video"]
-        url = "https://youtube-nocookie.com/{}".format(video)
+        url = f"https://youtube-nocookie.com/{video}"
         # url = "https://youtu.be/{}".format(video)
         start = ""
         if "start" in self.dictionary:
@@ -48,9 +48,7 @@ class Video(YAMLChunk):
             url = url + start
         if "position" in self.dictionary and self.dictionary["position"] == "aside":
             aside_id = self.get_id()
-            html.append(
-                '<span name="{}"></span><aside name="{}">'.format(aside_id, aside_id)
-            )
+            html.append(f'<span name="{aside_id}"></span><aside name="{aside_id}">')
             html.append(
                 '<a href="{}"><img width="{}" src="https://img.youtube.com/vi/{}/sddefault.jpg"></img></a>'.format(
                     url, 240, video
@@ -99,13 +97,13 @@ class Video(YAMLChunk):
         )
         video_url = "https://youtu.be/{}".format(self.dictionary["video"])
         video_id = self.get_id()
-        target_path = self.get_dir_cached() / "{}.jpg".format(video_id)
+        target_path = self.get_dir_cached() / f"{video_id}.jpg"
         download_preview(url, target_path)
         # target_path =  Path('../cached/{}.jpg'.format(video_id))
         target_path = target_path.relative_to(builder.output_file.parent)
         s.append(r"\n")
         s.append(r"\\begin{video}[h]")
-        s.append(r"\includegraphics[width=\linewidth]{{{}}}".format(target_path))
+        s.append(rf"\includegraphics[width=\linewidth]{{{target_path}}}")
         if "caption" in self.dictionary:
             s.append(
                 r"\caption{"
@@ -115,11 +113,11 @@ class Video(YAMLChunk):
                     source_format="md",
                 )
                 + r" \textcolor{SteelBlue}{\faArrowCircleRight}~"
-                + r"\\url{{{}}}".format(video_url)
+                + rf"\\url{{{video_url}}}"
                 + r"}"
             )
         else:
             s.append(r"\caption{")
-            s.append(r"\\url{{{}}}".format(video_url) + "}")
+            s.append(rf"\\url{{{video_url}}}" + "}")
         s.append(r"\end{video}")
         return r"\n".join(s)

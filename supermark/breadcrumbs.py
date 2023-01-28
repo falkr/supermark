@@ -1,8 +1,11 @@
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Set, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .build_html import HTMLBuilder
+
 import yaml
 from yaml.scanner import ScannerError
-
 
 from .report import Report
 from .utils import get_relative_path
@@ -39,6 +42,7 @@ class Breadcrumbs:
                 self.report.warning(str(e), path)
 
     def parse_breadcrumbs(self, l: List[Any], path: Path) -> List[Any]:
+        """[{page}, [children]]"""
         tchildren = []
         for i in range(len(l)):
             item = l[i]

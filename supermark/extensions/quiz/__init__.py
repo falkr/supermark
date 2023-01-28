@@ -1,7 +1,8 @@
+import random
 from pathlib import Path
 from typing import Any, Dict, Sequence
-import random
-from ... import YAMLChunk, YamlExtension, RawChunk, Builder
+
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
 
 class QuizExtension(YamlExtension):
@@ -96,7 +97,7 @@ class Quiz(YAMLChunk):
 
     def get_id(self):
         video = self.dictionary["video"]
-        return super().create_hash("{}".format(video))
+        return super().create_hash(f"{video}")
 
     def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []

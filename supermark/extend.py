@@ -1,10 +1,9 @@
 from typing import Any, Dict, Optional, Sequence, Set, Union
 
-
-from .chunks import MarkdownChunk, YAMLChunk, RawChunk
-from .report import Report
-
 from .base import Extension, ExtensionPoint
+from .chunks import Chunk, MarkdownChunk, RawChunk, YAMLChunk
+from .report import Report
+from .write_html import HTMLTable, html_link
 
 
 class ChunkExtensionPoint(ExtensionPoint):
@@ -38,6 +37,23 @@ class YamlExtension(ChunkExtension):
     def __repr__(self) -> str:
         return "yaml/" + self.get_primary_type()
 
+    def get_doc_table(
+        self, example_chunks: Optional[Sequence["Chunk"]] = None
+    ) -> HTMLTable:
+        table: HTMLTable = HTMLTable(css_class="table")
+        table.flush_row()
+        table.add_row("Language", html_link("#", "YAML"))
+        table.flush_row()
+        table.add_row("Mandatory Attributes", "type, name, link")
+        table.flush_row()
+        table.add_row("Optional Attributes", "title, text")
+        table.flush_row()
+        table.add_row("Post-Yaml Section", "optional")
+        table.flush_row()
+        table.add_row("Groups", "no")
+        table.flush_row()
+        return table
+
 
 class YamlExtensionPoint(ChunkExtensionPoint):
     """For extension that are based on Yaml chunks."""
@@ -70,7 +86,7 @@ class YamlExtensionPoint(ChunkExtensionPoint):
             chunk.extension = extension
             return chunk
         else:
-            print("no yaml type: {}".format(type))
+            print(f"no yaml type: {type}")
         return None
 
 
@@ -86,6 +102,14 @@ class TableClassExtension(Extension):
 
     def get_empty_cell(self) -> str:
         return self.empty_cell
+
+    def get_doc_table(
+        self, example_chunks: Optional[Sequence["Chunk"]] = None
+    ) -> HTMLTable:
+        table: HTMLTable = HTMLTable()
+        table.add_row("Name", str(self.type))
+        table.flush_row()
+        return table
 
 
 class TableClassExtensionPoint(ExtensionPoint):
@@ -116,6 +140,14 @@ class ParagraphExtension(ChunkExtension):
     def __repr__(self) -> str:
         return "md/" + str(self.tag)
 
+    def get_doc_table(
+        self, example_chunks: Optional[Sequence["Chunk"]] = None
+    ) -> HTMLTable:
+        table: HTMLTable = HTMLTable()
+        table.add_row("Tag", str(self.tag))
+        table.flush_row()
+        return table
+
 
 class ParagraphExtensionPoint(ChunkExtensionPoint):
     def __init__(self) -> None:
@@ -145,7 +177,7 @@ class ParagraphExtensionPoint(ChunkExtensionPoint):
             return chunk
         else:
             raw.tell(
-                "Paragraph tag :{}: is unknown.".format(tag),
+                f"Paragraph tag :{tag}: is unknown.",
                 level=YAMLChunk.WARNING,
             )
             return MarkdownChunk(raw, page_variables)

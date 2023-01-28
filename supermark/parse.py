@@ -1,6 +1,7 @@
 from enum import Enum
 from pathlib import Path
-from typing import List, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Sequence
+
 from .chunks import RawChunk, RawChunkType
 from .utils import has_class_tag
 
@@ -239,19 +240,19 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
 
     # TODO remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
-    chunks = expand_reference_chunks(chunks, path, report)
+    chunks = expand_reference_chunks(chunks, report)
     return chunks
 
 
 def expand_reference_chunks(
-    source_chunks: Sequence[RawChunk], path: Path, report: "Report"
+    source_chunks: Sequence[RawChunk], report: "Report"
 ) -> Sequence[RawChunk]:
     # TODO prevent cycles
     target_chunks: Sequence[RawChunk] = []
     for source_chunk in source_chunks:
-        path = source_chunk._get_reference()
+        path: Path | None = source_chunk.get_reference()
         if path is not None:
-            with open(path, "r", encoding="utf-8") as file:
+            with open(path, encoding="utf-8") as file:
                 lines = file.readlines()
                 chunks = parse(lines, path, report)
                 # TODO add all ele,emt sof chink but simpler

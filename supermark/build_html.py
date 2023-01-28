@@ -1,16 +1,14 @@
-from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Set, Optional
-from rich.progress import Progress, BarColumn
-import yaml
+from typing import Any, Dict, List, Sequence, Set
 
+from rich.progress import BarColumn, Progress
 
+from .breadcrumbs import Breadcrumbs
 from .chunks import Builder, Chunk, MarkdownChunk, YAMLDataChunk
+from .pagemap import Folder
 from .report import Report
-from .utils import write_file, add_notnone, reverse_path, get_relative_path
-from .pagemap import PageMapper, Folder
-
-from .breadcrumbs import Breadcrumbs, Page2
+from .utils import add_notnone, get_relative_path, reverse_path, write_file
 
 
 class HTMLBuilder(Builder):
@@ -40,7 +38,7 @@ class HTMLBuilder(Builder):
         breadcrumbs_path = input_path / Path("breadcrumbs.yaml")
         self.report.info(f"Looking for breadcrumbs file in {breadcrumbs_path}")
         if breadcrumbs_path.exists():
-            self.breadcrumbs = Breadcrumbs(self.report, breadcrumbs_path)
+            self.breadcrumbs: Breadcrumbs = Breadcrumbs(self.report, breadcrumbs_path)
             self.report.info(f"Breadcrumbs exist in {breadcrumbs_path}")
 
     def _transform_page_to_html(
@@ -77,7 +75,6 @@ class HTMLBuilder(Builder):
                 pass
             elif not chunk.is_ok():
                 print("chunk not ok")
-                pass
             elif isinstance(chunk, MarkdownChunk):
                 if chunk.is_section:
                     # open a new section
@@ -169,10 +166,10 @@ class HTMLBuilder(Builder):
     def _load_html_template(self, template_path: Path, report: Report) -> str:
         try:
             with open(
-                template_path, "r", encoding="utf-8", errors="surrogateescape"
+                template_path, encoding="utf-8", errors="surrogateescape"
             ) as templatefile:
                 template = templatefile.read()
-                self.report.info("Loading template {}.".format(template_path))
+                self.report.info(f"Loading template {template_path}.")
                 return template
         except FileNotFoundError:
             self.report.warning(
@@ -266,66 +263,6 @@ class HTMLBuilder(Builder):
                     for future in futures:
                         future.result()
 
-        # build the page map
-        pm = PageMapper(self.input_path, self.core, self.report)
-        target_file_path = self.output_path / "pagemap.html"
-        html: List[str] = []
-        indent = ""
-        if pm.root.index_path is not None:
-            target = get_relative_path(
-                target_file_path, self.get_target_file(pm.root.index_path)
-            )
-            html.append(indent + f'<a href="{target}">{pm.root.title}</a>')
-        else:
-            html.append(indent + f'<a href="#">{pm.root.title}</a>')
-        self._get_html_folder(pm.root, target_file_path, html)
-        write_file("\n".join(html), target_file_path, self.report)
-
-        # build the breadcrumbs
-        # print(yaml.dump(pm.root.get_list(self.input_path)))
-
-        # for folder in pm.get_all_folders_with_index_paths():
-        #    self._write_links(folder)
-
-    def _write_links(self, folder: Folder):
-        print(folder.index_path)
-        # print(folder.page_groups.keys())
-        if "preparation" in folder.page_groups:
-            pg = folder.page_groups["preparation"]
-            print("## Preparation")
-            print("")
-            print(
-                "Go through the following preparation material before we meet in class:"
-            )
-            print("")
-            print("")
-            for page in pg.pages.values():
-                print("---")
-                print("type: link")
-                print(f"title: '{page.get_title()}'")
-                print("icon: journal-bookmark-fill")
-                print(f"link: {page.path.name.replace('.md', '.html')}")
-                print("---")
-                print("")
-                print("")
-
-        if "teamwork" in folder.page_groups:
-            pg = folder.page_groups["teamwork"]
-            print("## Teamwork")
-            print("")
-            print("Go through the following activities with your team:")
-            print("")
-            print("")
-            for page in pg.pages.values():
-                print("---")
-                print("type: link")
-                print(f"title: '{page.get_title()}'")
-                print("icon: people-fill")
-                print(f"link: {page.path.name.replace('.md', '.html')}")
-                print("---")
-                print("")
-                print("")
-
     def _get_html_folder(
         self, folder: Folder, target_file_path: Path, html: List[str], indent: str = ""
     ):
@@ -360,31 +297,3 @@ class HTMLBuilder(Builder):
                 self._get_html_folder(f, target_file_path, html, indent + "    ")
                 html.append(indent + "</li>")
         html.append(indent + "</ul>")
-
-
-# from watchdog.events import FileSystemEventHandler
-# from watchdog.observers import Observer
-# def build_html_continuously(
-#     self,
-#     input_path: Path,
-#     output_path: Path,
-#     template_path: Path,
-#     draft: bool,
-#     verbose: bool,
-# ):
-#     class MyHandler(FileSystemEventHandler):
-#         def on_modified(self, event):
-#             print(event)
-#             self.build()
-
-#     observer = Observer()
-#     # event_handler = LoggingEventHandler()
-#     # observer.schedule(event_handler, input, recursive=True)
-#     observer.schedule(MyHandler(), input, recursive=True)
-#     observer.start()
-#     try:
-#         while True:
-#             time.sleep(10)
-#     except KeyboardInterrupt:
-#         observer.stop()
-#     observer.join()

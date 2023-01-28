@@ -7,22 +7,18 @@ import click
 
 # from beepy import beep
 from click import ClickException
-
+from rich import print
+from rich.pretty import pprint
 
 from . import __version__
+from .build_doc import DocBuilder
 from .build_html import HTMLBuilder
 from .core import Core
-from .setup import setup_github_action
-from .pagemap import PageMapper
-
 from .pandoc import print_pandoc_info
 
 # from .build_latex import build_latex
 from .report import Report
-from rich import print
-from rich.pretty import pprint
-
-import toml
+from .setup import setup_github_action
 
 
 def logo(version: str) -> str:
@@ -75,24 +71,19 @@ def setup_paths(
     input: Optional[Path],
     output: Optional[Path],
     template: Optional[Path],
-    report: Report,
+    core: Core,
 ) -> PathSetup:
     base_path = path or Path.cwd()
     input_path = None
     output_path = None
     template_path = None
 
-    # read configuration file
-    config_file = Path("config.toml")
-    if config_file.exists():
-        report.info("Found configuration file.", path=config_file)
-        config = toml.load(config_file)
-        if "input" in config and input is None:
-            input_path = base_path / config["input"]
-        if "output" in config and output is None:
-            output_path = base_path / config["output"]
-        if "template" in config and template is None:
-            template_path = base_path / config["template"]
+    if core.config.has_config("input") and input is None:
+        input_path = base_path / core.config.get("input")
+    if core.config.has_config("output") and output is None:
+        output_path = base_path / core.config.get("output")
+    if core.config.has_config("template") and template is None:
+        template_path = base_path / core.config.get("template")
 
     if input_path is None:
         input_path = base_path / "pages"
@@ -199,8 +190,7 @@ def build(
     print(logo_2(__version__))
     print_pandoc_info()
 
-    path_setup = setup_paths(path, input, output, template, report)
-    format = "html"
+    path_setup = setup_paths(path, input, output, template, core)
 
     builder = HTMLBuilder(
         path_setup.input,
@@ -252,10 +242,42 @@ def map(
 ):
     report = Report()
     core = Core(report=report)
-    path_setup = setup_paths(None, input, None, None, report)
+    path_setup = setup_paths(None, input, None, None, core)
 
-    pm = PageMapper(path_setup.input, core, report)
-    print(pm.get_html())
+    # pm = PageMapper(path_setup.input, core, report)
+    # print(pm.get_html())
+
+    builder = DocBuilder(
+        path_setup.input,
+        path_setup.output,
+        path_setup.base,
+        path_setup.template,
+        report,
+        verbose=True,
+    )
+    builder.set_core(core)
+    builder.build()
+
+    #     # build the page map
+    # pm = PageMapper(self.input_path, self.core, self.report)
+    # target_file_path = self.output_path / "pagemap.html"
+    # html: List[str] = []
+    # indent = ""
+    # if pm.root.index_path is not None:
+    #     target = get_relative_path(
+    #         target_file_path, self.get_target_file(pm.root.index_path)
+    #     )
+    #     html.append(indent + f'<a href="{target}">{pm.root.title}</a>')
+    # else:
+    #     html.append(indent + f'<a href="#">{pm.root.title}</a>')
+    # self._get_html_folder(pm.root, target_file_path, html)
+    # write_file("\n".join(html), target_file_path, self.report)
+
+    # # build the breadcrumbs
+    # # print(yaml.dump(pm.root.get_list(self.input_path)))
+
+    # # for folder in pm.get_all_folders_with_index_paths():
+    # #    self._write_links(folder)
 
 
 @supermark.command(help="Setup a project.")
@@ -303,9 +325,9 @@ def clean(
     html: bool = False,
 ):
     report = Report()
-    # core = Core(report=report)
+    core = Core(report=report)
 
-    path_setup = setup_paths(None, None, None, None, report)
+    path_setup = setup_paths(None, None, None, None, core)
 
     if html:
         html_files: List[Path] = []

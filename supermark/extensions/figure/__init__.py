@@ -1,16 +1,7 @@
-import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
-from shutil import copyfile
 
-from ... import (
-    YAMLChunk,
-    YamlExtension,
-    RawChunk,
-    Builder,
-    reverse_path,
-    get_relative_path,
-)
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_placeholder_uri_str
 
 
 class FigureExtension(YamlExtension):
@@ -32,34 +23,67 @@ class Figure(YAMLChunk):
             required=["source"],
             optional=["caption", "link"],
         )
-        if dictionary["source"].startswith("http://") or dictionary[
-            "source"
-        ].startswith("https://"):
+        source = dictionary["source"]
+        self.placeholder = None
+        self.file_path = None
+        self.name = None
+        # TODO base the name on a hash ID of the raw chunk?
+        if source.startswith("http://") or source.startswith("https://"):
             self.tell(
-                "Refer to remote figure: {}".format(dictionary["source"]),
+                f"Refer to remote figure: {source}",
                 level=self.WARNING,
             )
+            self.name = source
+        elif source.startswith("_placeholder"):
+            self.placeholder = source
+            self.name = source
         else:
-            self.file_path = (
-                raw_chunk.path.parent / Path(dictionary["source"])
-            ).resolve()
+            self.file_path = (raw_chunk.path.parent / Path(source)).resolve()
+            self.name = source
             if not self.file_path.exists():
                 self.tell(
-                    "Figure file {} does not exist.".format(self.file_path),
+                    f"Figure file {str(self.file_path)} does not exist.",
                     level=self.WARNING,
                 )
 
     def _get_target_relative_path(
         self, builder: Builder, target_file_path: Path
     ) -> str:
+        # TODO this can be simplified
         path = self.file_path.relative_to(builder.input_path)
         target = builder.output_path / path
-        target.parent.mkdir(exist_ok=True)
-        if self.file_path.exists():
-            copyfile(self.file_path, target)
         return str(target.relative_to(target_file_path.parent))
 
     def to_html(self, builder: Builder, target_file_path: Path):
+        if self.file_path is not None:
+            builder.copy_resource(self.raw_chunk, self.file_path)
+        alt = self.dictionary.get("caption", "")
+        src = None
+        if self.file_path is not None:
+            src = self._get_target_relative_path(builder, target_file_path)
+        elif "link" in self.dictionary:
+            src = self.dictionary["link"]
+        elif self.placeholder:
+            src = get_placeholder_uri_str(self.placeholder)
+        html: Sequence[str] = []
+        html.append('<figure class="figure">')
+        if "link" in self.dictionary:
+            html.append(f'  <a href="{self.dictionary["link"]}">')
+        html.append(
+            f'    <img src="{src}" class="figure-img img-fluid rounded" alt="{alt}">'
+        )
+        if "link" in self.dictionary:
+            html.append("  </a>")
+        if "caption" in self.dictionary:
+            html.append(
+                f'  <figcaption class="figure-caption">{self.dictionary["caption"]}</figcaption>'
+            )
+        html.append("</figure>")
+        return "\n".join(html)
+
+    def to_html_old(self, builder: Builder, target_file_path: Path):
+        if self.file_path is not None:
+            builder.copy_resource(self.raw_chunk, self.file_path)
         html: Sequence[str] = []
         html.append('<div class="figure">')
         if "caption" in self.dictionary:
@@ -71,24 +95,24 @@ class Figure(YAMLChunk):
                         self.dictionary["caption"],
                     )
                 )
-            else:
+            elif self.file_path is not None:
                 html.append(
                     '<img src="{}" alt="{}" width="100%"/>'.format(
                         self._get_target_relative_path(builder, target_file_path),
                         self.dictionary["caption"],
                     )
                 )
-            html.append(
-                '<span name="{}">&nbsp;</span>'.format(
-                    self._get_target_relative_path(builder, target_file_path)
+            elif self.placeholder:
+                html.append(
+                    f'<img src="{get_placeholder_uri_str(self.placeholder)}" alt="{self.dictionary["caption"]}" width="100%"/>'
                 )
-            )
+            html.append(f'<span name="{self.name}">&nbsp;</span>')
             html_caption: str = builder.convert(
                 self.dictionary["caption"], target_format="html", source_format="md"
             )
             html.append(
                 '<aside name="{}"><p>{}</p></aside>'.format(
-                    self._get_target_relative_path(builder, target_file_path),
+                    self.name,
                     html_caption,
                 )
             )
@@ -100,11 +124,15 @@ class Figure(YAMLChunk):
                         self._get_target_relative_path(builder, target_file_path),
                     )
                 )
-            else:
+            elif self.file_path is not None:
                 html.append(
-                    '<img src="{}" width="100%"/>'.format(
-                        self._get_target_relative_path(builder, target_file_path)
+                    '<img src="{}" alt="" width="100%"/>'.format(
+                        self._get_target_relative_path(builder, target_file_path),
                     )
+                )
+            elif self.placeholder is not None:
+                html.append(
+                    f'<img src="{get_placeholder_uri_str(self.placeholder)}" alt="{self.dictionary["caption"]}" width="100%"/>'
                 )
         html.append("</div>")
         return "\n".join(html)
@@ -128,7 +156,7 @@ class Figure(YAMLChunk):
             return None
         if figure_file.suffix == ".svg":
             # file = Path(file)
-            target_path = self.get_dir_cached() / "{}.pdf".format(figure_file.stem)
+            target_path = self.get_dir_cached() / f"{figure_file.stem}.pdf"
             if not target_path.exists():
                 import cairosvg
 
@@ -138,7 +166,7 @@ class Figure(YAMLChunk):
             figure_file = target_path
         figure_file = figure_file.relative_to(builder.output_file.parent)
         # print('figure_file: {}'.format(figure_file))
-        s.append("\\includegraphics[width=\\linewidth]{{{}}}%".format(figure_file))
+        s.append(f"\\includegraphics[width=\\linewidth]{{{figure_file}}}%")
         if "caption" in self.dictionary:
             s.append(
                 "\\caption{{{}}}".format(

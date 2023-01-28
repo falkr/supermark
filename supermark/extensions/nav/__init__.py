@@ -1,6 +1,7 @@
-from typing import Any, Dict, Sequence
 from pathlib import Path
-from ... import YamlExtension, YAMLChunk, RawChunk, Builder, get_icon
+from typing import Any, Dict, Sequence
+
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_icon
 
 
 class NavExtension(YamlExtension):
@@ -33,13 +34,35 @@ class Nav(YAMLChunk):
     def to_html(self, builder: Builder, target_file_path: Path):
         html: Sequence[str] = []
         html.append('<nav class="d-flex justify-content-between">')
-        for link in ["prev", "up", "next"]:
-            if link in self.dictionary:
-                html.append(
-                    f'<a type="button" href="{self.dictionary[link][1]}" class="page-link rounded">{self.dictionary[link][0]}'
+        if "prev" in self.dictionary:
+            html.append(
+                '<a type="button" href="{}" class="page-link rounded">'.format(
+                    self.dictionary["prev"][1]
                 )
-                html.append(self._get_icon(link))
-                html.append("</a>")
-            else:
-                html.append("<div></div>")
+            )
+            html.append(get_icon("arrow-left-short", size="16"))
+            html.append(f"{self.dictionary['prev'][0]}")
+            html.append("</a>")
+        else:
+            html.append("<div></div>")
+        if "up" in self.dictionary:
+            html.append(
+                '<a type="button" href="{}" class="page-link rounded">'.format(
+                    self.dictionary["up"][1]
+                )
+            )
+            html.append(f"{self.dictionary['up'][0]}")
+            html.append("</a>")
+        else:
+            html.append("<div></div>")
+        if "next" in self.dictionary:
+            html.append(
+                f'<a type="button" href="{self.dictionary["next"][1]}" class="page-link rounded">'
+            )
+            html.append(f"{self.dictionary['next'][0]}")
+            html.append(get_icon("arrow-right-short", size="16"))
+            html.append("</a>")
+        else:
+            html.append("<div></div>")
+        html.append("</nav>")
         return "\n".join(html)

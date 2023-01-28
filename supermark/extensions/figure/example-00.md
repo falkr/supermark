@@ -1,5 +1,5 @@
 ---
 type: figure
-source: figures/statemachines/state-machines-tcp.jpg
+source: _placeholder 800 x 200
 caption: "The TCP protocol uses state machines to describe parts of its behavior."
 ---

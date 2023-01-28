@@ -1,6 +1,7 @@
-from typing import Any, Dict, Sequence
 from pathlib import Path
-from ... import YamlExtension, YAMLChunk, RawChunk, Builder
+from typing import Any, Dict, Sequence
+
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
 
 class ButtonExtension(YamlExtension):

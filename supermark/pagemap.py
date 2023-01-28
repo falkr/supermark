@@ -1,9 +1,10 @@
-from pathlib import Path
-from .core import Core
-from .chunks import MarkdownChunk
-from .report import Report
-from typing import Sequence, Optional, List, Dict, Any, Union
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence, Union
+
+from .chunks import MarkdownChunk
+from .core import Core
+from .report import Report
 
 
 @dataclass

@@ -1,1 +1,1 @@
-# Abstract
+An abstract at the beginning of an article or a page.

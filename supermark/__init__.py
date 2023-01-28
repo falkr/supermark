@@ -7,15 +7,17 @@ from .chunks import (
     RawChunk,
     YAMLChunk,
     YAMLDataChunk,
+    YAMLGroupChunk,
 )
 from .core import Core
 from .extend import Extension, ParagraphExtension, TableClassExtension, YamlExtension
-from .report import Report
-from .utils import reverse_path, get_relative_path
 from .icons import get_icon
 from .pagemap import PageMapper
+from .placeholder import get_placeholder_uri, get_placeholder_uri_str
+from .report import Report
+from .utils import get_relative_path, reverse_path
 
-__version__ = "0.3.17"
+__version__ = "0.3.18"
 
 __all__ = [
     "Core",
@@ -36,4 +38,7 @@ __all__ = [
     "get_relative_path",
     "get_icon",
     "PageMapper",
+    "YAMLGroupChunk",
+    "get_placeholder_uri",
+    "get_placeholder_uri_str",
 ]

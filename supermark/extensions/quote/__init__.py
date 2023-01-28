@@ -1,7 +1,7 @@
-from typing import Any, Dict, Sequence
 from pathlib import Path
+from typing import Any, Dict, Sequence
 
-from ... import YAMLChunk, YamlExtension, RawChunk, Builder
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
 
 class QuoteExtension(YamlExtension):

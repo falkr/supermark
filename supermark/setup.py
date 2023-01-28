@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import click
 
 GITHUB_ACTION = """
@@ -31,7 +32,7 @@ def _write_file(base_path: Path, file: str, folder: str, content: str):
     folder_path = base_path / Path(folder)
     file_path = folder_path / Path(file)
     if file_path.exists():
-        if not click.confirm("File {} already exsists. Overwrite?".format(file)):
+        if not click.confirm(f"File {file} already exsists. Overwrite?"):
             return
     folder_path.mkdir(parents=True, exist_ok=True)
     with open(file, "w") as ofile:

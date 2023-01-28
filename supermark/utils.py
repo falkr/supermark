@@ -1,9 +1,9 @@
-from typing import List, Optional
-from .report import Report
-
-from pathlib import Path
-import re
 import random
+import re
+from pathlib import Path
+from typing import List, Optional
+
+from .report import Report
 
 ENV_PATTERN = re.compile("[a-zA-Z]*:")
 
@@ -19,7 +19,7 @@ def write_file(content: str, target_file_path: Path, report: Report):
             file.write(content)
     except UnicodeEncodeError as error:
         report.tell(
-            "Encoding error when writing file {}.".format(target_file_path),
+            f"Encoding error when writing file {target_file_path}.",
             level=Report.ERROR,
         )
         character = error.object[error.start : error.end]

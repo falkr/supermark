@@ -1,13 +1,12 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
+import indentation
+from colorama import Fore
 from rich import print as pprint
+from rich.console import Console
 from rich.panel import Panel
 from rich.tree import Tree
-from rich.console import Console
-
-from colorama import Fore, Back, Style
-import indentation
 
 COLOR_1 = Fore.LIGHTBLUE_EX
 COLOR_2 = Fore.LIGHTGREEN_EX
@@ -125,7 +124,9 @@ class Report:
         message: str,
         path: Optional[Path] = None,
         line: Optional[int] = None,
+        exception: Optional[Exception] = None,
     ):
+        # TODO handle exception
         self.tell(message, level=Report.ERROR, path=path, line=line)
 
     def conclude(self, message: str):
@@ -209,7 +210,6 @@ class Report:
             with console.capture() as capture:
                 console.print(tree)
             file.write(console.export_text())
-
 
     # @staticmethod
     # def print_reports(verbose: bool = False) -> int:

@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import Any, Dict, Sequence
-from ... import YamlExtension, YAMLChunk, RawChunk, Builder
+from typing import Any, Dict
+
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
 TEMPLATE = """<p>
 <div class="accordion" id="{element_id}">

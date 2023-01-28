@@ -1,6 +1,7 @@
 from pathlib import Path
-from ... import YAMLChunk, YamlExtension, Builder, RawChunk
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
 
 class LinesExtension(YamlExtension):

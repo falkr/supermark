@@ -1,27 +1,27 @@
 import inspect
-import requests
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
 from pathlib import Path
-from collections import defaultdict
-from rich.progress import Progress, BarColumn
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any, DefaultDict, Dict, List, Optional, Sequence, Set
 
-from typing import Any, DefaultDict, Dict, List, Optional, Sequence, Set, Tuple
-
+import requests
 import rich
-from rich.tree import Tree
 import yaml
+from rich.progress import BarColumn, Progress
+from rich.tree import Tree
 from yaml.scanner import ScannerError
 
 from .chunks import (
     Chunk,
     HTMLChunk,
     MarkdownChunk,
-    YAMLDataChunk,
     RawChunk,
     RawChunkType,
+    YAMLDataChunk,
 )
 from .code import Code
+from .config import Config
 from .extend import (
     Extension,
     ExtensionPoint,
@@ -41,7 +41,7 @@ class URLChecker:
     def __init__(self) -> None:
         self.urls: DefaultDict[str, Set[Chunk]] = defaultdict(set)
 
-    def look_at_chunk(self, chunk: Chunk):
+    def look_at_chunk(self, chunk: Chunk) -> None:
         chunk_urls = chunk.get_urls()
         if chunk_urls is not None:
             for url in chunk_urls:
@@ -95,6 +95,7 @@ class URLChecker:
 class Core:
     def __init__(self, report: Report, collect_urls: bool = False) -> None:
         self.report = report
+        self.config = Config(report)
         self.extension_points: Dict[str, ExtensionPoint] = {}
         self.yaml_extension_point: YamlExtensionPoint = self._register(
             YamlExtensionPoint()
@@ -126,8 +127,7 @@ class Core:
                     self.register(extension)
                     self.report.info(f"Found extension {name}")
         except ModuleNotFoundError as error:
-            self.report.error(f"Error when registering {name}")
-            print(error)
+            self.report.error(f"Error when registering {name}", exception=error)
 
     def _register(self, extension_point: ExtensionPoint) -> ExtensionPoint:
         self.extension_points[extension_point.name] = extension_point
@@ -179,10 +179,6 @@ class Core:
         report: Report,
         used_extensions: Optional[Set[Extension]] = None,
     ) -> Optional[Chunk]:
-
-        if isinstance(raw, list):
-            print(raw)
-
         chunk_type = raw.get_type()
         if chunk_type == RawChunkType.MARKDOWN:
             tag = raw.get_tag()
@@ -295,7 +291,7 @@ class Core:
         reformat: bool = False,
         used_extensions: Optional[Set[Extension]] = None,
     ) -> Optional[Sequence[Chunk]]:
-        with open(source_file_path, "r", encoding="utf-8") as file:
+        with open(source_file_path, encoding="utf-8") as file:
             lines = file.readlines()
             # report.tell("{}".format(source_file_path), Report.INFO)
             chunks = self.parse_lines(

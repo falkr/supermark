@@ -1,17 +1,25 @@
+import re
+from typing import TYPE_CHECKING, Optional
+
 import pypandoc
+from markdown_it import MarkdownIt
 from packaging import version
 from rich import print
-from markdown_it import MarkdownIt
 
 from .icons import get_icon
+
+if TYPE_CHECKING:
+    from .core import Core
 
 
 md = MarkdownIt()
 
+pattern = re.compile("{{:.*?:}}")
+
 
 def print_pandoc_info():
     installed_pandoc_version = pypandoc.get_pandoc_version()
-    print("Installed Pandoc version: {}".format(installed_pandoc_version))
+    print(f"Installed Pandoc version: {installed_pandoc_version}")
     if version.parse(installed_pandoc_version) < version.parse("2.14"):
         print(
             "There exists a newer version of Pandoc. Update via [link=https://pandoc.org]pandoc.org[/link]."
@@ -20,12 +28,16 @@ def print_pandoc_info():
     # print(pypandoc.get_pandoc_formats())
 
 
-def convert(source: str, target_format: str, source_format: str = "md") -> str:
-
+def convert(
+    source: str,
+    target_format: str,
+    core: "Core",
+    source_format: str = "md",
+) -> str:
     if source_format == "md" and target_format == "html":
         result = str(md.render(source))
         if "{{:" in result:
-            result = _replace_variables(result)
+            result = _replace_variables(result, core)
         return result
 
     if source_format == "mediawiki":
@@ -37,12 +49,27 @@ def convert(source: str, target_format: str, source_format: str = "md") -> str:
     ).strip()
 
 
-def _replace_variables(input: str) -> str:
-    string: str = input
-    for variable in ["bi-circle-fill", "bi-circle-half", "bi-circle"]:
-        wrapped = "{{:" + variable + ":}}"
+def _find_replacement(variable: str, core: "Core") -> Optional[str]:
+    if variable.startswith("bi-"):
         replacement = get_icon(variable.replace("bi-", ""), size="16px")
-        if replacement is None or replacement is "":
+        return replacement
+    else:
+        return core.config.get_replacement(variable)
+
+
+def _replace_variables(input: str, core: "Core") -> str:
+    if "{{:" not in input:
+        return input
+    string: str = input
+    # find all the template variables
+    variables: set[str] = set()
+    for variable in re.findall(pattern, input):
+        variables.add(variable[3:-3])
+    # replace the found template variables
+    for variable in variables:
+        wrapped = "{{:" + variable + ":}}"
+        replacement = _find_replacement(variable, core)
+        if replacement is None or replacement == "":
             replacement = wrapped
             # TODO report missing replacement
             print(f"Replacement not found for variable {variable} {wrapped}")
