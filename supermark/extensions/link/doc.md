@@ -1,0 +1,1 @@
+A link as a box with text and icon.

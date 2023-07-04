@@ -1,3 +1,5 @@
+Syntax highlighting for code.
+
 # Code Blocks
 
 Supermark  uses Pandoc's functions to highlight code. Place the code between the following delimiters:

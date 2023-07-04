@@ -1,3 +1,5 @@
+A table style for study plans.
+
 
 ### Legend
 
