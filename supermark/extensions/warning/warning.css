@@ -1,13 +1,14 @@
 div.warning p {
-padding: 10px;
-background-color: #ffd9ab;
-border-radius: 5px;
-border-left: 6px solid #fc8c03 
+    padding: 10px;
+    background-color: #ffd9ab;
+    border-radius: 5px;
+    border-left: 6px solid #fc8c03
 }
 
 div.warning p::before {
-    content: '\f071 ';
-    font-family: 'Font Awesome 5 Free'; 
+    content: '\f31a';
+    font-family: bootstrap-icons !important;
     color: #fc8c03;
-display: inline;
+    display: inline;
+    padding-right: 6px;
 }
