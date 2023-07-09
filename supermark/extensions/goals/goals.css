@@ -15,7 +15,7 @@ div.goals ul li {
 }
 
 div.goals ul li:before {
-  content: '\f26a';
+  content: '\f3cb';
   font-family: bootstrap-icons !important;
   font-size: 20;
   float: left;

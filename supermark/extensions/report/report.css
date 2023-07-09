@@ -1,13 +1,21 @@
 div.report p {
-padding: 10px;
-background-color: #D6E5F0;
-border-radius: 5px;
-border-left: 6px solid #1481b8 
+    padding: 10px;
+    background-color: #D6E5F0;
+    border-radius: 5px;
+    position: relative;
+    padding: 1rem 1rem 1rem 3.5rem;
 }
 
 div.report p::before {
-    content: 'For the Report: ';
-    font-weight: bold; 
+    content: '\f43e';
+    font-family: bootstrap-icons !important;
     color: #1481b8;
-display: inline;
+    font-size: 1.5rem;
+    padding: 0.8rem;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: grid;
+    place-items: center;
 }

@@ -8,7 +8,7 @@ div.warning p {
 }
 
 div.warning p::before {
-    content: '\f31a';
+    content: '\f33a';
     font-family: bootstrap-icons !important;
     color: #fc8c03;
     font-size: 1.5rem;

@@ -91,17 +91,27 @@ This results in the following box:
 The `:extension:` prefix only applies to the current chunk. This means that you use **two blank lines** before you start the next chunk that is not a warning anymore.
 
 
-
-
-# Image Placeholders
-
-
 # Constants
 
+You can use constants in markdown chunks that are replaced during the building process.
+Refer to the constant names wrapped in double curly braces and colons as shown below.
 
-You can use constants in your documents that get replaced with values. 
+Usage of the variable in a Markdown chunk:
 
 ```markdown
-Year: {{:year:}}
+This document is written in the year {{:year:}}.
 ```
+
+
+The constants and their values are declared in the configuration file `config.toml`. 
+
+**config.toml**
+```
+input = "pages"
+output = "docs"
+
+[replacements]
+"year" = "2023"
+```
+
 

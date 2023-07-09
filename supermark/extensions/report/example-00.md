@@ -1,1 +1,1 @@
-:warning: This is a hint for a report.
+:report: This is a hint for a report.

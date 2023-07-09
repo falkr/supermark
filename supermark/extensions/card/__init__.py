@@ -54,8 +54,8 @@ class CardGroup(YAMLGroupChunk):
         html: Sequence[str] = []
         columns = self.dictionary["columns"] if "columns" in self.dictionary else 2
 
-        if columns < 1 or columns > 3:
-            self.warning("Columsn set to two")
+        if columns < 1:  # or columns > 3:
+            self.warning("Columns for cards set to 2")
             columns = 2
 
         html.append(f'<div class="row row-cols-1 row-cols-md-{columns} g-4 mb-5">')

@@ -47,6 +47,16 @@ class Extension:
             return files[0]
         return None
 
+    def get_doc_summary(self) -> Optional[str]:
+        doc = self.get_doc()
+        if doc is None:
+            return None
+        docstring = doc.read_text()
+        if len(docstring.strip()) == 0:
+            return None
+        sentences = docstring.strip().split(".")
+        return sentences[0].strip()
+
     def __str__(self) -> str:
         return "Extension at " + str(self.folder)
 

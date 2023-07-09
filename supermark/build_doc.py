@@ -107,7 +107,7 @@ class DocBuilder(Builder):
     def _build_extension(
         self, extension: Extension, md: List[str], is_first_extension_of_folder: bool
     ):
-        md.append("\n\n# Documentation\n")
+        md.append(f"\n\n# Extension {extension.folder.name}\n")
         doc = extension.get_doc()
         if doc is not None and doc.exists() and is_first_extension_of_folder:
             with open(doc, encoding="utf-8") as file:
@@ -126,9 +126,9 @@ class DocBuilder(Builder):
         #    md.append(table.get_html())
         #    md.append("\n\n\n")
 
-        for example in extension.get_examples():
+        for index, example in enumerate(extension.get_examples()):
             if example.exists():
-                self._build_example(extension, example, md)
+                self._build_example(extension, example, index, md)
 
     def _load_example_chunks(
         self,
@@ -142,8 +142,10 @@ class DocBuilder(Builder):
                     example_chunks.append(c)
         return example_chunks
 
-    def _build_example(self, extension: Extension, example: Path, md: List[str]):
-        md.append("\n\n# Example\n")
+    def _build_example(
+        self, extension: Extension, example: Path, index: int, md: List[str]
+    ):
+        md.append(f"\n\n# Example {index+1}\n")
         code: str = ""
         # include example directly, to show the result
         with open(example, encoding="utf-8") as file:
