@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
+from shutil import copyfile
 
 from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_placeholder_uri_str
 
@@ -40,11 +41,7 @@ class Figure(YAMLChunk):
         else:
             self.file_path = (raw_chunk.path.parent / Path(source)).resolve()
             self.name = source
-            if not self.file_path.exists():
-                self.tell(
-                    f"Figure file {str(self.file_path)} does not exist.",
-                    level=self.WARNING,
-                )
+
 
     def _get_target_relative_path(
         self, builder: Builder, target_file_path: Path
@@ -56,7 +53,25 @@ class Figure(YAMLChunk):
 
     def to_html(self, builder: Builder, target_file_path: Path):
         if self.file_path is not None:
-            builder.copy_resource(self.raw_chunk, self.file_path)
+            if not self.file_path.exists():
+                if builder.core.image_file_locator is not None:
+                    # try to find the file in another place
+                    other_file = builder.core.image_file_locator.lookup(self.file_path)
+                    if other_file is not None:
+                        target = self.raw_chunk.path.parent / "figures" / self.file_path.name
+                        if not target.exists():
+                            target.parent.mkdir(exist_ok=True)
+                            self.tell(F"Found matching file {other_file} and copied it to {target}.", level=self.WARNING)
+                            copyfile(other_file, target)
+                            # TODO should we rewrite the source file path in the original chunk?
+            if self.file_path.exists():
+                builder.copy_resource(self.raw_chunk, self.file_path)
+            else:
+                self.tell(
+                    f"Figure file {str(self.file_path)} does not exist.",
+                    level=self.WARNING,
+                )
+
         alt = self.dictionary.get("caption", "")
         src = None
         if self.file_path is not None:

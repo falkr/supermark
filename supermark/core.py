@@ -92,6 +92,27 @@ class URLChecker:
                     future.result()
 
 
+class ImageFileLocator:
+    def get_graphic_files(self, dirs, extensions):
+        file_map = {}
+        for dir in dirs:
+            p = Path(dir)
+            for ext in extensions:
+                for file in p.rglob(f"*.{ext}"):
+                    file_map[file.name] = file
+        return file_map
+
+    def __init__(self, dirs, report: Report) -> None:
+        self.report = report
+        file_extensions = ["png", "jpg", "svg"]
+        self.graphic_files = self.get_graphic_files(dirs, file_extensions)
+
+    def lookup(self, path: Path) -> Optional[Path]:
+        if path.name in self.graphic_files:
+            return self.graphic_files[path.name]
+        return None
+
+
 class Core:
     def __init__(self, report: Report, collect_urls: bool = False) -> None:
         self.report = report
@@ -110,6 +131,7 @@ class Core:
         self.collect_urls = collect_urls
         if collect_urls:
             self.url_checker = URLChecker()
+        self.image_file_locator = None  # ImageFileLocator(report)
 
     def _load_extensions(self):
         for file in (Path(__file__).parent / "extensions").glob("*"):
