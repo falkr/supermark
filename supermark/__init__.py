@@ -17,7 +17,7 @@ from .placeholder import get_placeholder_uri, get_placeholder_uri_str
 from .report import Report
 from .utils import get_relative_path, reverse_path
 
-__version__ = "0.3.18"
+__version__ = "0.3.19"
 
 __all__ = [
     "Core",

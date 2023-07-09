@@ -18,6 +18,7 @@ setup(
     packages=[
         package_name,
         "supermark.data",
+        "supermark.doc",
         "supermark.extensions",
         "supermark.extensions.abstract",
         "supermark.extensions.boxes",
@@ -43,7 +44,6 @@ setup(
         "supermark.extensions.rat",
         "supermark.extensions.report",
         "supermark.extensions.rubrics",
-        "supermark.extensions.steplist",
         "supermark.extensions.steps",
         "supermark.extensions.table",
         "supermark.extensions.task",
@@ -54,7 +54,7 @@ setup(
         "supermark.extensions.warning",
         "supermark.extensions.weekplan",
     ],
-    version=get_version("{}/__init__.py".format(package_name)),
+    version=get_version(f"{package_name}/__init__.py"),
     description="Pandoc-based transformation tool for documents containing different markup languages.",
     # long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
     install_requires=[
