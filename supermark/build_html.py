@@ -136,20 +136,20 @@ class HTMLBuilder(Builder):
         target_file_path: Path,
         template: str,
     ):
-
         extensions_used: Set[Extension] = set()
         chunks = self.parse_file(source_file_path, extensions_used)
         if not chunks:
             # TODO warn that the page is empty, and therefore nothing is written
             return
+
         html = self._transform_page_to_html(
             chunks,
             template,
             source_file_path,
             target_file_path,
             self.report,
-            self.core.get_css(self.extensions_used),
-            self.core.get_js(self.extensions_used),
+            self.core.get_css(extensions_used),
+            self.core.get_js(extensions_used),
         )
         write_file(html, target_file_path, self.report)
         self.report.info("Translated", path=target_file_path)

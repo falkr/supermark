@@ -314,7 +314,10 @@ class Core:
     def get_css(self, used_extensions: Set[Extension]) -> str:
         all_css: str = ""
         for extension in sorted(list(used_extensions), key=lambda e: e.folder):
-            all_css += extension.get_css() + "\n"
+            css = extension.get_css()
+            if css:
+                all_css += f"/* === {extension.folder.name} === */\n"
+                all_css += css + "\n\n"
         return all_css
 
     def get_js(self, used_extensions: Set[Extension]) -> str:
