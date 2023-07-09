@@ -229,7 +229,7 @@ def info():
     core.info()
 
 
-@supermark.command(help="Map the pages in a project.")
+@supermark.command(help="Add documentation pages.")
 @click.option(
     "-i",
     "--input",
@@ -237,16 +237,12 @@ def info():
     type=click.Path(exists=True, readable=True, path_type=Path),
     help="Input directory containing the source files.",
 )
-def map(
+def doc(
     input: Optional[Path] = None,
 ):
     report = Report()
     core = Core(report=report)
     path_setup = setup_paths(None, input, None, None, core)
-
-    # pm = PageMapper(path_setup.input, core, report)
-    # print(pm.get_html())
-
     builder = DocBuilder(
         path_setup.input,
         path_setup.output,
@@ -258,6 +254,8 @@ def map(
     builder.set_core(core)
     builder.build()
 
+    # pm = PageMapper(path_setup.input, core, report)
+    # print(pm.get_html())
     #     # build the page map
     # pm = PageMapper(self.input_path, self.core, self.report)
     # target_file_path = self.output_path / "pagemap.html"
@@ -303,13 +301,6 @@ def setup(
     base_path = path or Path.cwd()
     if githubaction:
         setup_github_action(base_path)
-
-
-@supermark.command(help="Show info about a project and installation.")
-def info():
-    report = Report()
-    core = Core(report=report)
-    core.info()
 
 
 @supermark.command(help="Perform some cleanup tasks.")

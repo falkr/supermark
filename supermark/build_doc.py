@@ -1,6 +1,6 @@
 from pathlib import Path
 from shutil import copy
-from typing import List, Sequence
+from typing import List, Sequence, Set
 
 import supermark.doc
 
@@ -10,6 +10,8 @@ from .examples_yaml import YAMLExamples
 from .report import Report
 from .utils import write_file
 from .write_md import nav_link_back
+
+DOC_FOLDER = "supermark"
 
 
 class DocBuilder(Builder):
@@ -30,7 +32,19 @@ class DocBuilder(Builder):
             report,
             verbose,
         )
-        self.target_folder = input_path / "_doc"
+        self.target_folder = input_path / DOC_FOLDER
+
+    def find_used_extensions(self) -> Set[Extension]:
+        files = list(
+            self.input_path.glob(
+                "**/*.md",
+            )
+        )
+        files = [file for file in files if not file.match(f"{DOC_FOLDER}/**")]
+        extensions_used: Set[Extension] = set()
+        for source_file_path in files:
+            _ = self.parse_file(source_file_path, extensions_used)
+        return extensions_used
 
     def build(
         self,
@@ -38,34 +52,50 @@ class DocBuilder(Builder):
         self.target_folder.mkdir(exist_ok=True)
         self.copy_docs()
 
-        # import supermark
-        # print(str(supermark.__file__))
-
-        folders: set[Path] = set()
-        for extension in self.core.get_all_extensions():
-            folders.add(extension.folder)
+        extensions_used = self.find_used_extensions()
 
         # Overview page
         md: List[str] = []
-        md.append("# Supermark Documentation")
-        md.append("<ul>")
-        for folder in sorted(folders):
-            x = str(folder.name)
-            md.append(f'<li><a href="{x}.html">{x}</a></li>')
-        md.append("<ul>")
-        write_file("\n".join(md), self.target_folder / "extensions.md", self.report)
+        nav_link_back("Documentation", "index.html", md)
+        md.append("# Extensions")
+        for used in [True, False]:
+            if used:
+                md.append("### Extensions used in this Site")
+            else:
+                md.append("### Other Extensions")
+            md.append("<ul>")
+            # for folder in sorted(folders):
+            folders: set[Path] = set()
+            for extension in self.core.get_all_extensions():
+                # Extensions can show up several times, but folder is unique
+                folder = extension.folder
+                if folder in folders:
+                    continue
+                folders.add(extension.folder)
+                is_used = extension in extensions_used
+                if is_used != used:
+                    continue
+                x = str(folder.name)
+                doc = extension.get_doc_summary()
+                if doc is None:
+                    doc = ""
+                md.append(f'<li><a href="{x}.html">{x}</a> {doc}</li>')
+            md.append("</ul>\n\n\n\n")
+            write_file("\n".join(md), self.target_folder / "extensions.md", self.report)
 
         # Page for each extension
-        for folder in folders:
-            md: List[str] = []
-            nav_link_back("All extensions", "extensions.html", md)
+        for extension in self.core.get_all_extensions():
+            # for folder in folders:
+            folder = extension.folder
+            mdx: List[str] = []
+            nav_link_back("All extensions", "extensions.html", mdx)
             is_first_extension_of_folder = True
             for e in self.core.get_all_extensions():
                 if e.folder == folder and is_first_extension_of_folder:
-                    self._build_extension(e, md, is_first_extension_of_folder)
+                    self._build_extension(e, mdx, is_first_extension_of_folder)
                     is_first_extension_of_folder = False
             write_file(
-                "\n".join(md),
+                "\n".join(mdx),
                 self.target_folder / f"{folder.name}.md",
                 self.report,
             )
