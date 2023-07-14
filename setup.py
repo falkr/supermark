@@ -37,6 +37,7 @@ setup(
         "supermark.extensions.hints",
         "supermark.extensions.lines",
         "supermark.extensions.link",
+        "supermark.extensions.milestone",
         "supermark.extensions.nav",
         "supermark.extensions.qna",
         "supermark.extensions.quiz",
