@@ -16,6 +16,7 @@ from .base import Extension
 from .pandoc import convert, convert_code
 from .report import Report
 from .utils import has_class_tag
+from .write_html import div, aside
 
 
 def is_empty(s_line: str) -> bool:
@@ -406,6 +407,8 @@ class MarkdownChunk(Chunk):
         else:
             self.class_tag = None
             self.aside = False
+        # overwritten during the casting of a chunk if the chunk is an extension
+        self.extension = None
 
     def get_chunk_type(self) -> str:
         if self.class_tag:
@@ -417,29 +420,26 @@ class MarkdownChunk(Chunk):
 
     def to_html(self, builder: Builder, target_file_path: Path) -> str:
         if self.aside:
-            aside_id = Chunk.create_hash(self.content)
-            output: Sequence[str] = []
-            output.append(f'<span name="{aside_id}"></span><aside name="{aside_id}">')
-            output.append(
+            return aside(
                 builder.convert(
                     self.get_content(), target_format="html", source_format="md"
-                )
+                ),
+                aside_id=Chunk.create_hash(self.content),
             )
-            output.append("</aside>")
-            return "".join(output)
-        else:
+        elif self.extension is None:
             if self.class_tag:
-                output = '<div class="{}">{}</div>'.format(
-                    self.class_tag,
+                return div(
                     builder.convert(
                         self.get_content(), target_format="html", source_format="md"
                     ),
+                    classes=[self.class_tag],
                 )
             else:
-                output = builder.convert(
+                return builder.convert(
                     self.get_content(), target_format="html", source_format="md"
                 )
-            return output
+        else:
+            return self.extension.build_html(self, builder)
 
     def wrap(self, content: str) -> str:
         return (

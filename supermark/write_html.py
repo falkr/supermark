@@ -1,8 +1,18 @@
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 
 def html_link(href: str, title: str) -> str:
     return f'<a href="{href}">{title}</a>'
+
+
+def div(content: str, classes: Optional[Sequence[str]] = None) -> str:
+    atts = f' class="{" ".join(classes)}"' if classes else ""
+    return f"<div{atts}>{content}</div>"
+
+
+def aside(content: str, aside_id: str, classes: Optional[Sequence[str]] = None) -> str:
+    atts = f' class="{" ".join(classes)}"' if classes else ""
+    return f'<span name="{aside_id}"></span><aside name="{aside_id}"{atts}>{content}</aside>'
 
 
 class HTMLTable:

@@ -171,7 +171,7 @@ class Core:
         report: Report,
         used_extensions: Optional[Set[Extension]] = None,
     ) -> Sequence[Chunk]:
-        chunks: Sequence[Chunk] = []
+        chunks: List[Chunk] = []
         page_variables: Dict[str, Any] = {}
         for raw in rawchunks:
             chunk = self._cast_chunk(

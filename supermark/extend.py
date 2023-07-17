@@ -1,9 +1,9 @@
 from typing import Any, Dict, Optional, Sequence, Set, Union
 
 from .base import Extension, ExtensionPoint
-from .chunks import Chunk, MarkdownChunk, RawChunk, YAMLChunk
+from .chunks import Chunk, MarkdownChunk, RawChunk, YAMLChunk, Builder
 from .report import Report
-from .write_html import HTMLTable, html_link
+from .write_html import HTMLTable, html_link, div
 
 
 class ChunkExtensionPoint(ExtensionPoint):
@@ -147,6 +147,14 @@ class ParagraphExtension(ChunkExtension):
         table.add_row("Tag", str(self.tag))
         table.flush_row()
         return table
+
+    def build_html(self, chunk: MarkdownChunk, builder: Builder) -> str:
+        return div(
+            builder.convert(
+                chunk.get_content(), target_format="html", source_format="md"
+            ),
+            classes=[chunk.class_tag],
+        )
 
 
 class ParagraphExtensionPoint(ChunkExtensionPoint):
