@@ -7,6 +7,7 @@ from packaging import version
 from rich import print
 
 from .icons import get_icon
+from .report import Report
 
 if TYPE_CHECKING:
     from .core import Core
@@ -17,13 +18,18 @@ md = MarkdownIt()
 pattern = re.compile("{{:.*?:}}")
 
 
-def print_pandoc_info():
+def print_pandoc_info(report: Report):
     installed_pandoc_version = pypandoc.get_pandoc_version()
-    print(f"Installed Pandoc version: {installed_pandoc_version}")
-    if version.parse(installed_pandoc_version) < version.parse("2.14"):
-        print(
-            "There exists a newer version of Pandoc. Update via [link=https://pandoc.org]pandoc.org[/link]."
+    if installed_pandoc_version != "2.12":
+        report.warning(
+            f"The recommended Pandoc version is 2.12. You have version {installed_pandoc_version}. This may lead to slightly different output, when different versions commit to a repository."
         )
+    else:
+        report.info(f"Installed Pandoc version: {installed_pandoc_version}")
+    # if version.parse(installed_pandoc_version) < version.parse("2.14"):
+    #    print(
+    #        "There exists a newer version of Pandoc. Update via [link=https://pandoc.org]pandoc.org[/link]."
+    #    )
     # print(pypandoc.get_pandoc_path())
     # print(pypandoc.get_pandoc_formats())
 
@@ -79,6 +85,11 @@ def _replace_variables(input: str, core: "Core") -> str:
 
 def convert_code(source: str, target_format: str) -> str:
     extra_args = ["--highlight-style", "pygments"]
-    return pypandoc.convert_text(
-        source, target_format, format="md", extra_args=extra_args
-    ).strip()
+
+    return (
+        pypandoc.convert_text(
+            source, target_format, format="md", extra_args=extra_args
+        ).strip()
+        # This reduced difference between Pandoc results from version 2.12 and newer versions.
+        .replace('<pre\nclass="sourceCode', '<pre class="sourceCode')
+    )
