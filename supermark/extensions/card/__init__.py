@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 from ... import (
     Builder,
@@ -51,7 +51,7 @@ class CardGroup(YAMLGroupChunk):
         ...
 
     def to_html(self, builder: Builder, target_file_path: Path) -> Optional[str]:
-        html: Sequence[str] = []
+        html: List[str] = []
         columns = self.dictionary["columns"] if "columns" in self.dictionary else 2
 
         if columns < 1:  # or columns > 3:
@@ -186,7 +186,7 @@ class Card(YAMLChunk):
         html.append("</div>")
 
     def to_html(self, builder: Builder, target_file_path: Path):
-        html: Sequence[str] = []
+        html: List[str] = []
 
         link = self.dictionary["link"] if "link" in self.dictionary else ""
         link_title = (

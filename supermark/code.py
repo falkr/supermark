@@ -25,7 +25,7 @@ class Code(Chunk):
         html: List[str] = []
         raw_id = "id" + Chunk.create_hash(self.code)
         html.append('<div class="source-code-frame">')
-        html.append(f'<pre class="hidden-pre" id="{raw_id}">{self.code}</pre>')
+        html.append(f'<pre class="d-none" id="{raw_id}">{self.code}</pre>')
         html.append(
             f'<button type="button" class="copy-button" data-clipboard-target="#{raw_id}">'
         )

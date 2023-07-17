@@ -51,7 +51,7 @@ class HTMLBuilder(Builder):
         css: str,
         js: str,
     ) -> str:
-        content: Sequence[str] = []
+        content: List[str] = []
         content.append('<div class="page">')
         if len(chunks) == 0:
             pass
@@ -155,7 +155,7 @@ class HTMLBuilder(Builder):
         self.report.info("Translated", path=target_file_path)
 
     def _default_html_template(self) -> str:
-        html: Sequence[str] = []
+        html: List[str] = []
         html.append('<head><title></title><style type="text/css">{css}</style></head>')
         html.append("<body>")
         html.append("{content}")

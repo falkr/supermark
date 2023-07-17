@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set
+from typing import Any, Dict, List, Optional, Set
 
 import wikitextparser as wtp
 from wikitextparser._table import Cell
@@ -103,7 +103,7 @@ class Table(YAMLChunk):
                 return ' class="{}"'.format(cell.attrs["class"])
             return ""
 
-        output: Sequence[str] = []
+        output: List[str] = []
         parsed = wtp.parse(self.table_raw)
         rows = parsed.tables[0].cells(span=False)
         if self.div_class:
@@ -147,7 +147,7 @@ class Table(YAMLChunk):
             if self.table_extension is None
             else self.table_extension.get_empty_cell()
         )
-        html: Sequence[str] = []
+        html: List[str] = []
 
         if "format" in self.dictionary:
             source_format = self.dictionary["format"]
@@ -184,7 +184,7 @@ class Table(YAMLChunk):
         rowspec = ""
         for _ in rows[0]:
             rowspec = rowspec + "L"
-        latex: Sequence[str] = []
+        latex: List[str] = []
         latex.append("\\begin{table*}[t]")
         latex.append("\\begin{tabulary}{\\textwidth}" + f"{{{rowspec}}}")
         latex.append("\\toprule")

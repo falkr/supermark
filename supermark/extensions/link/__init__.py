@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, List
 
 from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_icon
 
@@ -25,8 +25,8 @@ class Link(YAMLChunk):
         )
 
     def to_html(self, builder: Builder, target_file_path: Path):
-        html: Sequence[str] = []
-        html.append('<div class="card mt-3">')
+        html: List[str] = []
+        html.append('<div class="card mt-3 mb-3">')
         html.append('<div class="card-body">')
         html.append(f'<a href="{self.dictionary["link"]}" class="stretched-link">')
         if "icon" in self.dictionary:

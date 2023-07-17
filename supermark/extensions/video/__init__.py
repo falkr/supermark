@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, List
 
 import requests
 
@@ -38,7 +38,7 @@ class Video(YAMLChunk):
         return super().create_hash(f"{video}")
 
     def to_html(self, builder: Builder, target_file_path: Path):
-        html: Sequence[str] = []
+        html: List[str] = []
         video = self.dictionary["video"]
         url = f"https://youtube-nocookie.com/{video}"
         # url = "https://youtu.be/{}".format(video)
@@ -91,7 +91,7 @@ class Video(YAMLChunk):
         return "\n".join(html)
 
     def to_latex(self, builder: Builder) -> str:
-        s: Sequence[str] = []
+        s: List[str] = []
         url = "https://img.youtube.com/vi/{}/sddefault.jpg".format(
             self.dictionary["video"]
         )

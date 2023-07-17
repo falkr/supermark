@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, List
 
 from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_icon
 
@@ -32,7 +32,7 @@ class Nav(YAMLChunk):
         return ""
 
     def to_html(self, builder: Builder, target_file_path: Path):
-        html: Sequence[str] = []
+        html: List[str] = []
         html.append('<nav class="d-flex justify-content-between">')
         if "prev" in self.dictionary:
             html.append(

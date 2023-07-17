@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, List
 
 from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
@@ -22,7 +22,7 @@ class Button(YAMLChunk):
 
     def to_html(self, builder: Builder, target_file_path: Path):
         clazz = "ntnu-button"
-        html: Sequence[str] = []
+        html: List[str] = []
         html.append(
             '<a class="{}" href="{}">{}</a>'.format(
                 clazz, self.dictionary["url"], self.dictionary["text"]

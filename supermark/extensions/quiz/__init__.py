@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Sequence, List
 
 from ... import Builder, RawChunk, YAMLChunk, YamlExtension
 
@@ -45,7 +45,7 @@ class Quiz(YAMLChunk):
         if "false-3" in dictionary:
             if "false-2" not in dictionary:
                 self.raw_chunk.report.error("Attribute false-2 is missing.")
-                self.is_ok = False
+                self.ok = False
             self.n_alternatives = 4
         elif "false-2" in dictionary:
             self.n_alternatives = 3
@@ -100,7 +100,7 @@ class Quiz(YAMLChunk):
         return super().create_hash(f"{video}")
 
     def to_html(self, builder: Builder, target_file_path: Path):
-        html: Sequence[str] = []
+        html: List[str] = []
         html.append(f'<div class="card mb-5 shadow-sm" id="{self.quiz_id}">')
         html.append('  <div class="card-body">')
         html.append(f'    <h5 class="card-title">{self.title}</h5>')

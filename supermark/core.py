@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
 from pathlib import Path
 from typing import Any, DefaultDict, Dict, List, Optional, Sequence, Set
+import traceback
 
 import requests
 import rich
@@ -144,10 +145,14 @@ class Core:
             clsmembers = inspect.getmembers(module, inspect.isclass)
             for name, clazz in clsmembers:
                 if issubclass(clazz, Extension) and clazz.__module__ == module.__name__:
-                    extension = clazz()
-                    extension.set_folder(Path(module.__file__).parent)
-                    self.register(extension)
-                    self.report.info(f"Found extension {name}")
+                    try:
+                        extension = clazz()
+                        extension.set_folder(Path(module.__file__).parent)
+                        self.register(extension)
+                        self.report.info(f"Found extension {name}")
+                    except Exception as error:
+                        print(error)
+                        traceback.print_exc()
         except ModuleNotFoundError as error:
             self.report.error(f"Error when registering {name}", exception=error)
 
