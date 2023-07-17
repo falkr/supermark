@@ -188,7 +188,7 @@ def build(
     report = Report()
     core = Core(report=report, collect_urls=urls)
     print(logo_2(__version__))
-    print_pandoc_info()
+    print_pandoc_info(report)
 
     path_setup = setup_paths(path, input, output, template, core)
 
@@ -213,11 +213,11 @@ def build(
         report.print_to_file(path_setup.base / "supermark.log")
     else:
         report.print(verbose=verbose)
-    if report.has_error():
-        # beep(3)  # sad error
-        ex = ClickException("Something is wrong.")
-        ex.exit_code = 1
-        raise ex
+        if report.has_error():
+            # beep(3)  # sad error
+            ex = ClickException("Something is wrong.")
+            ex.exit_code = 1
+            raise ex
     # else:
     # beep(5)
 
