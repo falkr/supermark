@@ -1,1 +1,0 @@
-Paragraph style for hints for report writing.

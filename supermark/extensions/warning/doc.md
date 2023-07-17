@@ -1,1 +1,0 @@
-Show warnings in a box.

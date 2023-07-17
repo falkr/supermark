@@ -1,1 +1,0 @@
-A paragraph style for a guideline.
