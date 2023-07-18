@@ -176,7 +176,8 @@ class DocBuilder(Builder):
         table.add_cell("Extensions", header=True)
         table.flush_row()
         for extension_package in sorted(
-            self.core.extension_packages.values(), key=lambda e: e.folder.name
+            filter(lambda ep: not ep.is_alpha(), self.core.extension_packages.values()),
+            key=lambda e: e.folder.name,
         ):
             extensions = extension_package.extensions
             name = extension_package.folder.name

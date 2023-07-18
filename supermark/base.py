@@ -86,6 +86,11 @@ class ExtensionPackage:
     def __init__(self, folder: Path):
         self.folder = folder
         self.extensions: List[Extension] = []
+        alpha_file = folder / "alpha.md"
+        self.alpha = alpha_file.exists()
+
+    def is_alpha(self) -> bool:
+        return self.alpha
 
     def register_extension(self, extension: Extension):
         self.extensions.append(extension)
