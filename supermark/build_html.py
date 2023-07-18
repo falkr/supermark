@@ -190,7 +190,7 @@ class HTMLBuilder(Builder):
         self,
     ) -> None:
         template = self._load_html_template(self.template_file, self.report)
-        jobs: Sequence[Dict[str, Any]] = []
+        jobs: List[Dict[str, Any]] = []
         files = list(
             self.input_path.glob(
                 "**/*.md",

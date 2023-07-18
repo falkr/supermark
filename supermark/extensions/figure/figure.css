@@ -9,3 +9,7 @@ div.figurefullwitdth {
   margin-right: -33px;
   width: 100%;
 }
+
+figcaption {
+  color: #868279;
+}

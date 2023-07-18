@@ -52,8 +52,7 @@ class DocBuilder(Builder):
     ) -> None:
         self.target_folder.mkdir(exist_ok=True)
         self.copy_docs()
-
-        extensions_used = self.find_used_extensions()
+        # extensions_used = self.find_used_extensions()
 
         # Overview page
         md: List[str] = []
