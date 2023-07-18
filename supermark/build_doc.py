@@ -10,6 +10,7 @@ from .examples_yaml import YAMLExamples
 from .report import Report
 from .utils import write_file
 from .write_md import nav_link_back
+from .write_html import HTMLTable, html_link
 
 DOC_FOLDER = "supermark"
 
@@ -58,6 +59,10 @@ class DocBuilder(Builder):
         md: List[str] = []
         nav_link_back("Documentation", "index.html", md)
         md.append("# Extensions")
+        md.append(self.build_all_extensions_table().get_html())
+        md.append("\n\n")
+        md.append(self.build_all_extensions_table_2().get_html())
+        md.append("\n\n")
         for used in [True, False]:
             if used:
                 md.append("### Extensions used in this Site")
@@ -165,3 +170,47 @@ class DocBuilder(Builder):
         if code.startswith("---"):
             return "yaml"
         return ""
+
+    def build_all_extensions_table(self) -> HTMLTable:
+        table: HTMLTable = HTMLTable(css_class="table")
+        for extension in self.core.get_all_extensions():
+            table.add_row(
+                extension.get_name(),
+                str(type(extension).__name__),
+                extension.package.folder.name,
+                extension.extension_point.name,
+            )
+            table.flush_row()
+        table.flush_row_group()
+        return table
+
+    def build_all_extensions_table_2(self) -> HTMLTable:
+        table: HTMLTable = HTMLTable(css_class="table")
+        table.add_cell("Pack", header=True)
+        table.add_cell("Doc", header=True)
+        table.add_cell("Extensions", header=True)
+        table.flush_row()
+        for extension_package in sorted(
+            self.core.extension_packages.values(), key=lambda e: e.folder.name
+        ):
+            extensions = extension_package.extensions
+            name = extension_package.folder.name
+            # <a href="{x}.html">{x}</a>
+            table.add_cell(html_link(f"{name}.html", name), rowspan=len(extensions))
+            table.add_cell(extension_package.get_doc_summary(), rowspan=len(extensions))
+
+            for extension in extensions:
+                table.add_cell(
+                    extension.get_name(),
+                )
+                table.flush_row()
+        table.flush_row_group()
+        return table
+
+        #        table.add_row("type", ", ".join(list(self.get_types(type))))
+        #        table.add_row("Language", html_link("#", "YAML"))
+        #        table.add_row("Required fields", ", ".join(self.get_required(type)))
+        #        table.add_row("Optional fields", ", ".join(self.get_optional(type)))
+        #        table.add_row("Post-Yaml Section", self.has_post_yaml(type))
+        table.flush_row_group()
+        return table

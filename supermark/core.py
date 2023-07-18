@@ -21,10 +21,10 @@ from .chunks import (
     RawChunkType,
     YAMLDataChunk,
 )
+from .base import Extension, ExtensionPackage
 from .code import Code
 from .config import Config
 from .extend import (
-    Extension,
     ExtensionPoint,
     ParagraphExtension,
     ParagraphExtensionPoint,
@@ -118,6 +118,7 @@ class Core:
     def __init__(self, report: Report, collect_urls: bool = False) -> None:
         self.report = report
         self.config = Config(report)
+        self.extension_packages: Dict[str, ExtensionPackage] = {}
         self.extension_points: Dict[str, ExtensionPoint] = {}
         self.yaml_extension_point: YamlExtensionPoint = self._register(
             YamlExtensionPoint()
@@ -142,12 +143,20 @@ class Core:
     def _register_module(self, name: str):
         try:
             module = import_module(name, package=None)
+            if module is None:
+                return
             clsmembers = inspect.getmembers(module, inspect.isclass)
+            if len(clsmembers) == 0:
+                return
+            extension_package = ExtensionPackage(Path(module.__file__).parent)
             for name, clazz in clsmembers:
                 if issubclass(clazz, Extension) and clazz.__module__ == module.__name__:
                     try:
                         extension = clazz()
                         extension.set_folder(Path(module.__file__).parent)
+                        extension.set_package(extension_package)
+                        extension_package.register_extension(extension)
+                        self.register_extension_package(extension_package)
                         self.register(extension)
                         self.report.info(f"Found extension {name}")
                     except Exception as error:
@@ -163,12 +172,18 @@ class Core:
     def register(self, extension: Extension) -> None:
         if isinstance(extension, YamlExtension):
             self.yaml_extension_point.register(extension)
+            extension.set_extension_point(self.yaml_extension_point)
         elif isinstance(extension, ParagraphExtension):
             self.paragraph_extension_point.register(extension)
+            extension.set_extension_point(self.paragraph_extension_point)
         elif isinstance(extension, TableClassExtension):
             self.tableclass_extension_point.register(extension)
+            extension.set_extension_point(self.tableclass_extension_point)
         else:
             ValueError("Not sure what to do with this extension.")
+
+    def register_extension_package(self, extension_package) -> None:
+        self.extension_packages[extension_package.folder.name] = extension_package
 
     def cast(
         self,
@@ -252,7 +267,7 @@ class Core:
             )
 
     def arrange_assides(self, chunks: Sequence[Chunk]) -> Sequence[Chunk]:
-        main_chunks: Sequence[Chunk] = []
+        main_chunks: List[Chunk] = []
         current_main_chunk = None
         for chunk in chunks:
             if chunk.is_aside():
@@ -306,8 +321,8 @@ class Core:
         report: Report,
         used_extensions: Optional[Set[Extension]] = None,
     ):
-        chunks = parse(lines, source_file_path, report)
-        chunks = self.cast(chunks, report, used_extensions=used_extensions)
+        raw_chunks = parse(lines, source_file_path, report)
+        chunks = self.cast(raw_chunks, report, used_extensions=used_extensions)
         # TODO not sure if we first arrange asides and then group or vice versa
         return self.group_chunks(self.arrange_assides(chunks))
 

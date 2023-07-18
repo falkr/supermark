@@ -35,6 +35,9 @@ class YamlExtension(ChunkExtension):
         return self.type if isinstance(self.type, str) else self.type[0]
 
     def __repr__(self) -> str:
+        return self.get_name()
+
+    def get_name(self):
         return "yaml/" + self.get_primary_type()
 
     def get_doc_table(
@@ -61,12 +64,16 @@ class YamlExtensionPoint(ChunkExtensionPoint):
     def __init__(self) -> None:
         super().__init__("yaml")
         self.extensions: Dict[str, YamlExtension] = {}
+        self.extensions_with_extra_tags: Dict[str, YamlExtension] = {}
 
     def register(self, extension: YamlExtension):
-        for ttype in (
-            [extension.type] if isinstance(extension.type, str) else extension.type
-        ):
-            self.extensions[ttype] = extension
+        if isinstance(extension.type, str):
+            self.extensions[extension.type] = extension
+            self.extensions_with_extra_tags[extension.type] = extension
+        else:
+            self.extensions[extension.type[0]] = extension
+            for ttype in extension.type:
+                self.extensions_with_extra_tags[ttype] = extension
 
     def cast_yaml(
         self,
@@ -78,8 +85,8 @@ class YamlExtensionPoint(ChunkExtensionPoint):
     ) -> Optional[YAMLChunk]:
         if "/" in type:
             type = type.split("/")[0]
-        if type in self.extensions:
-            extension = self.extensions[type]
+        if type in self.extensions_with_extra_tags:
+            extension = self.extensions_with_extra_tags[type]
             if used_extensions is not None:
                 used_extensions.add(extension)
             chunk = extension.chunk_class(raw, dictionary, page_variables)
@@ -97,8 +104,11 @@ class TableClassExtension(Extension):
         self.type = type
         self.empty_cell = empty_cell
 
-    def __repr__(self) -> str:
+    def get_name(self):
         return "table/" + self.type
+
+    def __repr__(self) -> str:
+        return self.get_name()
 
     def get_empty_cell(self) -> str:
         return self.empty_cell
@@ -137,13 +147,15 @@ class ParagraphExtension(ChunkExtension):
         self.tag = tag
         self.extra_tags = extra_tags
 
-    def __repr__(self) -> str:
+    def get_name(self):
         return "md/" + str(self.tag)
+
+    def __repr__(self) -> str:
+        return self.get_name()
 
     def get_doc_table(
         self, example_chunks: Optional[Sequence["Chunk"]] = None
     ) -> HTMLTable:
-        print("get doc table")
         table: HTMLTable = HTMLTable(css_class="table")
         table.add_row("Type", "Markdown Paragraph Extension")
         table.flush_row()
@@ -165,12 +177,14 @@ class ParagraphExtensionPoint(ChunkExtensionPoint):
     def __init__(self) -> None:
         super().__init__("paragraph")
         self.extensions: Dict[str, ParagraphExtension] = {}
+        self.extensions_with_extra_tags: Dict[str, ParagraphExtension] = {}
 
     def register(self, extension: ParagraphExtension):
         self.extensions[extension.tag] = extension
+        self.extensions_with_extra_tags[extension.tag] = extension
         if extension.extra_tags is not None:
             for tag in extension.extra_tags:
-                self.extensions[tag] = extension
+                self.extensions_with_extra_tags[tag] = extension
 
     def cast_paragraph_class(
         self,
@@ -180,8 +194,8 @@ class ParagraphExtensionPoint(ChunkExtensionPoint):
         report: Report,
         used_extensions: Optional[Set[Extension]] = None,
     ) -> Optional[MarkdownChunk]:
-        if tag in self.extensions:
-            extension = self.extensions[tag]
+        if tag in self.extensions_with_extra_tags:
+            extension = self.extensions_with_extra_tags[tag]
             if used_extensions is not None:
                 used_extensions.add(extension)
             chunk = extension.chunk_class(raw, page_variables)
