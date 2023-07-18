@@ -17,7 +17,7 @@ TEMPLATE = """<p>
 </p>"""
 
 
-class ButtonExtension(YamlExtension):
+class QNAExtension(YamlExtension):
     def __init__(self):
         super().__init__(type="qna", chunk_class=QnA)
 

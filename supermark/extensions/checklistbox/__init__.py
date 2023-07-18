@@ -1,6 +1,6 @@
 from ... import ParagraphExtension
 
 
-class TipsParagraphExtension(ParagraphExtension):
+class CheckListBoxParagraphExtension(ParagraphExtension):
     def __init__(self):
         super().__init__("checklistbox")

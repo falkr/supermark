@@ -37,7 +37,7 @@ class HTMLTable:
         header: bool = False,
         css_class: Optional[str] = None,
     ) -> None:
-        cell = "<td "
+        cell = "<th " if header else "<td "
         if rowspan > 1:
             cell = cell + f'rowspan="{rowspan}" '
         if colspan > 1:
@@ -45,7 +45,7 @@ class HTMLTable:
         if css_class is not None:
             cell = cell + f'class="{css_class}" '
         cell = cell + ">"
-        cell = cell + cell_content + "</td>"
+        cell = cell + cell_content + ("</th>" if header else "</td>")
         self.row_under_construction.append(cell)
 
     def flush_row(self) -> None:

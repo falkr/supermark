@@ -24,7 +24,7 @@ class Code(Chunk):
     def wrap_in_code_frame(self, code: str, builder: Builder) -> str:
         html: List[str] = []
         raw_id = "id" + Chunk.create_hash(self.code)
-        html.append('<div class="source-code-frame">')
+        html.append('<div class="source-code-frame mt-3 mb-3">')
         html.append(f'<pre class="d-none" id="{raw_id}">{self.code}</pre>')
         html.append(
             f'<button type="button" class="copy-button" data-clipboard-target="#{raw_id}">'

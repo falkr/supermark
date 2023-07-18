@@ -59,83 +59,68 @@ class DocBuilder(Builder):
         md: List[str] = []
         nav_link_back("Documentation", "index.html", md)
         md.append("# Extensions")
-        md.append(self.build_all_extensions_table().get_html())
-        md.append("\n\n")
         md.append(self.build_all_extensions_table_2().get_html())
         md.append("\n\n")
-        for used in [True, False]:
-            if used:
-                md.append("### Extensions used in this Site")
-            else:
-                md.append("### Other Extensions")
-            md.append("<ul>")
-            # for folder in sorted(folders):
-            folders: set[Path] = set()
-            for extension in self.core.get_all_extensions():
-                # Extensions can show up several times, but folder is unique
-                folder = extension.folder
-                if folder in folders:
-                    continue
-                folders.add(extension.folder)
-                is_used = extension in extensions_used
-                if is_used != used:
-                    continue
-                x = str(folder.name)
-                doc = extension.get_doc_summary()
-                if doc is None:
-                    doc = ""
-                md.append(f'<li><a href="{x}.html">{x}</a> {doc}</li>')
-            md.append("</ul>\n\n\n\n")
-            write_file("\n".join(md), self.target_folder / "extensions.md", self.report)
+        # for used in [True, False]:
+        #     if used:
+        #         md.append("### Extensions used in this Site")
+        #     else:
+        #         md.append("### Other Extensions")
+        #     md.append("<ul>")
+        #     # for folder in sorted(folders):
+        #     folders: set[Path] = set()
+        #     for extension in self.core.get_all_extensions():
+        #         # Extensions can show up several times, but folder is unique
+        #         folder = extension.folder
+        #         if folder in folders:
+        #             continue
+        #         folders.add(extension.folder)
+        #         is_used = extension in extensions_used
+        #         if is_used != used:
+        #             continue
+        #         x = str(folder.name)
+        #         doc = extension.get_doc_summary()
+        #         if doc is None:
+        #             doc = ""
+        #         md.append(f'<li><a href="{x}.html">{x}</a> {doc}</li>')
+        #     md.append("</ul>\n\n\n\n")
+        write_file("\n".join(md), self.target_folder / "extensions.md", self.report)
 
         # Page for each extension
-        for extension in self.core.get_all_extensions():
-            # for folder in folders:
-            folder = extension.folder
+        for extension_package in self.core.extension_packages.values():
             mdx: List[str] = []
             nav_link_back("All extensions", "extensions.html", mdx)
-            is_first_extension_of_folder = True
-            for e in self.core.get_all_extensions():
-                if e.folder == folder:
-                    self._build_extension(e, mdx, is_first_extension_of_folder)
-                    is_first_extension_of_folder = False
+
+            mdx.append(f"\n\n# Extension {extension_package.folder.name}\n")
+            doc = extension_package.get_doc()
+            if doc is not None and doc.exists():
+                with open(doc, encoding="utf-8") as file:
+                    lines = file.readlines()
+                    mdx.append("".join(lines))
+
+            # Table for each extension
+            for extension in sorted(
+                extension_package.extensions, key=lambda e: e.get_name()
+            ):
+                mdx.append(extension.get_doc_table().get_html())
+
+            # for now, all examples:
+            example_chunks = self._load_example_chunks(extension)
+            ye = YAMLExamples(example_chunks)
+            ye.write_doc(mdx)
+            for index, example in enumerate(extension.get_examples()):
+                if example.exists():
+                    self._build_example(extension, example, index, mdx)
+
             write_file(
                 "\n".join(mdx),
-                self.target_folder / f"{folder.name}.md",
+                self.target_folder / f"{extension_package.folder.name}.md",
                 self.report,
             )
 
     def copy_docs(self):
         for file in Path(supermark.doc.__file__).parent.glob("*.md"):
             copy(file, self.target_folder)
-
-    def _build_extension(
-        self, extension: Extension, md: List[str], is_first_extension_of_folder: bool
-    ):
-        md.append(f"\n\n# Extension {extension.folder.name}\n")
-        doc = extension.get_doc()
-        if doc is not None and doc.exists() and is_first_extension_of_folder:
-            with open(doc, encoding="utf-8") as file:
-                lines = file.readlines()
-                md.append("".join(lines))
-
-        md.append(extension.get_doc_table().get_html())
-
-        if is_first_extension_of_folder:
-            example_chunks = self._load_example_chunks(extension)
-            ye = YAMLExamples(example_chunks)
-            ye.write_doc(md)
-
-            # table = extension.get_doc_table(example_chunks)
-            # if table is not None:
-            #    table.flush_row_group()
-            #    md.append("\n\n\n")
-            #    md.append(table.get_html())
-            #    md.append("\n\n\n")
-
-            for index, example in enumerate(extension.get_examples()):
-                if example.exists():
-                    self._build_example(extension, example, index, md)
 
     def _load_example_chunks(
         self,

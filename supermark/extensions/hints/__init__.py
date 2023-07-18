@@ -4,9 +4,9 @@ from typing import Any, Dict, List
 from ... import Builder, ParagraphExtension, RawChunk, YAMLChunk, YamlExtension
 
 
-class HintParagraphExtension(ParagraphExtension):
-    def __init__(self):
-        super().__init__("hints", extra_tags=["hint"])
+# class HintParagraphExtension(ParagraphExtension):
+#    def __init__(self):
+#        super().__init__("hints", extra_tags=["hint"])
 
 
 class HintExtension(YamlExtension):
