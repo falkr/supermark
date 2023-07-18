@@ -91,7 +91,7 @@ class DocBuilder(Builder):
             nav_link_back("All extensions", "extensions.html", mdx)
             is_first_extension_of_folder = True
             for e in self.core.get_all_extensions():
-                if e.folder == folder and is_first_extension_of_folder:
+                if e.folder == folder:
                     self._build_extension(e, mdx, is_first_extension_of_folder)
                     is_first_extension_of_folder = False
             write_file(
@@ -114,21 +114,23 @@ class DocBuilder(Builder):
                 lines = file.readlines()
                 md.append("".join(lines))
 
-        example_chunks = self._load_example_chunks(extension)
+        md.append(extension.get_doc_table().get_html())
 
-        ye = YAMLExamples(example_chunks)
-        ye.write_doc(md)
+        if is_first_extension_of_folder:
+            example_chunks = self._load_example_chunks(extension)
+            ye = YAMLExamples(example_chunks)
+            ye.write_doc(md)
 
-        # table = extension.get_doc_table(example_chunks)
-        # if table is not None:
-        #    table.flush_row_group()
-        #    md.append("\n\n\n")
-        #    md.append(table.get_html())
-        #    md.append("\n\n\n")
+            # table = extension.get_doc_table(example_chunks)
+            # if table is not None:
+            #    table.flush_row_group()
+            #    md.append("\n\n\n")
+            #    md.append(table.get_html())
+            #    md.append("\n\n\n")
 
-        for index, example in enumerate(extension.get_examples()):
-            if example.exists():
-                self._build_example(extension, example, index, md)
+            for index, example in enumerate(extension.get_examples()):
+                if example.exists():
+                    self._build_example(extension, example, index, md)
 
     def _load_example_chunks(
         self,

@@ -1,1 +1,1 @@
-A box to provide supplementary information.
+Boxes to highlight tips, warnings, milestones, guidelines or definitions.

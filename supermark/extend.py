@@ -143,9 +143,13 @@ class ParagraphExtension(ChunkExtension):
     def get_doc_table(
         self, example_chunks: Optional[Sequence["Chunk"]] = None
     ) -> HTMLTable:
-        table: HTMLTable = HTMLTable()
+        print("get doc table")
+        table: HTMLTable = HTMLTable(css_class="table")
+        table.add_row("Type", "Markdown Paragraph Extension")
+        table.flush_row()
         table.add_row("Tag", str(self.tag))
         table.flush_row()
+        table.flush_row_group()
         return table
 
     def build_html(self, chunk: MarkdownChunk, builder: Builder) -> str:
