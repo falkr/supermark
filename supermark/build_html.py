@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Set
+from typing import Any, Dict, List, Sequence, Set, TYPE_CHECKING
 
 from rich.progress import BarColumn, Progress
 
@@ -9,6 +9,9 @@ from .chunks import Builder, Chunk, MarkdownChunk, YAMLDataChunk
 from .pagemap import Folder
 from .report import Report
 from .utils import add_notnone, get_relative_path, reverse_path, write_file
+
+if TYPE_CHECKING:
+    from .base import Extension
 
 
 class HTMLBuilder(Builder):
@@ -53,16 +56,12 @@ class HTMLBuilder(Builder):
     ) -> str:
         content: List[str] = []
         content.append('<div class="page">')
-        if len(chunks) == 0:
-            pass
-        else:
-            first_chunk = chunks[0]
-            if isinstance(first_chunk, MarkdownChunk) and not first_chunk.is_section:
-                content.append('    <section class="content">')
+        content.append('    <section class="content">')
 
         if self.breadcrumbs.has_breadcrumbs(source_file_path):
             content.append(self.breadcrumbs.get_html(source_file_path, self))
 
+        first_chunk_written = False
         for chunk in chunks:
             if (
                 "status" in chunk.page_variables
@@ -76,7 +75,7 @@ class HTMLBuilder(Builder):
             elif not chunk.is_ok():
                 print("chunk not ok")
             elif isinstance(chunk, MarkdownChunk):
-                if chunk.is_section:
+                if chunk.is_section and first_chunk_written:
                     # open a new section
                     content.append("    </section>")
                     content.append('    <section class="content">')
@@ -84,15 +83,16 @@ class HTMLBuilder(Builder):
                 for aside in chunk.asides:
                     add_notnone(aside.to_html(self, target_file_path), content)
                 add_notnone(chunk.to_html(self, target_file_path), content)
+                first_chunk_written = True
             else:
                 # add_notnone(chunk.to_html(self, target_file_path), content)
                 for aside in chunk.asides:
                     add_notnone(aside.to_html(self, target_file_path), content)
                 add_notnone(chunk.to_html(self, target_file_path), content)
+                first_chunk_written = True
 
         content.append("    </section>")
         content.append("</div>")
-        content = "\n".join(content)
         for tag in ["content", "css", "js", "rel_path"]:
             if "{" + tag + "}" not in template:
                 self.report.warning(
@@ -101,7 +101,7 @@ class HTMLBuilder(Builder):
         try:
             return template.format_map(
                 {
-                    "content": content,
+                    "content": "\n".join(content),
                     "css": css,
                     "js": js,
                     "rel_path": reverse_path(self.input_path, source_file_path),
