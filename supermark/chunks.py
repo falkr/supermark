@@ -120,7 +120,7 @@ class RawChunk:
         self.path = Path(path)
         self.parent_path = Path(path).parent.parent
         self.report = report
-        self.hash = None
+        self.hash: Optional[str] = None
 
         # check if we only got empty lines
         def all_empty(lines: Sequence[str]) -> bool:
@@ -453,7 +453,12 @@ class MarkdownChunk(Chunk):
 
     def to_latex(self, builder: Builder) -> str:
         # TODO paragraph style in latex
-        output = convert(self.get_content(), target_format="latex", source_format="md")
+        output = convert(
+            self.get_content(),
+            target_format="latex",
+            core=builder.core,
+            source_format="md",
+        )
         if self.class_tag is None:
             return output
         elif self.class_tag == "aside":
@@ -505,7 +510,10 @@ class HTMLChunk(Chunk):
             return None
         else:
             return convert(
-                self.get_content(), target_format="latex", source_format="html"
+                self.get_content(),
+                target_format="latex",
+                core=builder.core,
+                source_format="html",
             )
 
     def recode(self) -> str:

@@ -8,7 +8,7 @@ from .base import Extension
 from .chunks import Builder, Chunk
 from .examples_yaml import YAMLExamples
 from .report import Report
-from .utils import write_file
+from .utils import write_file, none_str
 from .write_md import nav_link_back
 from .write_html import HTMLTable, html_link
 
@@ -182,7 +182,9 @@ class DocBuilder(Builder):
             name = extension_package.folder.name
             # <a href="{x}.html">{x}</a>
             table.add_cell(html_link(f"{name}.html", name), rowspan=len(extensions))
-            table.add_cell(extension_package.get_doc_summary(), rowspan=len(extensions))
+            table.add_cell(
+                none_str(extension_package.get_doc_summary()), rowspan=len(extensions)
+            )
 
             for extension in extensions:
                 table.add_cell(

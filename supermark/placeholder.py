@@ -1,5 +1,7 @@
 from urllib.parse import quote
 
+PLACEHOLDER_PREFIX = "_placeholder"
+
 
 def svg_1(
     width: int,
@@ -47,11 +49,15 @@ def get_placeholder_uri(width: int, height: int) -> str:
     return "data:image/svg+xml;charset=UTF-8," + quote(svg_2(width, height))
 
 
+def is_placeholder(src: str) -> bool:
+    return src.startswith(PLACEHOLDER_PREFIX)
+
+
 def get_placeholder_uri_str(src: str) -> str:
-    if src.startswith("_placeholder"):
+    if is_placeholder(src):
         width, height = (100, 100)
         try:
-            text = src.replace("_placeholder", "")
+            text = src.replace(PLACEHOLDER_PREFIX, "")
             tokens = text.split("x")
             if len(tokens) > 1:
                 width, height = int(tokens[0]), int(tokens[1])

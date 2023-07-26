@@ -9,6 +9,7 @@ from .chunks import Builder, Chunk, MarkdownChunk, YAMLDataChunk
 from .pagemap import Folder
 from .report import Report
 from .utils import add_notnone, get_relative_path, reverse_path, write_file
+from .write_html import div
 
 if TYPE_CHECKING:
     from .base import Extension
@@ -81,14 +82,22 @@ class HTMLBuilder(Builder):
                     content.append('    <section class="content">')
                 # TODO maybe we want to put the anchor element to the top?
                 for aside in chunk.asides:
-                    add_notnone(aside.to_html(self, target_file_path), content)
-                add_notnone(chunk.to_html(self, target_file_path), content)
+                    add_notnone(
+                        div(aside.to_html(self, target_file_path), ["chunk"]), content
+                    )
+                add_notnone(
+                    div(chunk.to_html(self, target_file_path), ["chunk"]), content
+                )
                 first_chunk_written = True
             else:
                 # add_notnone(chunk.to_html(self, target_file_path), content)
                 for aside in chunk.asides:
-                    add_notnone(aside.to_html(self, target_file_path), content)
-                add_notnone(chunk.to_html(self, target_file_path), content)
+                    add_notnone(
+                        div(aside.to_html(self, target_file_path), ["chunk"]), content
+                    )
+                add_notnone(
+                    div(chunk.to_html(self, target_file_path), ["chunk"]), content
+                )
                 first_chunk_written = True
 
         content.append("    </section>")

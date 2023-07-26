@@ -13,7 +13,7 @@ from .core import Core
 from .extend import Extension, ParagraphExtension, TableClassExtension, YamlExtension
 from .icons import get_icon
 from .pagemap import PageMapper
-from .placeholder import get_placeholder_uri, get_placeholder_uri_str
+from .placeholder import get_placeholder_uri, get_placeholder_uri_str, is_placeholder
 from .report import Report
 from .utils import get_relative_path, reverse_path
 from .write_html import div
@@ -40,6 +40,7 @@ __all__ = [
     "get_icon",
     "PageMapper",
     "YAMLGroupChunk",
+    "is_placeholder",
     "get_placeholder_uri",
     "get_placeholder_uri_str",
     "div",

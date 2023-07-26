@@ -2,7 +2,14 @@ from pathlib import Path
 from typing import Any, Dict, Optional, List
 from shutil import copyfile
 
-from ... import Builder, RawChunk, YAMLChunk, YamlExtension, get_placeholder_uri_str
+from ... import (
+    Builder,
+    RawChunk,
+    YAMLChunk,
+    YamlExtension,
+    is_placeholder,
+    get_placeholder_uri_str,
+)
 
 
 class FigureExtension(YamlExtension):
@@ -35,7 +42,7 @@ class Figure(YAMLChunk):
                 level=self.WARNING,
             )
             self.name = source
-        elif source.startswith("_placeholder"):
+        elif is_placeholder(source):
             self.placeholder = source
             self.name = source
         else:

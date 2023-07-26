@@ -56,8 +56,8 @@ def code_stop(s_line: str) -> bool:
 
 
 def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
-    chunks: Sequence[RawChunk] = []
-    current_lines: Sequence[str] = []
+    chunks: List[RawChunk] = []
+    current_lines: List[str] = []
     empty_lines = 0
     state = ParserState.MARKDOWN
     start_line_number = 0
@@ -246,9 +246,9 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
 
 def expand_reference_chunks(
     source_chunks: Sequence[RawChunk], report: "Report"
-) -> Sequence[RawChunk]:
+) -> List[RawChunk]:
     # TODO prevent cycles
-    target_chunks: Sequence[RawChunk] = []
+    target_chunks: List[RawChunk] = []
     for source_chunk in source_chunks:
         path: Path | None = source_chunk.get_reference()
         if path is not None:

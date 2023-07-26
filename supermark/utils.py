@@ -12,6 +12,10 @@ def has_class_tag(s_line: str) -> bool:
     return s_line.startswith(":") and ENV_PATTERN.match(s_line) is not None
 
 
+def none_str(string_or_none: Optional[str]) -> str:
+    return string_or_none if string_or_none else ""
+
+
 def write_file(content: str, target_file_path: Path, report: Report):
     encoding = "utf-8"
     try:
