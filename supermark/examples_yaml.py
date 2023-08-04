@@ -39,13 +39,13 @@ class YAMLExamples:
         chunks.extend(self.get_yaml_chunks())
         return chunks
 
-    def get_chunk_classes(self) -> set[Any]:
+    def get_chunk_classes(self) -> Set[Any]:
         types: Set[Any] = set()
         for chunk in self.get_yaml_chunks():
             types.add(type(chunk))
         return types
 
-    def get_group_classes(self) -> set[Any]:
+    def get_group_classes(self) -> Set[Any]:
         types: Set[Any] = set()
         for chunk in self.get_yaml_groups():
             types.add(type(chunk))
