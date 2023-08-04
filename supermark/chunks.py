@@ -245,6 +245,9 @@ class Chunk:
         print("No conversion to html: " + self.get_content())
         return None
 
+    def html_keep_with_next(self) -> bool:
+        return False
+
     def recode(self) -> str:
         raise NotImplementedError
 
@@ -419,14 +422,14 @@ class MarkdownChunk(Chunk):
         return self.content
 
     def to_html(self, builder: Builder, target_file_path: Path) -> str:
-        if self.aside:
-            return aside(
-                builder.convert(
-                    self.get_content(), target_format="html", source_format="md"
-                ),
-                aside_id=Chunk.create_hash(self.content),
-            )
-        elif self.extension is None:
+        # if self.aside:
+        #     return aside(
+        #         builder.convert(
+        #             self.get_content(), target_format="html", source_format="md"
+        #         ),
+        #         aside_id=Chunk.create_hash(self.content),
+        #     )
+        if self.extension is None:
             if self.class_tag:
                 return div(
                     builder.convert(
@@ -501,6 +504,19 @@ class MarkdownChunk(Chunk):
 class HTMLChunk(Chunk):
     def __init__(self, raw_chunk: RawChunk, page_variables: Dict[str, Any]):
         super().__init__(raw_chunk, page_variables)
+
+    @staticmethod
+    def create_derived_chunk(html: str, parent_chunk: RawChunk) -> "HTMLChunk":
+        return HTMLChunk(
+            RawChunk(
+                [html],
+                RawChunkType.HTML,
+                parent_chunk.start_line_number,
+                parent_chunk.path,
+                parent_chunk.report,
+            ),
+            None,
+        )
 
     def to_html(self, builder: Builder, target_file_path: Path):
         return super().get_content()

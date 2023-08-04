@@ -9,7 +9,7 @@ from .chunks import Builder, Chunk, MarkdownChunk, YAMLDataChunk
 from .pagemap import Folder
 from .report import Report
 from .utils import add_notnone, get_relative_path, reverse_path, write_file
-from .write_html import div
+from .write_html import div, main_and_aside
 
 if TYPE_CHECKING:
     from .base import Extension
@@ -66,6 +66,33 @@ class HTMLBuilder(Builder):
         css: str,
         js: str,
     ) -> str:
+        for tag in ["content", "css", "js", "rel_path"]:
+            if "{" + tag + "}" not in template:
+                self.report.warning(
+                    "The template does not contain insertion tag {" + tag + "}"
+                )
+        try:
+            return template.format_map(
+                {
+                    "content": self._main_html_stream_new(
+                        chunks, source_file_path, target_file_path
+                    ),
+                    "css": css,
+                    "js": js,
+                    "rel_path": reverse_path(self.input_path, source_file_path),
+                    "page_source": source_file_path.relative_to(self.input_path),
+                }
+            )
+        except KeyError as e:
+            report.error(f"The template contains an unknown key {str(e)}")
+            return ""
+
+    def _main_html_stream(
+        self,
+        chunks: Sequence[Chunk],
+        source_file_path: Path,
+        target_file_path: Path,
+    ) -> str:
         content: List[str] = []
         content.append('<div class="page">')
         content.append('    <section class="content">')
@@ -113,24 +140,66 @@ class HTMLBuilder(Builder):
 
         content.append("    </section>")
         content.append("</div>")
-        for tag in ["content", "css", "js", "rel_path"]:
-            if "{" + tag + "}" not in template:
-                self.report.warning(
-                    "The template does not contain insertion tag {" + tag + "}"
+        return "\n".join(content)
+
+    def _group_chunks_into_sections(
+        self,
+        chunks: Sequence[Chunk],
+    ) -> Sequence[Sequence[Chunk]]:
+        result: List[List[Chunk]] = []
+        current_section: List[Chunk] = []
+        keep_with_next: bool = False
+        for chunk in chunks:
+            if isinstance(chunk, YAMLDataChunk):
+                pass
+            elif not chunk.is_ok():
+                pass
+            elif (
+                isinstance(chunk, MarkdownChunk)
+                and (chunk.is_section and not keep_with_next)
+                and current_section
+            ):
+                # Append the current section to the result and start a new section
+                result.append(current_section)
+                current_section = [chunk]
+            else:
+                # Append the chunk to the current section
+                current_section.append(chunk)
+            keep_with_next = chunk.html_keep_with_next()
+
+        # Append the last section if it's not empty
+        if current_section:
+            result.append(current_section)
+        return result
+
+    def _main_html_stream_new(
+        self,
+        chunks: Sequence[Chunk],
+        source_file_path: Path,
+        target_file_path: Path,
+    ) -> str:
+        content: List[str] = []
+
+        margin_top = "mt-5"
+        if self.breadcrumbs.has_breadcrumbs(source_file_path):
+            content.append(self.breadcrumbs.get_html(source_file_path, self))
+            margin_top = "mt-2"
+
+        sections = self._group_chunks_into_sections(chunks)
+        for section in sections:
+            content.append(f'<section class="{margin_top} mb-5 py-3">')
+            for chunk in section:
+                content.append(
+                    main_and_aside(
+                        chunk.to_html(self, target_file_path),
+                        [
+                            aside.to_html(self, target_file_path)
+                            for aside in chunk.asides
+                        ],
+                    )
                 )
-        try:
-            return template.format_map(
-                {
-                    "content": "\n".join(content),
-                    "css": css,
-                    "js": js,
-                    "rel_path": reverse_path(self.input_path, source_file_path),
-                    "page_source": source_file_path.relative_to(self.input_path),
-                }
-            )
-        except KeyError as e:
-            report.error(f"The template contains an unknown key {str(e)}")
-            return ""
+            content.append("</section>")
+        return "\n".join(content)
 
     def _create_target(
         self,

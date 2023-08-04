@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 
 def html_link(href: str, title: str) -> str:
@@ -13,6 +13,18 @@ def div(content: str, classes: Optional[Sequence[str]] = None) -> str:
 def aside(content: str, aside_id: str, classes: Optional[Sequence[str]] = None) -> str:
     atts = f' class="{" ".join(classes)}"' if classes else ""
     return f'<span name="{aside_id}"></span><aside name="{aside_id}"{atts}>{content}</aside>'
+
+
+def main_and_aside(main: str, asides: Optional[Union[str, Sequence[str]]]) -> str:
+    s = '<div class="row g-0 my-3">'
+    s += '<div class="col-md-8 px-4 chunk">' + main + "</div>"
+    if asides is not None:
+        s += '<aside class="col-md-4 chunk ps-2">'
+        for aside in asides if isinstance(asides, Sequence) else [asides]:
+            s += aside
+        s += "</aside>"
+    s += "</div>"
+    return s
 
 
 class HTMLTable:
