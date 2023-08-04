@@ -66,12 +66,11 @@ class ReportEntry:
 
 
 class Report:
-
     INFO = 1
     WARNING = 2
     ERROR = 3
 
-    def __init__(self, source_path: Optional[Path] = None):
+    def __init__(self, source_path: Optional[Path] = None, verbose: bool = False):
         self.source_path = source_path
         self.messages: List[ReportEntry] = []
         self.max_level = self.INFO
@@ -79,6 +78,7 @@ class Report:
         self.conclusions: List[ReportEntry] = []
         self.warnings: int = 0
         self.errors: int = 0
+        self.verbose = verbose
 
     def get_max_level(self):
         return self.max_level
@@ -199,8 +199,8 @@ class Report:
                             hashes[entry.get_hash()].add(entry.get_styled_location())
         return tree
 
-    def print(self, verbose: bool = False):
-        tree = self._get_tree(verbose=verbose)
+    def print(self):
+        tree = self._get_tree(verbose=self.verbose)
         pprint(tree)
 
     def print_to_file(self, log: Path):
