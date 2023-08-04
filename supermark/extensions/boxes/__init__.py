@@ -53,3 +53,8 @@ class WarningParagraphExtension(BoxParagraphExtension):
 class TipParagraphExtension(BoxParagraphExtension):
     def __init__(self):
         super().__init__("tip")
+
+
+class TaskParagraphExtension(BoxParagraphExtension):
+    def __init__(self):
+        super().__init__("task")

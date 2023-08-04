@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 # from collections import namedtuple
@@ -189,6 +190,7 @@ def build(
     core = Core(report=report, collect_urls=urls)
     print(logo_2(__version__))
     print_pandoc_info(report)
+    report.info(f"Installed Python version: {sys.version}")
 
     path_setup = setup_paths(path, input, output, template, core)
 
@@ -209,10 +211,10 @@ def build(
     if urls:
         core.url_checker.check()
 
+    report.print()
     if log:
         report.print_to_file(path_setup.base / "supermark.log")
     else:
-        report.print()
         if report.has_error():
             # beep(3)  # sad error
             ex = ClickException("Something is wrong.")

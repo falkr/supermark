@@ -129,9 +129,6 @@ class Breadcrumbs:
             page, title = line.strip().split(" - ")
             parent = None
             if indent > 0:
-                if indent > len(stack):
-                    print(indent)
-                    print([p.title for p in stack])
                 parent = stack[len(stack) - 1]
             node = Page(self.path, page, title)
             node.parent = parent
