@@ -4,25 +4,27 @@ table.weekplan {
 }
 
 table.weekplan td {
-  background-color: #1481b8;
   color: white;
+  background-image: linear-gradient(color(display-p3 0.231 0.498 0.706), rgb(0, 80, 158));
 }
 
-table.weekplan td, table.weekplan th {
+table.weekplan td,
+table.weekplan th {
   text-align: center;
 }
 
 table.weekplan td:empty {
   background-color: white;
+  background: white;
 }
 
 table.weekplan td:first-child {
-  background-color: white;
+  background: white;
   color: grey;
 }
 
 table.weekplan a {
-  font-weight:bold;
+  font-weight: bold;
   color: white;
   text-decoration: underline;
 }
