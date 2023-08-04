@@ -5,7 +5,9 @@ from shutil import copyfile
 from ... import (
     Builder,
     RawChunk,
+    RawChunkType,
     YAMLChunk,
+    HTMLChunk,
     YamlExtension,
     is_placeholder,
     get_placeholder_uri_str,
@@ -30,6 +32,7 @@ class Figure(YAMLChunk):
             page_variables,
             required=["source"],
             optional=["caption", "link"],
+            # TODO add figure credits
         )
         source = dictionary["source"]
         self.placeholder = None
@@ -48,6 +51,16 @@ class Figure(YAMLChunk):
         else:
             self.file_path = (raw_chunk.path.parent / Path(source)).resolve()
             self.name = source
+        # add caption as aside element
+        if "caption" in self.dictionary:
+            # self.asides.insert(0, MarkdownChunk())
+            self.asides.insert(
+                0,
+                HTMLChunk.create_derived_chunk(
+                    f'<figcaption class="figure-caption">{self.dictionary["caption"]}</figcaption>',
+                    self.raw_chunk,
+                ),
+            )
 
     def _get_target_relative_path(
         self, builder: Builder, target_file_path: Path
@@ -100,10 +113,10 @@ class Figure(YAMLChunk):
         )
         if "link" in self.dictionary:
             html.append("  </a>")
-        if "caption" in self.dictionary:
-            html.append(
-                f'  <figcaption class="figure-caption">{self.dictionary["caption"]}</figcaption>'
-            )
+        # if "caption" in self.dictionary:
+        #     html.append(
+        #         f'  <figcaption class="figure-caption">{self.dictionary["caption"]}</figcaption>'
+        #     )
         html.append("</figure>")
         return "\n".join(html)
 

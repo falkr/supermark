@@ -58,7 +58,7 @@ class CardGroup(YAMLGroupChunk):
             self.warning("Columns for cards set to 2")
             columns = 2
 
-        html.append(f'<div class="row row-cols-1 row-cols-md-{columns} g-4 mb-5">')
+        html.append(f'<div class="row row-cols-1 row-cols-md-{columns} g-4">')
         for chunk in self.chunks:
             c = chunk.to_html(builder=builder, target_file_path=target_file_path)
             if c:
@@ -115,7 +115,7 @@ class Card(YAMLChunk):
         builder: Builder,
     ):
         html.append(
-            '<div class="card mb-3 border-0 person-card h-100" style="max-width: 540px;">'
+            '<div class="card border-0 person-card h-100" style="max-width: 540px;">'
         )
         html.append('    <div class="row g-0">')
         html.append('        <div class="col-md-3">')

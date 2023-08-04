@@ -30,7 +30,7 @@ class Quote(YAMLChunk):
         link = self.dictionary["link"] if "link" in self.dictionary else None
         title = self.dictionary["title"] if "title" in self.dictionary else None
 
-        html.append('<div class="quotedoc shadow-sm mt-5 mb-5 bg-light rounded">')
+        html.append('<div class="quotedoc shadow-sm mt-5 bg-light rounded">')
         if link is not None:
             html.append(
                 f'<div class="quotetitle"><a href="{link}"><i class="bi bi-arrow-right-circle-fill"></i>&nbsp;{title}</a></div>'

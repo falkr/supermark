@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 
 import requests
 
-from ... import Builder, RawChunk, YAMLChunk, YamlExtension
+from ... import Builder, RawChunk, YAMLChunk, YamlExtension, HTMLChunk
 
 
 def download_preview(url: str, target_path: Path):
@@ -32,6 +32,20 @@ class Video(YAMLChunk):
             required=["video"],
             optional=["start", "caption", "position"],
         )
+        if "caption" in self.dictionary:
+            ...
+            self.asides.insert(
+                0,
+                HTMLChunk.create_derived_chunk(
+                    self.dictionary["caption"],
+                    # builder.convert(
+                    #     self.dictionary["caption"],
+                    #     target_format="html",
+                    #     source_format="md",
+                    # ),
+                    self.raw_chunk,
+                ),
+            )
 
     def get_id(self):
         video = self.dictionary["video"]
@@ -54,14 +68,14 @@ class Video(YAMLChunk):
                     url, 240, video
                 )
             )
-            if "caption" in self.dictionary:
-                html.append(
-                    builder.convert(
-                        self.dictionary["caption"],
-                        target_format="html",
-                        source_format="md",
-                    )
-                )
+            # if "caption" in self.dictionary:
+            #     html.append(
+            #         builder.convert(
+            #             self.dictionary["caption"],
+            #             target_format="html",
+            #             source_format="md",
+            #         )
+            #     )
             html.append("</aside>")
         else:
             html.append('<div class="figure">')
@@ -73,20 +87,20 @@ class Video(YAMLChunk):
                     width, height, video, start
                 )
             )
-            if "caption" in self.dictionary:
-                html.append(
-                    '<span name="{}">&nbsp;</span>'.format(self.dictionary["video"])
-                )
-                html.append(
-                    '<aside name="{}"><p>{}</p></aside>'.format(
-                        self.dictionary["video"],
-                        builder.convert(
-                            self.dictionary["caption"],
-                            target_format="html",
-                            source_format="md",
-                        ),
-                    )
-                )
+            # if "caption" in self.dictionary:
+            #     html.append(
+            #         '<span name="{}">&nbsp;</span>'.format(self.dictionary["video"])
+            #     )
+            #     html.append(
+            #         '<aside name="{}"><p>{}</p></aside>'.format(
+            #             self.dictionary["video"],
+            #             builder.convert(
+            #                 self.dictionary["caption"],
+            #                 target_format="html",
+            #                 source_format="md",
+            #             ),
+            #         )
+            #     )
             html.append("</div>")
         return "\n".join(html)
 

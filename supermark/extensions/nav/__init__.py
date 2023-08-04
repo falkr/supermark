@@ -31,6 +31,9 @@ class Nav(YAMLChunk):
             return get_icon("arrow-right-short", size="16")
         return ""
 
+    def html_keep_with_next(self) -> bool:
+        return True
+
     def to_html(self, builder: Builder, target_file_path: Path):
         html: List[str] = []
         html.append('<nav class="d-flex justify-content-between">')
