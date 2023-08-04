@@ -1,4 +1,7 @@
 from pathlib import Path
+import pprint
+from rich import print
+from rich.tree import Tree
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,20 +16,34 @@ from .utils import get_relative_path
 
 class Page:
     def __init__(
-        self, path: Path, d: Dict[str, str], children: Optional[List["Page"]] = None
+        self, path: Path, page: str, title: str, children: Optional[List["Page"]] = None
     ):
-        self.page = d["page"]
+        self.page = page
         self.page_path = path / Path(self.page)
-        self.title = d["title"] if "title" in d else d["page"]
+        self.title = title
         # TODO handle that these are not set
-        self.children = children
         self.parent = None
-        if self.children:
+        if children:
+            self.children = children
             for child in self.children:
                 child.parent = self
+        else:
+            self.children = []
 
     def __str__(self):
         return self.title
+
+    def print_tree(self, tree: Tree = None, level: int = 0):
+        if tree is None:
+            tree = Tree(self.title)
+
+        if self.children:
+            for child in self.children:
+                child_tree = tree.add(child.title)
+                child.print_tree(child_tree, level + 1)
+
+        if level == 0:
+            print(tree)
 
 
 class Breadcrumbs:
@@ -34,12 +51,24 @@ class Breadcrumbs:
         self.pages: Dict[Path, Page] = {}
         self.report = report
         self.path = path
-        with open(path) as f:
-            try:
-                temp: Any = yaml.safe_load(f)
-                self.roots = self.parse_breadcrumbs(temp, path.parent)
-            except ScannerError as e:
-                self.report.warning(str(e), path)
+        if path.suffix == ".yaml":
+            with open(path) as f:
+                try:
+                    temp: Any = yaml.safe_load(f)
+                    self.roots = self.parse_breadcrumbs(temp, path.parent)
+                    if report.verbose:
+                        for page in self.roots:
+                            page.print_tree()
+                    # store in new format
+                    x = self.serialize_page_trees()
+                    print(x)
+                    path.with_suffix(".txt").write_text(x)
+                except ScannerError as e:
+                    self.report.warning(str(e), path)
+        else:
+            text = path.read_text()
+            lines = text.split("\n")
+            self.roots = self.deserialize_page_trees(lines)
 
     def parse_breadcrumbs(self, l: List[Any], path: Path) -> List[Any]:
         """[{page}, [children]]"""
@@ -51,7 +80,8 @@ class Breadcrumbs:
                     children = self.parse_breadcrumbs(l[i + 1], path)
                 else:
                     children = None
-                page = Page(path, item, children=children)
+                title = item["title"] if "title" in item else item["page"]
+                page = Page(path, item["page"], title, children=children)
                 tchildren.append(page)
                 page_path = path / Path(item["page"])
                 if not page_path.exists():
@@ -60,6 +90,62 @@ class Breadcrumbs:
                     )
                 self.pages[page_path] = page
         return tchildren
+
+    def serialize_page_trees(self) -> str:
+        lines: List[str] = []
+        for root in self.roots:
+            lines.extend(self.serialize_page_tree(root))
+            lines.append("")  # Add an empty line between trees
+        # return lines[:-1]  # Remove the last empty line
+        return "\n".join(lines)
+
+    def serialize_page_tree(self, root, indent=0) -> List[str]:
+        lines: List[str] = []
+        prefix = "  " * indent
+        lines.append(f"{prefix}{root.page} - {root.title}")
+        if root.children:
+            for child in root.children:
+                lines.extend(self.serialize_page_tree(child, indent + 1))
+        return lines
+
+    def deserialize_page_trees(self, lines):
+        roots = []
+        current_tree_lines = []
+        for line in lines:
+            if line.strip():
+                current_tree_lines.append(line)
+            else:
+                roots.append(self.deserialize_page_tree(current_tree_lines))
+                current_tree_lines = []
+        if current_tree_lines:
+            roots.append(self.deserialize_page_tree(current_tree_lines))
+        return roots
+
+    def deserialize_page_tree(self, lines):
+        stack = []
+        root = None
+        for line in lines:
+            indent = len(line) - len(line.lstrip(" "))
+            page, title = line.strip().split(" - ")
+            parent = None
+            if indent > 0:
+                if indent > len(stack):
+                    print(indent)
+                    print([p.title for p in stack])
+                parent = stack[len(stack) - 1]
+            node = Page(self.path, page, title)
+            node.parent = parent
+            page_path = self.path.parent / Path(page)
+            self.pages[page_path] = node
+            if indent == 0:
+                root = node
+            else:
+                parent.children.append(node)
+            if len(stack) > indent:
+                stack[indent] = node
+            else:
+                stack.append(node)
+        return root
 
     def has_breadcrumbs(self, page: Path) -> bool:
         return page in self.pages
@@ -77,7 +163,6 @@ class Breadcrumbs:
         return trail
 
     def get_html(self, input_page: Path, builder: "HTMLBuilder") -> str:
-
         html: List[str] = []
         divider = "url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;)"
         html.append(

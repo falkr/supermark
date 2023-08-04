@@ -39,11 +39,22 @@ class HTMLBuilder(Builder):
             verbose,
             reformat,
         )
-        breadcrumbs_path = input_path / Path("breadcrumbs.yaml")
-        self.report.info(f"Looking for breadcrumbs file in {breadcrumbs_path}")
+        breadcrumbs_path = input_path / Path("breadcrumbs.txt")
         if breadcrumbs_path.exists():
             self.breadcrumbs: Breadcrumbs = Breadcrumbs(self.report, breadcrumbs_path)
             self.report.info(f"Breadcrumbs exist in {breadcrumbs_path}")
+        else:
+            # old format
+            breadcrumbs_path = input_path / Path("breadcrumbs.yaml")
+            if breadcrumbs_path.exists():
+                self.breadcrumbs: Breadcrumbs = Breadcrumbs(
+                    self.report, breadcrumbs_path
+                )
+                self.report.info(f"Breadcrumbs exist in {breadcrumbs_path}")
+            else:
+                self.report.info(
+                    f"Looking for breadcrumbs file in {breadcrumbs_path}, but it does not exist."
+                )
 
     def _transform_page_to_html(
         self,
