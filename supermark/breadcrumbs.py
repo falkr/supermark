@@ -20,6 +20,7 @@ class Page:
     ):
         self.page = page
         self.page_path = path
+        self.title = title
         # TODO handle that these are not set
         self.parent = None
         if children:
