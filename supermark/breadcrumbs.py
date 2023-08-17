@@ -19,8 +19,7 @@ class Page:
         self, path: Path, page: str, title: str, children: Optional[List["Page"]] = None
     ):
         self.page = page
-        self.page_path = path / Path(self.page)
-        self.title = title
+        self.page_path = path
         # TODO handle that these are not set
         self.parent = None
         if children:
@@ -61,7 +60,6 @@ class Breadcrumbs:
                             page.print_tree()
                     # store in new format
                     x = self.serialize_page_trees()
-                    print(x)
                     path.with_suffix(".txt").write_text(x)
                 except ScannerError as e:
                     self.report.warning(str(e), path)
@@ -125,37 +123,39 @@ class Breadcrumbs:
         stack = []
         root = None
         for line in lines:
-            indent = len(line) - len(line.lstrip(" "))
+            indent = int((len(line) - len(line.lstrip(" "))) / 2)
             page, title = line.strip().split(" - ")
             parent = None
-            if indent > 0:
-                parent = stack[len(stack) - 1]
-            node = Page(self.path, page, title)
-            node.parent = parent
+            if indent > 0 and len(stack) >= indent:  # Ensure stack length is checked
+                parent = stack[
+                    indent - 1
+                ]  # Get the parent from the stack based on indent
             page_path = self.path.parent / Path(page)
+            node = Page(page_path, page, title)
+            node.parent = parent
             self.pages[page_path] = node
-            if indent == 0:
+            if indent == 0 and root is None:  # Only set root once
                 root = node
-            else:
+            elif parent:
                 parent.children.append(node)
+            # Update the stack
             if len(stack) > indent:
-                stack[indent] = node
-            else:
-                stack.append(node)
+                stack = stack[:indent]  # Truncate the stack to the current indent
+            stack.append(node)
         return root
 
     def has_breadcrumbs(self, page: Path) -> bool:
         return page in self.pages
 
     def get_trail(self, page_path: Path) -> List[Page]:
+        if page_path not in self.pages:
+            return []
+        page = self.pages[page_path]
         trail: List[Page] = []
-        while page_path in self.pages:
-            p = self.pages[page_path]
-            trail.append(p)
-            if p.parent:
-                page_path = p.parent.page_path
-            else:
-                break
+        trail.append(page)
+        while page.parent is not None:
+            trail.append(page.parent)
+            page = page.parent
         trail.reverse()
         return trail
 
