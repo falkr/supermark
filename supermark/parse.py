@@ -55,7 +55,9 @@ def code_stop(s_line: str) -> bool:
     return s_line.startswith("```")
 
 
-def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
+def parse(
+    lines: List[str], path: Path, input_path: Path, report: "Report"
+) -> Sequence[RawChunk]:
     chunks: List[RawChunk] = []
     current_lines: List[str] = []
     empty_lines = 0
@@ -76,6 +78,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                         RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
+                        input_path,
                         report,
                     )
                 )
@@ -90,6 +93,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                         RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
+                        input_path,
                         report,
                     )
                 )
@@ -104,6 +108,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                         RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
+                        input_path,
                         report,
                     )
                 )
@@ -119,6 +124,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                         RawChunkType.MARKDOWN,
                         start_line_number,
                         path,
+                        input_path,
                         report,
                     )
                 )
@@ -140,6 +146,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                     RawChunkType.YAML,
                     start_line_number,
                     path,
+                    input_path,
                     report,
                 )
                 empty_lines = 0
@@ -181,6 +188,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                         RawChunkType.CODE,
                         start_line_number,
                         path,
+                        input_path,
                         report,
                     )
                 )
@@ -200,6 +208,7 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                         RawChunkType.HTML,
                         start_line_number,
                         path,
+                        input_path,
                         report,
                     )
                 )
@@ -234,18 +243,19 @@ def parse(lines: List[str], path: Path, report: "Report") -> Sequence[RawChunk]:
                 parser_state_to_chunk_type(state),
                 start_line_number,
                 path,
+                input_path,
                 report,
             )
         )
 
     # TODO remove chunks that turn out to be empty
     chunks = [item for item in chunks if not item.is_empty()]
-    chunks = expand_reference_chunks(chunks, report)
+    chunks = expand_reference_chunks(chunks, input_path, report)
     return chunks
 
 
 def expand_reference_chunks(
-    source_chunks: Sequence[RawChunk], report: "Report"
+    source_chunks: Sequence[RawChunk], input_path: Path, report: "Report"
 ) -> List[RawChunk]:
     # TODO prevent cycles
     target_chunks: List[RawChunk] = []
@@ -254,7 +264,7 @@ def expand_reference_chunks(
         if path is not None:
             with open(path, encoding="utf-8") as file:
                 lines = file.readlines()
-                chunks = parse(lines, path, report)
+                chunks = parse(lines, path, input_path, report)
                 # TODO add all ele,emt sof chink but simpler
                 for c in chunks:
                     target_chunks.append(c)

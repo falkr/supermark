@@ -19,7 +19,7 @@ from .report import Report
 from .utils import get_relative_path, reverse_path
 from .write_html import div
 
-__version__ = "0.3.27"
+__version__ = "0.3.28"
 
 __all__ = [
     "Core",

@@ -44,7 +44,7 @@ class DocBuilder(Builder):
         files = [file for file in files if not file.match(f"{DOC_FOLDER}/**")]
         extensions_used: Set[Extension] = set()
         for source_file_path in files:
-            _ = self.parse_file(source_file_path, extensions_used)
+            _ = self.parse_file(source_file_path, self.input_path, extensions_used)
         return extensions_used
 
     def build(
@@ -127,7 +127,7 @@ class DocBuilder(Builder):
     ) -> Sequence[Chunk]:
         example_chunks: List[Chunk] = []
         for example in extension.get_examples():
-            chunks = self.core.parse_file(example)
+            chunks = self.core.parse_file(example, input_path=self.input_path)
             if chunks is not None:
                 for c in chunks:
                     example_chunks.append(c)

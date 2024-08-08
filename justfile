@@ -1,6 +1,6 @@
 docs:
-    supermark build --all --input . --output ./docs
-    #    pdoc3 --html --force --output-dir ./docs/api ./supermark
+    # supermark build --all --input . --output ./docs
+    pdoc3 --html --force --output-dir ./docs/api ./supermark
 
 pypi: #docs
     sudo python2 setup.py register sdist upload

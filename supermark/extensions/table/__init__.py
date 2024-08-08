@@ -105,6 +105,12 @@ class Table(YAMLChunk):
 
         output: List[str] = []
         parsed = wtp.parse(self.table_raw)
+        if len(parsed.tables) == 0:
+            self.error(
+                "No table found. The table must be the first table in the file. Maybe it is not formatted correctly?"
+            )
+            print(parsed)
+            return ""
         rows = parsed.tables[0].cells(span=False)
         if self.div_class:
             output.append(f'<table class="{self.div_class} table table-sm">')

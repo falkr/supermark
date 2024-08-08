@@ -17,6 +17,8 @@ from .pandoc import convert, convert_code
 from .report import Report
 from .utils import has_class_tag
 from .write_html import div, aside
+import re
+from typing import List, Optional
 
 
 def is_empty(s_line: str) -> bool:
@@ -55,10 +57,15 @@ class Builder:
     def parse_file(
         self,
         source_file_path: Path,
+        input_path: Path,
         extensions_used: Set[Extension],
     ) -> Optional[Sequence["Chunk"]]:
         chunks = self.core.parse_file(
-            source_file_path, self.abort_draft, self.reformat, extensions_used
+            source_file_path,
+            input_path,
+            self.abort_draft,
+            self.reformat,
+            extensions_used,
         )
         self.extensions_used = self.extensions_used.union(extensions_used)
         if chunks is not None:
@@ -111,6 +118,7 @@ class RawChunk:
         chunk_type: RawChunkType,
         start_line_number: int,
         path: Path,
+        input_path: Path,
         report: "Report",
     ):
         self.lines: List[str] = list(lines)
@@ -118,6 +126,8 @@ class RawChunk:
         assert isinstance(self.type, RawChunkType)
         self.start_line_number = start_line_number
         self.path = Path(path)
+        self.input_path = input_path
+        # not sure if this is right:
         self.parent_path = Path(path).parent.parent
         self.report = report
         self.hash: Optional[str] = None
@@ -251,6 +261,31 @@ class Chunk:
     def recode(self) -> str:
         raise NotImplementedError
 
+    def _make_link_relative(self, link: str) -> str:
+        if (
+            link.startswith("http://")
+            or link.startswith("https://")
+            or link.startswith("mailto:")
+        ):
+            return link
+
+        try:
+            return str(
+                (self.raw_chunk.path.parent / link)
+                .resolve()
+                .relative_to(self.raw_chunk.input_path)
+            )
+        except ValueError:
+            self.warning(f"Link {link} is not relative to {self.raw_chunk.input_path}")
+            # Can happen if a link is wrong and points out of the pages directory
+            print("link: " + link)
+            print("raw_chunk.input_path: " + str(self.raw_chunk.input_path))
+            print("raw_chunk.parent_path: " + str(self.raw_chunk.path.parent))
+            print("raw_chunk.path: " + str(self.raw_chunk.path))
+            print("resolved: " + str((self.raw_chunk.parent_path / link).resolve()))
+            # raise ValueError
+            return link
+
     @abstractmethod
     def add_used_extension(self, used_extensions: Set[Extension], core: Any):
         ...
@@ -324,6 +359,14 @@ class YAMLChunk(Chunk):
                     ),
                     level=self.WARNING,
                 )
+
+    def get_urls(self) -> Optional[Sequence[str]]:
+        if "link" in self.dictionary:
+            try:
+                return [str(self._make_link_relative(self.dictionary["link"]))]
+            except ValueError:
+                self.warning("Invalid link: " + self.dictionary["link"])
+        return None
 
     def get(self, attribute: str) -> Optional[Any]:
         if attribute in self.dictionary:
@@ -483,15 +526,9 @@ class MarkdownChunk(Chunk):
         return "```markdown\n" + self.recode() + "\n```"
 
     def get_urls(self) -> Optional[Sequence[str]]:
-        # TODO only create once
-        pattern = re.compile(r"\[([^][]+)\](\(((?:[^()]+|(?2))+)\))")
-        result: Optional[Sequence[str]] = None
-        for match in pattern.finditer(self.get_content()):
-            if result is None:
-                result = []
-                _, _, url = match.groups()
-                result.append(url)
-        return result
+        link_pattern = r"\[.*?\]\((https?://[^\s]+|mailto:[^\s]+|[^)]+)\)"
+        matches = re.findall(link_pattern, self.get_content())
+        return [self._make_link_relative(link) if not link.startswith("mailto:") and not link.startswith("#") else link for link in matches]
 
     def find_anchors(self) -> Sequence[str]:
         anchors: List[str] = []
@@ -513,6 +550,7 @@ class HTMLChunk(Chunk):
                 RawChunkType.HTML,
                 parent_chunk.start_line_number,
                 parent_chunk.path,
+                parent_chunk.input_path,
                 parent_chunk.report,
             ),
             None,

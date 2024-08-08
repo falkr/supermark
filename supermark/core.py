@@ -9,6 +9,7 @@ import traceback
 import requests
 import rich
 import yaml
+from requests import Response
 from rich.progress import BarColumn, Progress
 from rich.tree import Tree
 from yaml.scanner import ScannerError
@@ -39,8 +40,10 @@ from .utils import remove_empty_lines_begin_and_end, write_file
 
 
 class URLChecker:
-    def __init__(self) -> None:
+    def __init__(self, check_external_urls: bool) -> None:
+        self.check_external_urls = check_external_urls
         self.urls: DefaultDict[str, Set[Chunk]] = defaultdict(set)
+        self.local_links: Set[str] = set()
 
     def look_at_chunk(self, chunk: Chunk) -> None:
         chunk_urls = chunk.get_urls()
@@ -48,25 +51,83 @@ class URLChecker:
             for url in chunk_urls:
                 self.urls[url] |= {chunk}
 
+    def translate_status_code(self, status_code: int) -> str:
+        status_codes = {
+            200: "OK",
+            201: "Created",
+            204: "No Content",
+            400: "Bad Request",
+            401: "Unauthorized",
+            403: "Forbidden",
+            404: "Not Found",
+            500: "Internal Server Error",
+        }
+        return status_codes.get(status_code, "Unknown")
+
+    def _execute_request(self, url: str) -> Response:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        }
+        response = requests.get(url, headers=headers, allow_redirects=True)
+        return response
+
     def _check_url(self, url: str, chunks: Set[Chunk]) -> None:
-        try:
-            response = requests.get(url)
-            if response.status_code != 200:
+        if url.startswith("mailto:"):
+            return
+        if url.startswith("#"):
+            return
+        if url.startswith("http://") or url.startswith("https://"):
+            if self.check_external_urls:
+                try:
+                    response = self._execute_request(url)
+                    if response.status_code != 200:
+                        for chunk in chunks:
+                            # 401 is not an error, it just means that the page is protected
+                            # 404 is not an error, it just means that the page is not found
+                            chunk.warning(
+                                f"{url} is not reachable, status_code: {response.status_code} ({self.translate_status_code (response.status_code)})"
+                            )
+                except requests.exceptions.RequestException as e:
+                    for chunk in chunks:
+                        chunk.warning(f"{url} is not reachable. {type(e)}")
+            return
+
+        else:
+            # Remove any anchor in the link first
+            if "#" in url:
+                base_url = url.split("#")[0]
+            else:
+                base_url = url
+            if base_url not in self.local_links:
                 for chunk in chunks:
-                    chunk.warning(
-                        f"{url} is not reachable, status_code: {response.status_code}"
-                    )
-        except requests.exceptions.MissingSchema:
-            ...  # a relative link
-        except requests.exceptions.RequestException as e:
-            for chunk in chunks:
-                chunk.warning(f"{url} is not reachable. {type(e)}")
+                    chunk.warning(f"{url} not found.")
 
     def check_all_urls(self) -> None:
         for url, chunks in self.urls.items():
             self._check_url(url, chunks)
 
-    def check(self) -> None:
+    def check(self, input_path: Path) -> None:
+        # find all internal files to check local links
+        files = list(
+            input_path.glob(
+                "**/*.md",
+            )
+        )
+        for file in files:
+            self.local_links.add(
+                str(file.relative_to(input_path)).replace(".md", ".html")
+            )
+        # Workaround for now, also accept links to PDFs
+        files = list(
+            input_path.glob(
+                "**/*.pdf",
+            )
+        )
+        for file in files:
+            self.local_links.add(
+                str(file.relative_to(input_path))
+            )
+
         with ThreadPoolExecutor() as e:
             with Progress(
                 "[progress.description]{task.description}",
@@ -115,7 +176,7 @@ class ImageFileLocator:
 
 
 class Core:
-    def __init__(self, report: Report, collect_urls: bool = False) -> None:
+    def __init__(self, report: Report, check_external_urls: bool = False) -> None:
         self.report = report
         self.config = Config(report)
         self.extension_packages: Dict[str, ExtensionPackage] = {}
@@ -130,9 +191,8 @@ class Core:
             TableClassExtensionPoint()
         )
         self._load_extensions()
-        self.collect_urls = collect_urls
-        if collect_urls:
-            self.url_checker = URLChecker()
+        self.collect_urls = True
+        self.url_checker = URLChecker(check_external_urls=check_external_urls)
         self.image_file_locator = None  # ImageFileLocator(report)
 
     def _load_extensions(self):
@@ -210,8 +270,7 @@ class Core:
                 chunks.append(chunk)
                 if used_extensions is not None:
                     chunk.add_used_extension(used_extensions, self)
-                if self.collect_urls:
-                    self.url_checker.look_at_chunk(chunk)
+                self.url_checker.look_at_chunk(chunk)
         return chunks
 
     def _cast_chunk(
@@ -254,6 +313,7 @@ class Core:
                 raw.report.error(f"Something is wrong with YAML section {se}")
             else:
                 raw.report.error("Something is wrong with the YAML section.")
+            return None
         elif chunk_type == RawChunkType.HTML:
             return HTMLChunk(raw, page_variables)
         elif chunk_type == RawChunkType.CODE:
@@ -265,6 +325,7 @@ class Core:
                     chunk_type, type(chunk_type)
                 )
             )
+            return None
 
     def arrange_assides(self, chunks: Sequence[Chunk]) -> Sequence[Chunk]:
         main_chunks: List[Chunk] = []
@@ -318,10 +379,11 @@ class Core:
         self,
         lines: List[str],
         source_file_path: Path,
+        input_path: Path,
         report: Report,
         used_extensions: Optional[Set[Extension]] = None,
     ):
-        raw_chunks = parse(lines, source_file_path, report)
+        raw_chunks = parse(lines, source_file_path, input_path, report)
         chunks = self.cast(raw_chunks, report, used_extensions=used_extensions)
         # TODO not sure if we first arrange asides and then group or vice versa
         return self.group_chunks(self.arrange_assides(chunks))
@@ -329,6 +391,7 @@ class Core:
     def parse_file(
         self,
         source_file_path: Path,
+        input_path: Path,
         abort_draft: bool = False,
         reformat: bool = False,
         used_extensions: Optional[Set[Extension]] = None,
@@ -337,7 +400,7 @@ class Core:
             lines = file.readlines()
             # report.tell("{}".format(source_file_path), Report.INFO)
             chunks = self.parse_lines(
-                lines, source_file_path, self.report, used_extensions
+                lines, source_file_path, input_path, self.report, used_extensions
             )
             # TODO do this in async
             if reformat:

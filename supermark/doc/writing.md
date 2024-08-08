@@ -87,7 +87,7 @@ See, here is a second paragraph.
 
 # Extensions
 
-Supermark uses extenions to add more elements. Have a look at [all installed extenions](extenions.html).
+Supermark uses extensions to add more elements. Have a look at [all installed extenions](extensions.html).
 
 
 ## Paragraph Extenions

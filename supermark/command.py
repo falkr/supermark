@@ -171,7 +171,7 @@ def setup_paths(
     "--urls",
     is_flag=True,
     default=False,
-    help="Check URLs for reachability.",
+    help="Check external URLs for reachability.",
 )
 def build(
     all: bool,
@@ -187,7 +187,7 @@ def build(
     urls: bool = False,
 ):
     report = Report(verbose=verbose)
-    core = Core(report=report, collect_urls=urls)
+    core = Core(report=report, check_external_urls=urls)
     print(logo_2(__version__))
     print_pandoc_info(report)
     report.info(f"Installed Python version: {sys.version}")
@@ -208,8 +208,9 @@ def build(
     builder.set_core(core)
     builder.build()
 
-    if urls:
-        core.url_checker.check()
+    core.url_checker.check(path_setup.input)
+
+    builder.copy_resources()
 
     report.print()
     if log:

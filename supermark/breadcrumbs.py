@@ -47,10 +47,12 @@ class Page:
 
 
 class Breadcrumbs:
-    def __init__(self, report: Report, path: Path):
+    def __init__(self, report: Report, path: Optional[Path]):
         self.pages: Dict[Path, Page] = {}
         self.report = report
         self.path = path
+        if path is None:
+            return
         if path.suffix == ".yaml":
             with open(path) as f:
                 try:
@@ -125,6 +127,12 @@ class Breadcrumbs:
         root = None
         for line in lines:
             indent = int((len(line) - len(line.lstrip(" "))) / 2)
+
+            # TODO error if the page title contains a " - "
+            if len(line.strip().split(" - ")) != 2:
+                self.report.warning(f"Invalid line in breadcrumbs: {line}", self.path)
+                print(f"Invalid line in breadcrumbs: {line}", self.path)
+                continue
             page, title = line.strip().split(" - ")
             parent = None
             if indent > 0 and len(stack) >= indent:  # Ensure stack length is checked

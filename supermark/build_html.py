@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Set, TYPE_CHECKING
+from shutil import copyfile
 
 from rich.progress import BarColumn, Progress
 
@@ -55,6 +56,7 @@ class HTMLBuilder(Builder):
                 self.report.info(
                     f"Looking for breadcrumbs file in {breadcrumbs_path}, but it does not exist."
                 )
+                self.breadcrumbs: Breadcrumbs = Breadcrumbs(self.report, None)
 
     def _transform_page_to_html(
         self,
@@ -223,10 +225,11 @@ class HTMLBuilder(Builder):
         self,
         source_file_path: Path,
         target_file_path: Path,
+        input_path: Path,
         template: str,
     ):
         extensions_used: Set[Extension] = set()
-        chunks = self.parse_file(source_file_path, extensions_used)
+        chunks = self.parse_file(source_file_path, input_path, extensions_used)
         if not chunks:
             # TODO warn that the page is empty, and therefore nothing is written
             return
@@ -299,6 +302,7 @@ class HTMLBuilder(Builder):
                     {
                         "source_file_path": source_file_path,
                         "target_file_path": target_file_path,
+                        "input_path": self.input_path,
                         "template": template,
                         "abort_draft": self.abort_draft,
                     }
@@ -322,6 +326,7 @@ class HTMLBuilder(Builder):
                 self._process_file(
                     jobs[0]["source_file_path"],
                     jobs[0]["target_file_path"],
+                    jobs[0]["input_path"],
                     jobs[0]["template"],
                 )
         else:
@@ -343,6 +348,7 @@ class HTMLBuilder(Builder):
                             self._process_file,
                             job["source_file_path"],
                             job["target_file_path"],
+                            job["input_path"],
                             job["template"],
                         )
                         future.add_done_callback(
@@ -351,6 +357,34 @@ class HTMLBuilder(Builder):
                         futures.append(future)
                     for future in futures:
                         future.result()
+
+    def _eligible_for_copy(self, file: Path) -> bool:
+        if file.is_dir():
+            return False
+        if file.suffix in [".md"]:
+            return False
+        if file.name in ["breadcrumbs.txt", "breadcrumbs.yaml"]:
+            return False
+        if file.name.startswith("."):
+            return False
+        if file.suffix in [".jpeg", ".jpg", ".png", ".svg", ".gif"]:
+            return False
+        if not file.suffix:
+            return False
+        return True
+
+    def copy_resources(self) -> None:
+        self.report.info("Copying resources.")
+        for file in self.input_path.glob("**/*"):
+            if self._eligible_for_copy(file):
+                # print(file)
+                target = self.output_path / file.relative_to(self.input_path)
+                # print("  to " + target.as_posix())
+                copyfile(file, target)
+                #target = self.output_path / file.relative_to(self.input_path)
+                #target.parent.mkdir(exist_ok=True, parents=True)
+                #file.replace(target)
+                #self.report.info("Copied", path=target)
 
     def _get_html_folder(
         self, folder: Folder, target_file_path: Path, html: List[str], indent: str = ""
